@@ -55,7 +55,7 @@ killall -q polybar
 polybar -conf=~/.config/polybar/tokyonight.ini bar &
 
 # Launch dunst notification daemon
-dunst -config "$HOME"/.config/dunstrc &
+dunst &
 
 # Launch polkit
 pidof -q polkit-gnome-authentication-agent-1 || { /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 & }
