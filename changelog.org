@@ -1,0 +1,19 @@
+#+TITLE: Change-Log
+#+AUTHOR: Lumi Denoir
+#+DATE: [2024-06-26 Wed 00:21]
+* 2024-06-26
+** New
+  - Add qtile configs
+  - Add awesome dunst ranger
+  - Add mpd, MpDris2, ncmpcpp and patched dwm
+  - Add sxhkd and i3 config
+  - Add cava shaders
+  - Add cava config
+  - Add picom.conf
+  - Add zathura config
+  - Add bspwm config
+** Fixes
+  - (bspwm) make dunst load default config
+
+
+
