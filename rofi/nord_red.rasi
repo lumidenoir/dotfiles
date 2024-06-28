@@ -1,0 +1,188 @@
+// Configuration.
+configuration {
+	modi:                       "drun,window,filebrowser,ssh";
+    show-icons:                 true;
+    display-drun:               "󱓞  Apps";
+    font:                       "JetBrainsMono Nerd Font 10";
+    icon-theme:                 "Papirus-Dark";
+    monitor: -1;
+}
+
+// Globals.
+
+* {
+    black:      #191D24;
+    gray0:      #242933;
+    gray1:      #2E3440;
+    gray2:      #3B4252;
+    gray3:      #434C5E;
+    gray4:      #4C566A;
+    gray5:      #60728A;
+    white0:     #D8DEE9;
+    white1:     #E5E9F0;
+    white2:     #ECEFF4;
+    blue0:      #5E81AC;
+    blue1:      #81A1C1;
+    blue2:      #88C0D0;
+    cyan:       #8FBCBB;
+    red:        #BF616A;
+    orange:     #D08770;
+    yellow:     #EBCB8B;
+    green:      #A3BE8C;
+    magenta:    #B48EAD;
+
+    background:     @black;
+    background-alt: @black;
+    foreground:     @white2;
+    selected:       @yellow;
+    active:         @blue2;
+    urgent:         @cyan;
+    border:         @red;
+}
+
+// Main window.
+window {
+    transparency:                "real";
+    location:                    center;
+    anchor:                      center;
+    fullscreen:                  false;
+    width:                       700px;
+    x-offset:                    0px;
+    y-offset:                    0px;
+    enabled:                     true;
+    margin:                      0px;
+    padding:                     0px;
+    border:                      0px solid;
+    border-radius:               10px;
+    border-color:                @border;
+    background-color:            @background;
+    cursor:                      "default";
+}
+
+// Main box.
+mainbox {
+    enabled:                     true;
+    spacing:                     0px;
+    margin:                      0px;
+    padding:                     20px;
+    border:                      2px solid;
+    border-radius:               10px;
+    border-color:                @border;
+    background-color:            transparent;
+    children:                    [ "inputbar", "listview" ];
+}
+
+// Bar where search field is.
+inputbar {
+    enabled:                     true;
+    spacing:                     20px;
+    margin:                      0px;
+    padding:                     0px 0px 20px 0px;
+    border:                      0px solid;
+    border-radius:               10px;
+    border-color:                @selected;
+    background-color:            @background-alt;
+    text-color:                  @foreground;
+    children:                    [ "prompt", "entry" ];
+}
+
+// Icon area.
+prompt {
+    enabled:                     true;
+    background-color:            @red;
+    text-color:                  @background;
+    border:                      0px;
+    border-color:                @blue2;
+    border-radius:               10px;
+    padding:                     10px 20px;
+}
+
+// Search field.
+entry {
+    enabled:                     true;
+    background-color:            inherit;
+    text-color:                  inherit;
+    padding:                     10px 0px 0px 0px;
+    cursor:                      text;
+    placeholder:                 "Search...";
+    placeholder-color:           @gray4;
+}
+
+// Area where all of the results are displayed.
+listview {
+    enabled:                     true;
+    columns:                     2;
+    lines:                       8;
+    cycle:                       true;
+    dynamic:                     true;
+    scrollbar:                   false;
+    layout:                      vertical;
+    reverse:                     false;
+    fixed-height:                true;
+    fixed-columns:               true;
+    spacing:                     5px;
+    margin:                      0px;
+    padding:                     0px;
+    border:                      0px;
+    background-color:            transparent;
+    text-color:                  @foreground;
+    cursor:                      "default";
+}
+
+// Items in the list.
+element {
+    enabled:                     true;
+    spacing:                     15px;
+    margin:                      0px;
+    padding:                     5px;
+    border:                      0px;
+    border-radius:               10px;
+    border-color:                @selected;
+    background-color:            transparent;
+    text-color:                  @foreground;
+    cursor:                      pointer;
+    orientation:                 horizontal;
+}
+element normal.normal {
+    background-color:            @background;
+    text-color:                  @foreground;
+}
+element alternate.normal {
+    background-color:            @background;
+    text-color:                  @foreground;
+}
+element selected.normal {
+    background-color:            @selected;
+    text-color:                  @background;
+}
+element-icon {
+    background-color:            transparent;
+    text-color:                  inherit;
+    size:                        32px;
+    cursor:                      inherit;
+}
+element-text {
+    background-color:            transparent;
+    text-color:                  inherit;
+    highlight:                   inherit;
+    cursor:                      inherit;
+    vertical-align:              0.5;
+    horizontal-align:            0.0;
+}
+
+// The error message.
+error-message {
+    padding:                     20px;
+    border:                      2px solid;
+    border-radius:               10px;
+    border-color:                @urgent;
+    background-color:            @background;
+    text-color:                  @foreground;
+}
+textbox {
+    background-color:            @background;
+    text-color:                  @foreground;
+    vertical-align:              0.5;
+    horizontal-align:            0.0;
+    highlight:                   none;
+}

@@ -19,7 +19,7 @@ from time import sleep
 
 mod = "mod4"
 mod1 = "mod1"
-terminal = "kitty --config /home/krishna/.config/kitty/kittyqtile.conf"
+terminal = "kitty -theme /home/krishna/.config/kitty/kittyqtile.conf"
 
 # █▄▀ █▀▀ █▄█ █▄▄ █ █▄░█ █▀▄ █▀
 # █░█ ██▄ ░█░ █▄█ █ █░▀█ █▄▀ ▄█
@@ -72,13 +72,13 @@ keys = [
     Key(
         [mod],
         "space",
-        lazy.spawn("rofi -theme ~/.config/rofi/configqtile.rasi -show drun"),
+        lazy.spawn("rofi -theme ~/.config/rofi/everforest.rasi -show drun"),
         desc="Spawn a command using a prompt widget",
     ),
     Key(
         [mod],
         "p",
-        lazy.spawn("rofi -show powermenu -theme ~/.config/rofi/configqtile.rasi"),
+        lazy.spawn("rofi -show powermenu -theme ~/.config/rofi/everforest.rasi"),
         desc="powermenu",
     ),
     # C U S T O M
@@ -216,11 +216,11 @@ extension_defaults = [widget_defaults.copy()]
 
 
 def search():
-    qtile.cmd_spawn("rofi -show drun -config ~/.config/rofi/configqtile.rasi")
+    qtile.cmd_spawn("rofi -show drun theme ~/.config/rofi/everforest.rasi")
 
 
 def power():
-    qtile.cmd_spawn("rofi -show powermenu -config ~/.config/rofi/configqtile.rasi")
+    qtile.cmd_spawn("rofi -show powermenu theme ~/.config/rofi/everforest.rasi")
 
 
 # █▄▄ ▄▀█ █▀█
