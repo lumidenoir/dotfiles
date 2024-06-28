@@ -12,7 +12,7 @@ local function font_with_fallback(name, params)
 	return wezterm.font_with_fallback(names, params)
 end
 
-local font_name = "Aesthetic Iosevka Original"
+local font_name = "Aesthetic Iosevka Original Ex"
 
 return {
 	-- OpenGL for GPU acceleration, Software for CPU
@@ -36,7 +36,7 @@ return {
 		},
 	},
 	warn_about_missing_glyphs = false,
-	font_size = 12,
+	font_size = 11,
 	line_height = 1.1,
 
 	-- Cursor style
@@ -148,7 +148,7 @@ return {
 	bold_brightens_ansi_colors = true,
 	colors = {
 		foreground = "#edeff0",
-		background = "#0c0e0f",
+		background = "#181f21",
 		cursor_bg = "#edeff0",
 		cursor_fg = "#edeff0",
 		cursor_border = "#232526",
@@ -156,8 +156,8 @@ return {
 		selection_bg = "#edeff0",
 		scrollbar_thumb = "#edeff0",
 		split = "#090909",
-		ansi = { "#232526", "#df5b61", "#78b892", "#de8f78", "#6791c9", "#bc83e3", "#67afc1", "#e4e6e7" },
-		brights = { "#2c2e2f", "#e8646a", "#81c19b", "#e79881", "#709ad2", "#c58cec", "#70b8ca", "#f2f4f5" },
+		ansi = { "#22292b", "#e06e6e", "#8ccf7e", "#e5c76b", "#67b0e8", "#c47fd5", "#6da4cd", "#b3b9b8" },
+		brights = { "#575e60", "#ef7d7d", "#9bdead", "#f4d67d", "#6cb5ed", "#ce89df", "#67cbe7", "#bdc3c2" },
 		indexed = { [136] = "#edeff0" },
 		tab_bar = {
 			active_tab = {
@@ -174,10 +174,10 @@ return {
 
 	-- Padding
 	window_padding = {
-		left = 25,
-		right = 25,
-		top = 25,
-		bottom = 25,
+		left = 5,
+		right = 1,
+		top = 5,
+		bottom = 1,
 	},
 
 	-- Tab Bar

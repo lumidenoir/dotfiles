@@ -25,6 +25,11 @@ import Graphics.X11.ExtraTypes.XF86 (
                                         xF86XK_MonBrightnessUp,
                                         xF86XK_MonBrightnessDown
                                     )
+-- Function to get the current layout and send a notification
+notifyCurrentLayout :: X ()
+notifyCurrentLayout = do
+    layout <- gets (description . W.layout . W.workspace . W.current . windowset)
+    spawn $ "dunstify -t 2000 'Layout' '" ++ layout ++ "'"
 
 ----------------------------------------------------------------------
 -- Variables
@@ -65,7 +70,7 @@ myKeys conf@(XConfig {XMonad.modMask = super}) = M.fromList $
         -- Kill focused window
         ((mod1Mask , xK_q),         kill),
 
-        ((mod1Mask, xK_l), spawn "~/.config/scripts/xlock.sh"),
+        ((super, xK_l), spawn "~/.config/scripts/xlock.sh"),
         -- Take screenshot
         ((super, xK_s),
             spawn "~/.config/rofi/scripts/book-search"),
@@ -87,22 +92,22 @@ myKeys conf@(XConfig {XMonad.modMask = super}) = M.fromList $
 
         -- Control brightness
         ((0,    xF86XK_MonBrightnessUp),
-                spawn "media_control.sh brightness_up"),
+                spawn "~/dotfiles/scripts/settings_control.sh brightness_up"),
 
         ((0,    xF86XK_MonBrightnessDown),
-                spawn "media_control.sh brightness_down"),
+                spawn "~/dotfiles/scripts/settings_control.sh brightness_down"),
 
         -- Control volume
         ((0,    xF86XK_AudioRaiseVolume),
-                spawn "media_control.sh volume_up"),
+                spawn "~/dotfiles/scripts/settings_control.sh volume_up"),
 
         ((0,    xF86XK_AudioLowerVolume),
-                spawn "media_control.sh volume_down"),
+                spawn "~/dotfiles/scripts/settings_control.sh volume_down"),
 
         ((0,    xF86XK_AudioMute),
-                spawn "media_control.sh volume_mute"),
+                spawn "~/dotfiles/scripts/settings_control.sh volume_mute"),
 
-        ((super, xK_Tab),    sendMessage NextLayout),
+        ((super, xK_Tab),    sendMessage NextLayout >> notifyCurrentLayout),
 
         -- Move focus
         ((super, xK_j),        windows W.focusUp),
