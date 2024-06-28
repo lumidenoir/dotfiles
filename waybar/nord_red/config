@@ -1,0 +1,100 @@
+{
+	"layer": "top",
+	"modules-left": ["custom/powermenu", "river/tags", "temperature"],
+	"modules-center": ["river/window"],
+	"modules-right": ["battery","backlight", "pulseaudio", "pulseaudio#microphone","cpu","clock", "tray"],
+	"pulseaudio": {
+        "format": "{icon} {volume}%",
+        "tooltip": false,
+        "format-muted": " Muted",
+        "on-click": "pamixer -t",
+        "on-right-click": "exec pavucontrol",
+        "on-scroll-up": "pamixer -i 5",
+        "on-scroll-down": "pamixer -d 5",
+        "scroll-step": 5,
+        "format-icons": {
+            "headphone": "",
+            "hands-free": "",
+            "headset": "",
+            "phone": "",
+            "portable": "",
+            "car": "",
+            "default": ["", "", ""]
+        }
+    },
+    "pulseaudio#microphone": {
+        "format": "{format_source}",
+        "format-source": " {volume}%",
+        "format-source-muted": " Muted",
+        "on-click": "pamixer --default-source -t",
+        "on-scroll-up": "pamixer --default-source -i 2",
+        "on-scroll-down": "pamixer --default-source -d 2",
+        "scroll-step": 5
+    },
+	"custom/powermenu": {
+		"format": "",
+		"interval": "once",
+		/*"exec": "checkupdates | wc -l",*/
+		"on-click": "rofi -show powermenu",
+		"tooltip": false,
+		"signal": 8
+	},
+
+	"river/tags": {
+		"tag-labels":[
+			"",
+			"",
+			"󰙯",
+			"",
+			"",
+			"",
+			""
+		],
+		"disable-click": false,
+		"num-tags": 7
+	},
+	"temperature": {
+		"hwmon-path-abs": "/sys/class/hwmon",
+		"input-filename": "temp1_input",
+		"format": "{temperatureC}°C ",
+		"on-click": ""
+	},
+	"river/window": {
+		"format": "{}",
+		"max-length": 90
+	},
+	"backlight": {
+		"device": "amdgpu_b10",
+		"format": "{icon}  {}%",
+		"format-icons": ["", ""],
+		"interval": 1,
+		"on-click": ""
+	},
+	"battery": {
+		"states": {
+			"good": 100,
+			"warning": 30,
+			"critical": 20
+		},
+		"format": "{icon}   {capacity}%",
+		"format-charging": "{icon}   {capacity}%",
+		"format-plugged": "{icon}   {capacity}%",
+		"format-alt": "{time} {icon}",
+		"format-icons": ["", "", "", "", ""],
+	},
+	"tray":{
+		"icon-size":18,
+		"show-passive-items":true,
+		"spacing": 10,
+		"reverse-direction": true
+	},
+    "clock": {
+        "format": "  {:%H:%M }",
+        "format-alt":"  {:%a, %b %e}",
+        "tooltip-format": "<tt><small>{calendar}</small></tt>"
+    },
+	"cpu" : {
+      "interval": 1,
+      "format": "  {}%"
+      }
+}

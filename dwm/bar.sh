@@ -12,7 +12,7 @@ cpu() {
   cpu_val=$(grep -o "^[^ ]*" /proc/loadavg)
 
   printf "^c$black^ ^b$green^ "
-  printf "^c$green^ ^b$grey^ $cpu_val"
+  printf "^c$green^ ^b$grey^ $cpu_val "
 }
 
 pkg_updates() {
@@ -63,5 +63,5 @@ while true; do
   [ $interval = 0 ] || [ $(($interval % 300)) = 0 ] && updates=$(pkg_updates)
   interval=$((interval + 1))
 
-  sleep 1 && xsetroot -name "$updates $(battery) $(brightness) $(vol) $(cpu)  $(mem) $(wlan) $(clock)"
+  sleep 1 && xsetroot -name "$updates $(battery) $(brightness) $(vol) $(cpu) $(mem) $(wlan) $(clock)"
 done
