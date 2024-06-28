@@ -20,6 +20,23 @@
 - ...
 
 * Changelog
+** v0.8 [2024-06-28]
+*** New
+  - Add kitty and polybar configs
+  - Add rofi configs
+  - wayland bang
+  - Add river config
+  - Add nvchad starter config
+  - Add suckless tools to dwm(onedark)
+  - Add commit to changelog automation
+  - Add scripts and eww
+  - Add xmonad config
+*** Fixes
+  - qtile backup config theme name
+*** Improvements
+  - xmonad, picom and wezterm
+  - changelog written to README
+
 ** v0.1 [2024-06-25]
 *** New
   - Add soap
