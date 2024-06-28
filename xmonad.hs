@@ -46,7 +46,7 @@ myWorkspaces          = ["1", "2", "3", "4", "5", "6", "7", "8"]
 -- Auto start programs
 ----------------------------------------------------------------------
 myStartupHook = do
-    spawnOnce "feh --bg-fill ~/Pictures/wallpaper/wall-07.webp"
+    spawnOnce "feh --bg-fill ~/Pictures/wallpaper/rosepine/wall-07.webp"
 
     -- Picom
     spawn "picom"
