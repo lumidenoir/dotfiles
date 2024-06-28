@@ -1,2 +1,36 @@
-#+title: Readme
-Update with info later
+#+title: dotfiles
+*This repository contains my personal dotfiles for configuring various aspects of my Linux environment. This repository serves as a backup and reference point for my own configurations.*
+
+* dots
+- i3
+- bspwm
+- patched dwm
+- qtile
+- awesome
+- hyprland
+- sway
+- river
+- kitty
+- neovim
+- doom
+- sxhkd
+- polybar
+- waybar
+- rofi
+- ...
+
+* Changelog
+** v0.1 [2024-06-25]
+*** New
+  - Add soap
+  - Add qtile configs
+  - Add awesome dunst ranger
+  - Add mpd, MpDris2, ncmpcpp and patched dwm
+  - Add sxhkd and i3 config
+  - Add cava shaders
+  - Add cava config
+  - Add picom.conf
+  - Add zathura config
+  - Add bspwm config
+*** Fixes
+  - (bspwm) make dunst load default config

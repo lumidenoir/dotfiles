@@ -7,11 +7,11 @@ msmtprc
 mbsyncrc
 mpv/
 .debris/
-extract_commits.sh
 todo.org
 dwm/config.h
+dmenu/config.h
 wallpaper/
 mpd/state
 qtile/__pycache__/
 qtile/*/__pycache__/
-qtile-natura/__pycache__/
+qtile-everforest/__pycache__/
