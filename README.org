@@ -1,23 +1,28 @@
-#+title: dotfiles
-*This repository contains my personal dotfiles for configuring various aspects of my Linux environment. This repository serves as a backup and reference point for my own configurations.*
+#+title:My dotfiles for Arch linux
+This repository contains my custom dotfiles for configuring various aspects of my Linux environment. It serves as a inspiration for anyone looking to personalize their setup. *While I've heavily borrowed and adapted configurations from numerous talented sources, I strive to give credit where due.*
 
-* dots
-- i3
-- bspwm
-- patched dwm
-- qtile
-- awesome
-- hyprland
-- sway
-- river
-- kitty
-- neovim
-- doom
-- sxhkd
-- polybar
-- waybar
-- rofi
-- ...
+** Disclaimer:
+- *Originality*: These dotfiles are a compilation of configurations inspired by the work of many fantastic developers. I do not claim them as entirely my own creation.
+- *Responsibility*: While I've made an effort to document sources and ensure functionality, I cannot guarantee compatibility with your specific system or take full responsibility for any issues that may arise.
+- *Usage*: You are absolutely free to use, modify, and adapt these configurations to suit your needs. However, please be mindful of the original authors' licenses and consider giving them credit if you distribute your own work.
+
+* Supported Tools:
+This collection includes configurations for:
+- Window Managers: i3-wm, bspwm, dwm (patched), qtile, awesome, hyprland, sway, river
+- Terminal: kitty, wezterm, st
+- Text Editor: neovim, /doom emacs/
+- Status Bars: polybar, waybar
+- Application Launcher: rofi, dmenu
+- Widget: eww
+
+* Getting Started:
+Due to the diverse nature of these configurations and potential system variations, there's no one-size-fits-all installation process. However you can carefully examine each dotfile and adapt it to your specific requirements.
+
+* Credits:
+- [[https://github.com/dani-lp/dotfiles][qtile]] config from [[https://github.com/dani-lp][dani-lp]]
+- [[https://github.com/darkkal44/Cozytile][qtile-everforest]] config from [[https://github.com/darkkal44][darkkal44]]
+- [[https://github.com/siduck/chadwm][dwm]], [[https://github.com/siduck/st][st]] and [[https://github.com/NvChad/NvChad][nvim]] from [[https://github.com/siduck][siduck]]
+- hyprland inspired from [[https://www.reddit.com/r/unixporn/comments/e1etn3/awesome_morpho/][this reddit post]]
 
 * Changelog
 ** v0.8 [2024-06-28]
@@ -31,11 +36,11 @@
   - Add commit to changelog automation
   - Add scripts and eww
   - Add xmonad config
-*** Fixes
-  - qtile backup config theme name
-*** Improvements
+*** Fix
+  - (qtile) backup config name
+*** Improve
   - xmonad, picom and wezterm
-  - changelog written to README
+  - changelog
 
 ** v0.1 [2024-06-25]
 *** New
@@ -49,5 +54,5 @@
   - Add picom.conf
   - Add zathura config
   - Add bspwm config
-*** Fixes
+*** Fix
   - (bspwm) make dunst load default config

@@ -1,7 +1,5 @@
 #!/usr/bin/env sh
 
-#!/bin/bash
-
 # Get the last two tags
 last_two_tags=$(git tag --sort=-creatordate | head -n 2)
 tag1=$(echo "$last_two_tags" | sed -n '1p')
