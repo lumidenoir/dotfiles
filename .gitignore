@@ -2,11 +2,9 @@
 .idea
 *.log
 tmp/
-.megaignore
 msmtprc
 mbsyncrc
 mpv/
-.debris/
 todo.org
 dwm/config.h
 dmenu/config.h
