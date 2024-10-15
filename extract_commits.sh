@@ -47,10 +47,10 @@ if [ -n "$new_feats" ]; then
     output+="*** New\n$new_feats"
 fi
 if [ -n "$fixes" ]; then
-    output+="*** Fixes\n$fixes"
+    output+="*** Fix\n$fixes"
 fi
 if [ -n "$improvements" ]; then
-    output+="*** Improvements\n$improvements"
+    output+="*** Improve\n$improvements"
 fi
 
 # Print the output

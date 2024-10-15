@@ -5,7 +5,8 @@
 /* appearance */
 static const unsigned int borderpx = 0; /* border pixel of windows */
 static const unsigned int default_border = 2;
-/* to switch back to default border after dynamic border resizing via keybinds */
+/* to switch back to default border after dynamic border resizing via keybinds
+ */
 static const unsigned int snap = 32;   /* snap pixel */
 static const unsigned int gappih = 10; /* horiz inner gap between windows */
 static const unsigned int gappiv = 10; /* vert inner gap between windows */
@@ -93,8 +94,9 @@ static const unsigned int ulinevoffset =
 static const int ulineall =
     0; /* 1 to show underline on all tags, 0 for just the active ones */
 
-static const char *eww[] = {"rofi", "-show", "powermenu", "-theme", "~/.config/rofi/onedark.rasi",
-                            NULL}; /*"eww", "open" , "eww"*/
+static const char *eww[] = {
+    "rofi", "-show", "powermenu", "-theme", "~/.config/rofi/onedark.rasi",
+    NULL}; /*"eww", "open" , "eww"*/
 
 static const Launcher launchers[] = {
     /* command     name to display */
@@ -110,7 +112,7 @@ static const Rule rules[] = {
        monitor */
     {"Gimp", NULL, NULL, 0, 0, 1, -1},
     {"Firefox", NULL, NULL, 1 << 8, 0, 0, -1},
-    {"eww", NULL, NULL, 0, 0, 1, -1},
+    {"Emacs", NULL, "doom-capture", 0, 1, 1, -1},
 };
 
 /* layout(s) */
@@ -174,7 +176,7 @@ static const Key keys[] = {
 
     {MODKEY, XK_space, spawn,
      SHCMD("rofi -show drun -theme ~/.config/rofi/onedark.rasi")},
-    {MODKEY, XK_r, spawn, {.v = dmenucmd }},
+    {MODKEY, XK_r, spawn, {.v = dmenucmd}},
     {MODKEY, XK_Return, spawn, SHCMD("st")},
 
     // toggle stuff
@@ -260,10 +262,22 @@ static const Key keys[] = {
 
     // powermenu
     {MODKEY, XK_p, spawn,
-     SHCMD("rofi -show powermenu -config ~/.config/rofi/onedark.rasi")},
+     SHCMD("rofi -show powermenu -theme ~/.config/rofi/onedark.rasi")},
 
     // lock screen
     {Mod1Mask, XK_l, spawn, SHCMD("~/.config/scripts/xlock.sh")},
+
+    {MODKEY, XK_s, spawn, SHCMD("~/.config/rofi/scripts/book-search")},
+
+    {MODKEY, XK_w, spawn, SHCMD("~/.config/rofi/scripts/web-search.sh")},
+
+    {MODKEY, XK_x, spawn, SHCMD("~/.config/emacs/bin/org-capture")},
+
+    {MODKEY | ShiftMask, XK_s, spawn,
+     SHCMD("~/.config/rofi/scripts/college-search")},
+
+    {MODKEY | ControlMask, XK_s, spawn,
+     SHCMD("~/.config/rofi/scripts/lit-search")},
 
     // hide & restore windows
     {MODKEY, XK_e, hidewin, {0}},

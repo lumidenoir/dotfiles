@@ -20,7 +20,7 @@ pkg_updates() {
   updates=$({ timeout 20 checkupdates 2>/dev/null || true; } | wc -l) # arch
   # updates=$({ timeout 20 aptitude search '~U' 2>/dev/null || true; } | wc -l)  # apt (ubuntu, debian etc)
 
-    printf "  ^c$green^    $updates"
+  printf "  ^c$green^    $updates"
 }
 
 battery() {
@@ -39,20 +39,27 @@ mem() {
 }
 
 wlan() {
-	case "$(cat /sys/class/net/wl*/operstate 2>/dev/null)" in
-	up) printf "^c$black^ ^b$red^ 󰤨 ^d^%s""^c$blue^^b$grey^ Connected" ;;
-	down) printf "^c$black^ ^b$red^ 󰤭 ^d^%s""^c$blue^^b$grey^ Disconnected" ;;
-	esac
+  case "$(cat /sys/class/net/wl*/operstate 2>/dev/null)" in
+  up) printf "^c$black^ ^b$red^ 󰤨 ^d^%s""^c$blue^^b$grey^ Connected" ;;
+  down) printf "^c$black^ ^b$red^ 󰤭 ^d^%s""^c$blue^^b$grey^ Disconnected" ;;
+  esac
 }
 
 clock() {
-	printf "^c$black^ ^b$pink^ 󱑆 "
-	printf "^c$black^^b$pink^ $(date '+%H:%M') "
+  printf "^c$black^ ^b$pink^ 󱑆 "
+  printf "^c$black^^b$pink^ $(date '+%H:%M') "
 }
 
-vol(){
-	volume="$(pactl list sinks | grep '^[[:space:]]Volume:' | head -n $(( $SINK + 1 )) | tail -n 1 | sed -e 's,.* \([0-9][0-9]*\)%.*,\1,')"
-	printf "^c$pink^^b$black^ 奄 $volume"
+vol() {
+  sink_info=$(pactl list sinks)
+  volume=$(echo "$sink_info" | grep '^[[:space:]]Volume:' | head -n $(($SINK + 1)) | tail -n 1 | sed -e 's,.* \([0-9][0-9]*\)%.*,\1,')
+  mute=$(echo "$sink_info" | grep '^[[:space:]]Mute:' | head -n $(($SINK + 1)) | tail -n 1 | awk '{print $2}')
+
+  if [ "$mute" = "yes" ]; then
+    printf "^c$pink^^b$black^ 󰖁 M"
+  else
+    printf "^c$pink^^b$black^ 󰕾 $volume"
+  fi
 }
 
 while true; do
