@@ -5,7 +5,7 @@ BOOKS_DIR=~/org/assets/books
 mkdir -p ~/org/assets/books
 
 # Save find result to F_ARRAY
-readarray -t F_ARRAY <<< "$(find "$BOOKS_DIR" -type f)"
+readarray -t F_ARRAY <<<"$(find "$BOOKS_DIR" -type f)"
 
 # Associative array for storing books
 # key => book name
@@ -16,24 +16,22 @@ declare -A BOOKS
 # Add elements to BOOKS array
 get_books() {
   if [[ ! -z ${F_ARRAY[@]} ]]; then
-    for i in "${!F_ARRAY[@]}"
-    do
+    for i in "${!F_ARRAY[@]}"; do
       path=${F_ARRAY[$i]}
       file=$(basename "${F_ARRAY[$i]}")
       BOOKS+=(["$file"]="$path")
     done
   else
-      echo "$BOOKS_DIR is empty!"
-      echo "Please put some books in it."
-      #echo "Only .pdf files are accepted."
-      exit
+    echo "$BOOKS_DIR is empty!"
+    echo "Please put some books in it."
+    #echo "Only .pdf files are accepted."
+    exit
   fi
 }
 
 # List for rofi
-gen_list(){
-  for i in "${!BOOKS[@]}"
-  do
+gen_list() {
+  for i in "${!BOOKS[@]}"; do
     echo "$i"
   done
 }

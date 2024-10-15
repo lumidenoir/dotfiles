@@ -10,8 +10,8 @@ configuration{
     disable-history: false;
     hide-scrollbar: true;
     display-drun: "   Apps ";
-    display-run: " 省 Run ";
-    display-window: " 﩯  window";
+    display-run: " 󰑮  Run ";
+    display-window: " 󰖯  window";
     sidebar-mode: true;
 }
 

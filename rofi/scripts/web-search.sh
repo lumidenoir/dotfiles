@@ -8,7 +8,7 @@ touch "$BOOKMARK_FILE"
 
 # Function to add a bookmark
 add_bookmark() {
-    echo "$1" >> "$BOOKMARK_FILE"
+    echo "$1" >>"$BOOKMARK_FILE"
 }
 
 # Function to display bookmarks
@@ -27,7 +27,7 @@ open_url() {
 
 # Main function
 main() {
-    query=$( (echo ) | rofi -dmenu -i -lines 0 -matching fuzzy -location 0 -p " " -input "$BOOKMARK_FILE")
+    query=$( (echo) | rofi -dmenu -i -lines 0 -matching fuzzy -location 0 -p " " -input "$BOOKMARK_FILE" -theme ~/.config/rofi/whale.rasi)
 
     if [[ -n "$query" ]]; then
         # If the query is a URL, open it directly

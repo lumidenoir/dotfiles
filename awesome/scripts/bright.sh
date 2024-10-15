@@ -1,5 +1,2 @@
-cur=$(cat /sys/class/backlight/*/brightness)
-max=192
-per=$((cur/max))
-percent="$per"
+percent=$(brightnessctl | grep -Po '[0-9]{1,3}(?=%)' | head -n 1)
 echo $percent
