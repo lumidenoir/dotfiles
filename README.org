@@ -25,6 +25,18 @@ Due to the diverse nature of these configurations and potential system variation
 - hyprland inspired from [[https://www.reddit.com/r/unixporn/comments/e1etn3/awesome_morpho/][this reddit post]]
 
 * Changelog
+** v0.9 [2024-10-15]
+*** New
+  - add doom emacs config
+*** Fix
+  - remove dwm bin
+  - st make compile
+*** Improve
+  - trivial improvements
+  - Network auto switch for unstable network
+  - dwm bar.sh
+  - Readme
+
 ** v0.8 [2024-06-28]
 *** New
   - Add kitty and polybar configs
