@@ -1,0 +1,16 @@
+{
+  "bg": "#282a36",
+  "fg": "#f8f8f2",
+  "dark": "#282a36",
+  "black": "#282a36",
+  "gray": "#859289",
+  "darkgray": "#44475a",
+  "white": "#f8f8f2",
+  "yellow": "#f1fa8c",
+  "magenta": "#8be9fd",
+  "maroon": "#e67e80",
+  "pink": "#ff79c6",
+  "green": "#50fa7b",
+  "red": "#ff5555",
+  "blue": "#6272a4"
+}

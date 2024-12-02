@@ -1,0 +1,72 @@
+# Global configuration section
+#   Values here are used as defaults for any following Channel section that
+#   doesn't specify them.
+Expunge Both
+Create Both
+
+MaildirStore local
+Path ~/Mail/
+Trash Trash
+
+###############################################
+
+# Account definition
+IMAPAccount iitk
+Host qasid.iitk.ac.in
+User username
+Pass Password
+Port 993
+TLSType IMAPS
+# Use the 'SSL' instead of 'IMAPS' if SSL is used without the STARTTLS command
+
+# Mailbox definitions
+IMAPStore iitk-remote
+Account iitk
+
+MaildirStore iitk-local
+Path ~/Mail/iitk/
+Inbox ~/Mail/iitk/INBOX
+
+Channel iitk
+Far :iitk-remote:
+Near :iitk-local:
+Pattern *
+MaxMessages 500
+ExpireUnread yes
+
+################################################
+
+IMAPAccount gmail
+# Address to connect to
+Host imap.gmail.com
+User username
+Pass keypass
+TLSType IMAPS
+# The following line should work. If you get certificate errors, uncomment the two following lines and read the "Troubleshooting" section.
+CertificateFile /etc/ssl/certs/ca-certificates.crt
+#CertificateFile ~/.cert/imap.gmail.com.pem
+#CertificateFile ~/.cert/Equifax_Secure_CA.pem
+
+IMAPStore gmail-remote
+Account gmail
+
+MaildirStore gmail-local
+SubFolders Verbatim
+# The trailing "/" is important
+Path ~/Mail/gmail/
+Inbox ~/Mail/gmail/INBOX
+
+Channel gmail
+Far :gmail-remote:
+Near :gmail-local:
+MaxMessages 350
+ExpireUnread yes
+Patterns * ![Gmail]* "[Gmail]/Sent Mail" "[Gmail]/Starred" "[Gmail]/Drafts" "[Gmail]/All Mail" "[Gmail]/Bin"
+# Automatically create missing mailboxes, both locally and on the server
+Create Both
+# Sync the movement of messages between folders and deletions, add after making sure the sync works
+Expunge Both
+# Save the synchronization state files in the relevant directory
+SyncState *
+
+##################################################
