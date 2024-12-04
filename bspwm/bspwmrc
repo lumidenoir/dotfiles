@@ -55,8 +55,8 @@ killall -q polybar
 polybar -conf=~/.config/polybar/tokyonight.ini bar &
 dunst &
 pidof -q polkit-gnome-authentication-agent-1 || { /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 & }
-auto_network_switch.sh &
-battery_notifier.sh &
+pgrep -f auto_network_switch.sh >/dev/null || auto_network_switch.sh &
+pgrep -f battery_notifier.sh >/dev/null || battery_notifier.sh &
 
 ## Fix java applications
 export _JAVA_AWT_WM_NONREPARENTING=1
