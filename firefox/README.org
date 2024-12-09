@@ -1,0 +1,46 @@
+#+title: Homepage serve
+* Create a startup script
+#+begin_src shell
+sudo nano /usr/local/bin/start_busybox_httpd.sh
+#+end_src
+then add following lines in it
+#+begin_src shell
+#!/bin/sh
+busybox httpd -f -p 8000 -h /path/to/your/site
+#+end_src
+make it executable
+#+begin_src shell
+sudo chmod +x /usr/local/bin/start_busybox_httpd.sh
+#+end_src
+
+* Add to system startup
+#+begin_src shell
+sudo nano /etc/systemd/system/busybox_httpd.service
+#+end_src
+add the following content
+#+begin_src ini
+[Unit]
+Description=BusyBox HTTP Server
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/start_busybox_httpd.sh
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+#+end_src
+enable the service
+#+begin_src shell
+sudo systemctl enable busybox_httpd.service
+sudo systemctl start busybox_httpd.service
+#+end_src
+
+* Lightweight startup using crontab
+#+begin_src shell
+crontab -e
+#+end_src
+add to crontab tasks
+#+begin_src bash
+@reboot /usr/local/bin/start_busybox_httpd.sh
+#+end_src

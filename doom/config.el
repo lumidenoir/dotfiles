@@ -227,11 +227,6 @@ truncated to fit within the limit using `org-reference-contraction-truncate-word
       '((org-roam-backlinks-section :unique t)
         org-roam-reflinks-section))
 
-(after! (org-roam kind-icon)
-  (add-to-list
-   'kind-icon-mapping
-   `(org-roam ,(nerd-icons-codicon "nf-cod-symbol_interface") :face font-lock-type-face)))
-
 (after! (org-roam nerd-icons-corfu)
   (add-to-list
    'nerd-icons-corfu-mapping
