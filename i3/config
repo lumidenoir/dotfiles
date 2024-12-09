@@ -22,7 +22,7 @@ exec polybar --config=~/.config/polybar/whale.ini main
 exec autotiling
 exec mpd
 exec mpDris2
-exec dunst -conf ~/.config/dunst/dunstrc
+exec dunst -startup_notification
 exec battery_notifier.sh
 exec auto_network_switch.sh
 
@@ -38,12 +38,12 @@ default_border pixel 0
 # exec --no-startup-id nm-applet
 
 # Use pactl to adjust volume in PulseAudio.
-bindsym XF86AudioRaiseVolume exec settings_control.sh volume_up
-bindsym XF86AudioLowerVolume exec settings_control.sh volume_down
-bindsym XF86AudioMute exec settings_control.sh volume_mute
-bindsym XF86AudioMicMute exec settings_control.sh mic_mute
-bindsym XF86MonBrightnessUp exec settings_control.sh brightness_up
-bindsym XF86MonBrightnessDown exec settings_control.sh brightness_down
+bindsym XF86AudioRaiseVolume exec settings_control.sh volup
+bindsym XF86AudioLowerVolume exec settings_control.sh voldown
+bindsym XF86AudioMute exec settings_control.sh volmute
+bindsym XF86AudioMicMute exec settings_control.sh micmute
+bindsym XF86MonBrightnessUp exec settings_control.sh briup
+bindsym XF86MonBrightnessDown exec settings_control.sh bridown
 
 # Use Mouse+$mod to drag floating windows to their wanted position
 floating_modifier $mod

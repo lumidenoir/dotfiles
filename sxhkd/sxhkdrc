@@ -131,23 +131,31 @@ super + r
 
 # Raise volume
 XF86AudioRaiseVolume
-    settings_control.sh volume_up
+    settings_control.sh volup
 
 # Lower volume
 XF86AudioLowerVolume
-	settings_control.sh volume_down
+	settings_control.sh voldown
  
 # Mute
 XF86AudioMute
-	settings_control.sh volume_mute
+	settings_control.sh volmute
   
 # brightness
 XF86MonBrightnessUp
-	settings_control.sh brightness_up
+	settings_control.sh briup
 
 XF86MonBrightnessDown
-	settings_control.sh brightness_down
+	settings_control.sh bridown
 
+XF86AudioPrev
+	playerctl previous
+
+XF86AudioNext
+	playerctl next
+
+XF86AudioPlay
+	playerctl play-pause
 #show powermenu
 super + p
 	rofi -show powermenu -theme ~/.config/rofi/tokyonight.rasi

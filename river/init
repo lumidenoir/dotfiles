@@ -107,9 +107,9 @@ riverctl map normal $mod+Shift+Mod1 H send-layout-cmd rivertile "main-location l
 
 for mode in normal locked; do
     # Control volume with amixer
-    riverctl map $mode None XF86AudioRaiseVolume spawn 'settings_control.sh volume_up'
-    riverctl map $mode None XF86AudioLowerVolume spawn 'settings_control.sh volume_down'
-    riverctl map $mode None XF86AudioMute spawn 'settings_control.sh volume_mute'
+    riverctl map $mode None XF86AudioRaiseVolume spawn 'settings_control.sh volup'
+    riverctl map $mode None XF86AudioLowerVolume spawn 'settings_control.sh voldown'
+    riverctl map $mode None XF86AudioMute spawn 'settings_control.sh volmute'
 
     # Control MPRIS aware media players with playerctl
     riverctl map $mode None XF86AudioMedia spawn 'playerctl play-pause'
@@ -118,8 +118,8 @@ for mode in normal locked; do
     riverctl map $mode None XF86AudioNext spawn 'playerctl next'
 
     # Control screen backlight brightness with brightnessctl
-    riverctl map $mode None XF86MonBrightnessUp spawn 'settings_control.sh brightness_up'
-    riverctl map $mode None XF86MonBrightnessDown spawn 'settings_control.sh brightness_down'
+    riverctl map $mode None XF86MonBrightnessUp spawn 'settings_control.sh briup'
+    riverctl map $mode None XF86MonBrightnessDown spawn 'settings_control.sh bridown'
 
     # Screenshot
     riverctl map $mode None Print spawn 'screenshot.sh'

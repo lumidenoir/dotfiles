@@ -90,7 +90,7 @@ keys = [
     Key(
         [mod],
         "Return",
-        lazy.spawn("kitty --config "+home+"/.config/kitty/kanagawa.conf"),
+        lazy.spawn("kitty --config " + home + "/.config/kitty/kanagawa.conf"),
         desc="Launch terminal",
     ),
     Key([alt], "q", lazy.window.kill(), desc="Kill active window"),
@@ -194,37 +194,42 @@ keys = [
     # screenshots
     Key([], "Print", lazy.spawn("screenshot.sh"), desc="Screenshot screen"),
     Key([mod], "Print", lazy.spawn("screenshot.sh --sel"), desc="Screenshot region"),
-    Key([mod, control], "Print", lazy.spawn("screenshot.sh --stop"), desc="Stop recording"),
+    Key(
+        [mod, control],
+        "Print",
+        lazy.spawn("screenshot.sh --stop"),
+        desc="Stop recording",
+    ),
     # audio stuff
     Key(
         [],
         "XF86AudioRaiseVolume",
-        lazy.spawn("settings_control.sh volume_up"),
+        lazy.spawn("settings_control.sh volup"),
         desc="Increase volume",
     ),
     Key(
         [],
         "XF86AudioLowerVolume",
-        lazy.spawn("settings_control.sh volume_down"),
+        lazy.spawn("settings_control.sh voldown"),
         desc="Decrease volume",
     ),
     Key(
         [],
         "XF86AudioMute",
-        lazy.spawn("settings_control.sh volume_mute"),
+        lazy.spawn("settings_control.sh volmute"),
         desc="Toggle volume mute",
     ),
     # brightness
     Key(
         [],
         "XF86MonBrightnessUp",
-        lazy.spawn("settings_control.sh brightness_up"),
+        lazy.spawn("settings_control.sh briup"),
         desc="Increase brightness",
     ),
     Key(
         [],
         "XF86MonBrightnessDown",
-        lazy.spawn("settings_control.sh brightness_down"),
+        lazy.spawn("settings_control.sh bridown"),
         desc="Decrease brightness",
     ),
     # misc
@@ -247,7 +252,7 @@ keys = [
             Key(
                 [],
                 "s",
-                lazy.spawn(""+home+"/.config/rofi/scripts/smart-search"),
+                lazy.spawn("" + home + "/.config/rofi/scripts/smart-search"),
                 desc="Launch Book search",
             ),
             Key([], "m", lazy.spawn("spotify"), desc="Launch Spotify"),

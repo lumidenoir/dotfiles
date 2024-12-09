@@ -89,20 +89,29 @@ myKeys conf@(XConfig {XMonad.modMask = super}) = M.fromList $
 
         -- Control brightness
         ((0,    xF86XK_MonBrightnessUp),
-                spawn "settings_control.sh brightness_up"),
+                spawn "settings_control.sh briup"),
 
         ((0,    xF86XK_MonBrightnessDown),
-                spawn "settings_control.sh brightness_down"),
+                spawn "settings_control.sh bridown"),
 
         -- Control volume
         ((0,    xF86XK_AudioRaiseVolume),
-                spawn "settings_control.sh volume_up"),
+                spawn "settings_control.sh volup"),
 
         ((0,    xF86XK_AudioLowerVolume),
-                spawn "settings_control.sh volume_down"),
+                spawn "settings_control.sh voldown"),
 
         ((0,    xF86XK_AudioMute),
-                spawn "settings_control.sh volume_mute"),
+                spawn "settings_control.sh volmute"),
+
+        ((0,    xF86XK_AudioPrev),
+                spawn "playerctl previous"),
+
+        ((0,    xF86XK_AudioNext),
+                spawn "playerctl next"),
+
+        ((0,    xF86XK_AudioPlay),
+                spawn "playerctl play-pause"),
 
         ((super, xK_Tab),    sendMessage NextLayout >> notifyCurrentLayout),
 

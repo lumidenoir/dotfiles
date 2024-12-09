@@ -7,4 +7,4 @@ feh --bg-fill ~/Pictures/wallpaper/everforest/fog_forest_2.png &
 picom --config ~/.config/picom/picom.conf --corner-radius 12 &
 
 # Start dunst
-dunst &
+dunst -startup_notification &
