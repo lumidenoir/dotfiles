@@ -24,7 +24,7 @@ configuration {
   	urgent:				#d3869b;
   	on:					#a9b665;
   	off:				#ea6962;
-    font:                           "JetBrainsMono 12";
+    font:                           "JetBrainsMono 11";
     background-color:             	@background;
 }
 

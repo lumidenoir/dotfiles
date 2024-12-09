@@ -10,9 +10,9 @@ indicate_hidden = yes
 
 shrink = yes
 
-separator_height = 2
-separator_color = auto
-#gap_size = 8
+# separator_height = 2
+# separator_color = auto
+gap_size = 8
 
 padding = 10
 #horizontal_padding = 25
