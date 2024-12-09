@@ -49,4 +49,6 @@ cd ./dotfiles
 - [[https://github.com/siduck/chadwm][dwm]], [[https://github.com/siduck/st][st]], dmenu and [[https://github.com/NvChad/NvChad][nvim]] from [[https://github.com/siduck][siduck]]
 - hyprland inspired from [[https://www.reddit.com/r/unixporn/comments/e1etn3/awesome_morpho/][this reddit post]]
 - i3 config from [[https://github.com/anufrievroman/dotfiles][@anufrievroman]]
-Thanks to all the wonderful people for posting their dots and helping noobs like me
+- crylia theme from [[https://github.com/Crylia/crylia-theme][here]]
+
+Thanks and ❤️ to all the wonderful people for posting their dots and helping noobs like me
