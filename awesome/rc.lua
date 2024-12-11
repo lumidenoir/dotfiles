@@ -19,7 +19,6 @@ local hotkeys_popup = require("awful.hotkeys_popup")
 require("awful.hotkeys_popup.keys")
 local dpi = beautiful.xresources.apply_dpi
 -- Autostart applications
-awful.spawn.with_shell("pkill -f 'autostart.sh'")
 awful.spawn.with_shell("~/.config/awesome/autostart.sh")
 -- {{{ Error handling
 -- Check if awesome encountered an error during startup and fell back to
