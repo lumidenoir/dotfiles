@@ -18,115 +18,141 @@ WEATHER_DESC=$(echo "$WEATHER" | jq -r ".weather[0].main")
 WEATHER_TEMP=$(echo "$WEATHER" | jq ".main.temp" | cut -d "." -f 1)
 WEATHER_ICON_CODE=$(echo "$WEATHER" | jq -r ".weather[].icon" | head -1)
 WEATHER_FEELS_LIKE=$(echo "$WEATHER" | jq ".main.feels_like" | cut -d "." -f 1)
-WEATHER_ICON=""
+WEATHER_ICON="" # uses weather icon font
+WEATHER_NERD_ICON=""
 WEATHER_HEX=""
 
 case $WEATHER_ICON_CODE in
-    "01d")
-        WEATHER_ICON=""
-        WEATHER_HEX="#ffd86b"
-        ;;
-    "01n")
-        WEATHER_ICON=""
-        WEATHER_HEX="#fcdcf6"
-        ;;
-    "02d")
-        WEATHER_ICON=""
-        WEATHER_HEX="#adadff"
-        ;;
-    "02n")
-        WEATHER_ICON=""
-        WEATHER_HEX="#adadff"
-        ;;
-    "03d")
-        WEATHER_ICON=""
-        WEATHER_HEX="#adadff"
-        ;;
-    "03n")
-        WEATHER_ICON=""
-        WEATHER_HEX="#adadff"
-        ;;
-    "04d")
-        WEATHER_ICON=""
-        WEATHER_HEX="#adadff"
-        ;;
-    "04n")
-        WEATHER_ICON=""
-        WEATHER_HEX="#acb0d0"
-        ;;
-    "09d")
-        WEATHER_ICON=""
-        WEATHER_HEX="#6b95ff"
-        ;;
-    "09n")
-        WEATHER_ICON=""
-        WEATHER_HEX="#6b95ff"
-        ;;
-    "10d")
-        WEATHER_ICON=""
-        WEATHER_HEX="#6b95ff"
-        ;;
-    "10n")
-        WEATHER_ICON=""
-        WEATHER_HEX="#6b95ff"
-        ;;
-    "11d")
-        WEATHER_ICON=""
-        WEATHER_HEX="#ffeb57"
-        ;;
-    "11n")
-        WEATHER_ICON=""
-        WEATHER_HEX="#ffeb57"
-        ;;
-    "13d")
-        WEATHER_ICON=""
-        WEATHER_HEX="#e3e6fc"
-        ;;
-    "13n")
-        WEATHER_ICON=""
-        WEATHER_HEX="#e3e6fc"
-        ;;
-    "40d")
-        WEATHER_ICON=""
-        WEATHER_HEX="#84afdb"
-        ;;
-    "40n")
-        WEATHER_ICON=""
-        WEATHER_HEX="#84afdb"
-        ;;
-    *)
-        WEATHER_ICON=""
-        WEATHER_HEX="#adadff"
-        ;;
+"01d")
+    WEATHER_ICON=""
+    WEATHER_NERD_ICON="󰖙"
+    WEATHER_HEX="#ffd86b"
+    ;;
+"01n")
+    WEATHER_ICON=""
+    WEATHER_NERD_ICON="󰖔"
+    WEATHER_HEX="#fcdcf6"
+    ;;
+"02d")
+    WEATHER_ICON=""
+    WEATHER_NERD_ICON="󰖕"
+    WEATHER_HEX="#adadff"
+    ;;
+"02n")
+    WEATHER_ICON=""
+    WEATHER_NERD_ICON="󰼱"
+    WEATHER_HEX="#adadff"
+    ;;
+"03d")
+    WEATHER_ICON=""
+    WEATHER_NERD_ICON="󰖐"
+    WEATHER_HEX="#adadff"
+    ;;
+"03n")
+    WEATHER_ICON=""
+    WEATHER_NERD_ICON="󰖐"
+    WEATHER_HEX="#adadff"
+    ;;
+"04d")
+    WEATHER_ICON=""
+    WEATHER_NERD_ICON="󰼯"
+    WEATHER_HEX="#adadff"
+    ;;
+"04n")
+    WEATHER_ICON=""
+    WEATHER_NERD_ICON="󰼯"
+    WEATHER_HEX="#acb0d0"
+    ;;
+"09d")
+    WEATHER_ICON=""
+    WEATHER_NERD_ICON="󰖗"
+    WEATHER_HEX="#6b95ff"
+    ;;
+"09n")
+    WEATHER_ICON=""
+    WEATHER_NERD_ICON="󰖗"
+    WEATHER_HEX="#6b95ff"
+    ;;
+"10d")
+    WEATHER_ICON=""
+    WEATHER_NERD_ICON="󰖖"
+    WEATHER_HEX="#6b95ff"
+    ;;
+"10n")
+    WEATHER_ICON=""
+    WEATHER_NERD_ICON="󰖖"
+    WEATHER_HEX="#6b95ff"
+    ;;
+"11d")
+    WEATHER_ICON=""
+    WEATHER_NERD_ICON="󰖓"
+    WEATHER_HEX="#ffeb57"
+    ;;
+"11n")
+    WEATHER_ICON=""
+    WEATHER_NERD_ICON="󰖓"
+    WEATHER_HEX="#ffeb57"
+    ;;
+"13d")
+    WEATHER_ICON=""
+    WEATHER_NERD_ICON=""
+    WEATHER_HEX="#e3e6fc"
+    ;;
+"13n")
+    WEATHER_ICON=""
+    WEATHER_NERD_ICON=""
+    WEATHER_HEX="#e3e6fc"
+    ;;
+"50d")
+    WEATHER_ICON=""
+    WEATHER_NERD_ICON=""
+    WEATHER_HEX="#84afdb"
+    ;;
+"50n")
+    WEATHER_ICON=""
+    WEATHER_NERD_ICON=""
+    WEATHER_HEX="#84afdb"
+    ;;
+*)
+    WEATHER_ICON=""
+    WEATHER_NERD_ICON="󰖐"
+    WEATHER_HEX="#adadff"
+    ;;
 esac
 
 case $1 in
-    "current_temp")
-        check_if_empty "$WEATHER_TEMP"
-        ;;
-    "current_temp_fahrenheit")
-        WEATHER_TEMP=$("$WEATHER_TEMP" 9 / 5 + 32)
-        check_if_empty "$WEATHER_TEMP"
-        ;;
-    "feels_like")
-        check_if_empty "$WEATHER_FEELS_LIKE"
-        ;;
-    "weather_desc")
-        [[ -z $WEATHER_DESC ]] && echo "Not Available." || echo "$WEATHER_DESC"
-        ;;
-    "icon")
-        echo $WEATHER_ICON
-        ;;
-    "hex")
-        echo $WEATHER_HEX
-        ;;
-    "full")
-        echo "$WEATHER"
-        ;;
-    "city")
-        echo "$CITY"
-        ;;
-    "wmodule")
-        echo $WEATHER_ICON  "$WEATHER_TEMP"°
-        ;;
+"current_temp")
+    check_if_empty "$WEATHER_TEMP"
+    ;;
+"current_temp_fahrenheit")
+    WEATHER_TEMP=$("$WEATHER_TEMP" 9 / 5 + 32)
+    check_if_empty "$WEATHER_TEMP"
+    ;;
+"feels_like")
+    check_if_empty "$WEATHER_FEELS_LIKE"
+    ;;
+"weather_desc")
+    [[ -z $WEATHER_DESC ]] && echo "Not Available." || echo "$WEATHER_DESC"
+    ;;
+"icon")
+    echo $WEATHER_ICON
+    ;;
+"nicon")
+    echo $WEATHER_NERD_ICON
+    ;;
+"hex")
+    echo $WEATHER_HEX
+    ;;
+"full")
+    echo "$WEATHER"
+    ;;
+"city")
+    echo "$CITY"
+    ;;
+"wmodule")
+    echo $WEATHER_ICON "$WEATHER_TEMP"°
+    ;;
+"wnmodule")
+    echo $WEATHER_NERD_ICON " $WEATHER_TEMP"°
+    ;;
 esac

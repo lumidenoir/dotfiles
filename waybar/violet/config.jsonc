@@ -7,8 +7,8 @@
     "gtk-layer-shell": true,
     "height": 44,
     "modules-center": ["hyprland/workspaces"],
-    "modules-left": ["cpu","memory","network","custom/pacman","mpd"],
-    "modules-right": ["mpris","custom/weather","backlight","pulseaudio","pulseaudio#microphone", "battery", "clock", "tray"],
+    "modules-left": ["mpris"],
+    "modules-right": ["cpu","memory","network","custom/pacman","custom/weather","backlight","pulseaudio","pulseaudio#microphone", "battery", "clock", "tray"],
     "hyprland/window": {
         "format": "{}"
     },
@@ -97,7 +97,7 @@
         "tooltip-format": "{essid} - {ifname} via {gwaddr} ",
         "format-linked": "{ifname} (No IP) ",
         "format-disconnected": "Disconnected ⚠",
-        "format-alt": "{ifname}:{essid} {ipaddr}/{cidr}"
+        "format-alt": "{ifname} {ipaddr}/{cidr}"
     },
 
     "bluetooth": {

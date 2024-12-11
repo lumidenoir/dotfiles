@@ -1,14 +1,14 @@
 * {
   /* border: none; */
   border-radius: 0px;
-  font-family: "CaskaydiaCove";
+  font-family: "Inconsolata";
   font-weight: 500;
-  font-size: 14px;
+  font-size: 16px;
   min-height: 20px;
 }
 
 window#waybar {
-  background: rgba(18, 18, 30, 0.6);
+  background: rgba(18, 18, 30, 0);
   color: #cdd6f4;
 }
 
@@ -68,9 +68,8 @@ tooltip {
 #cpu,
 #memory,
 #custom-spotify,
-
 #modbackground {
-  background: #1e1e2e;
+  color: #1e1e2e;
   opacity: 1;
   padding: 0px 7px;
   margin-top: 5px;
@@ -80,7 +79,8 @@ tooltip {
 
 #backlight {
   border-radius: 7px 0px 0px 7px;
-  background: #1e1e2e;
+  background: #cba6f7;
+  color: #1e1e2e;
   opacity: 1;
   padding: 0px 7px;
   margin-top: 5px;
@@ -88,14 +88,14 @@ tooltip {
 }
 
 #pulseaudio {
-  color: #89b4fa;
+  background: #cba6f7;
   border-radius: 0px;
   border-left: 0px;
   border-right: 0px;
 }
 
 #pulseaudio.microphone {
-  color: #cba6f7;
+  background: #cba6f7;
   border-left: 0px;
   border-right: 0px;
   border-radius: 0px 7px 7px 0px;
@@ -103,12 +103,12 @@ tooltip {
 }
 
 #cpu {
-  color: #89dceb;
+  background: #89dceb;
   border-radius: 7px 0px 0px 7px;
 }
 
 #memory {
-  color: #94e2d5;
+  background: #89dceb;
   border-radius: 0px 7px 7px 0px;
   margin-right: 5px;
 }
@@ -139,7 +139,7 @@ tooltip {
 }
 
 #clock {
-  color: #fab387;
+  background: #fab387;
   border-radius: 7px;
   /* margin-left: 10px; */
   margin-right: 5px;
@@ -148,7 +148,7 @@ tooltip {
 }
 
 #network {
-  color: #f9e2af;
+  background: #f9e2af;
   border-radius: 7px;
   margin-right: 5px;
   border-left: 0px;
@@ -156,13 +156,13 @@ tooltip {
 }
 
 #bluetooth {
-  color: #89b4fa;
+  background: #89b4fa;
   border-radius: 7px;
   margin-right: 5px;
 }
 
 #battery {
-  color: #a6e3a1;
+  background: #a6e3a1;
   border-radius: 7px;
   margin-right: 5px;
   border-left: 0px;
@@ -175,6 +175,8 @@ tooltip {
 }
 
 #mpris {
+  background: #1e1e2e;
+  color: #cdd6f4;
   border-radius: 7px;
   margin-right: 5px;
   border-right: 0px;
@@ -190,13 +192,12 @@ tooltip {
   border-right: 0px;
 }
 
-
 #mpd.paused {
   border-bottom: 2px solid @yellow;
 }
 
 #custom-pacman {
-  color: #ff7a91;
+  background: #ff7a91;
   border-radius: 7px;
   margin-right: 5px;
 }

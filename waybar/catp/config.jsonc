@@ -7,8 +7,8 @@
     "gtk-layer-shell": true,
     "height": 44,
     "modules-left": ["sway/workspaces"],
-    "modules-center": ["mpd","mpris"],
-    "modules-right": ["custom/pacman","network", "battery","clock", "cpu", "memory", "backlight","pulseaudio","pulseaudio#microphone", "tray"],
+    "modules-center": ["mpris"],
+    "modules-right": ["custom/pacman","network",  "cpu", "memory", "backlight","pulseaudio","pulseaudio#microphone","battery","clock", "tray"],
     "hyprland/window": {
         "format": "{}"
     },

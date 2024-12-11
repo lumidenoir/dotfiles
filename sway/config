@@ -5,6 +5,8 @@ exec autotiling
 exec battery_notifier.sh
 exec auto_network_switch.sh
 exec pidof -q polkit-gnome-authentication-agent-1 || { /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 & }
+exec mpd
+exec mpDris2
 
 # style
 font 			            pango:monospace 16px
@@ -59,7 +61,7 @@ set 	$up 	k
 set 	$right 	l
 
 ## terminal emulator
-set 	$term 	kitty --config ~/.config/kitty/catpuccin.conf
+set 	$term 	kitty --config ~/.config/kitty/catppuccin.conf
 
 # Note: pass the final command to swaymsg so that the resulting window can be opened
 # on the original workspace that the command was run on.
