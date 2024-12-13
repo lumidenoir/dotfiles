@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 pkill rofi
+playerctl pause
+mpc pause-if-playing
+
 if [ "$WAYLAND_DISPLAY" ]; then
         swaylock --clock --indicator-idle-visible \
                 -i ~/Pictures/wallpaper/other/lockscreen.jpg \

@@ -3,7 +3,7 @@ picom --corner-radius 12 &
 killall -q polybar
 polybar main -c ~/.config/polybar/gruvbox.ini &
 killall -q dunst
-dunst -startup_notification &
+dunst &
 mpd &
 mpDris2 &
 pgrep -f auto_network_switch.sh >/dev/null || auto_network_switch.sh &

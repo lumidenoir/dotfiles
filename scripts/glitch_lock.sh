@@ -1,4 +1,6 @@
 #!/bin/bash
+playerctl pause
+mpc pause-if-playing
 if [ "$WAYLAND_DISPLAY" ]; then
     swaylock --screenshots --clock --indicator-idle-visible \
         --indicator-radius 100 \

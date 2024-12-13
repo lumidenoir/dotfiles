@@ -19,7 +19,8 @@ local hotkeys_popup = require("awful.hotkeys_popup")
 require("awful.hotkeys_popup.keys")
 local dpi = beautiful.xresources.apply_dpi
 -- Autostart applications
-awful.spawn.with_shell("~/.config/awesome/autostart.sh")
+HOME = "/home/krishna/"
+awful.spawn.with_shell(HOME .. ".config/awesome/autostart.sh")
 -- {{{ Error handling
 -- Check if awesome encountered an error during startup and fell back to
 -- another config (This code will only ever execute for the fallback config)
@@ -43,10 +44,10 @@ end
 
 -- {{{ Variable definitions
 -- Themes define colours, icons, font and wallpapers.
-beautiful.init("~/.config/awesome/theme.lua")
+beautiful.init(HOME .. ".config/awesome/theme.lua")
 
 -- This is used later as the default terminal and editor to run.
-terminal = "kitty --config /home/krishna/.config/kitty/gruvbox.conf"
+terminal = "kitty --config " .. HOME.. ".config/kitty/gruvbox.conf"
 editor = "nvim"
 editor_cmd = terminal .. " -e " .. editor
 
@@ -135,7 +136,7 @@ root.buttons(gears.table.join(
 
 -- {{{ Key bindings
 globalkeys = gears.table.join(
-    awful.key({ modkey,           }, "s",      hotkeys_popup.show_help,
+    awful.key({ modkey,           }, "a",      hotkeys_popup.show_help,
               {description="show help", group="awesome"}),
     awful.key({ modkey,           }, "Up",   awful.tag.viewprev,
               {description = "view previous", group = "tag"}),
@@ -171,35 +172,34 @@ globalkeys = gears.table.join(
 -- FUNCTION KEYS
    awful.key({}, "XF86AudioRaiseVolume",
       function()
-         awful.spawn("pactl set-sink-volume @DEFAULT_SINK@ +5%")
+         awful.spawn("settings_control.sh volup")
       end,
       {description = "volume up", group = "hotkeys"}
    ),
    awful.key({}, "XF86AudioLowerVolume",
       function()
-         awful.spawn("pactl set-sink-volume @DEFAULT_SINK@ -5%")
+         awful.spawn("settings_control.sh voldown")
       end,
       {description = "volume down", group = "hotkeys"}
    ),
    awful.key({}, "XF86AudioMute",
       function()
-         awful.spawn("pamixer -t")
+         awful.spawn("settings_control.sh volmute")
       end,
       {description = "toggle mute", group = "hotkeys"}
    ),
    awful.key({}, "XF86MonBrightnessUp",
       function()
-         awful.spawn("brightnessctl s +5%")
+         awful.spawn("settings_control.sh briup")
       end,
       {description = "inc brightness", group = "hotkeys"}
    ),
    awful.key({}, "XF86MonBrightnessDown",
       function()
-         awful.spawn("brightnessctl s 5%-")
+         awful.spawn("settings_control.sh bridown")
       end,
       {description = "dec brightness", group = "hotkeys"}
    ),
-   
 
 -- SCREENSHOT SHORT CUT --
     awful.key({},"Print", function () awful.spawn("screenshot.sh") end,
@@ -217,11 +217,11 @@ globalkeys = gears.table.join(
     awful.key({ modkey, "Shift"   }, "q", awesome.quit,
               {description = "quit awesome", group = "awesome"}),
 
-    awful.key({ modkey,           }, "KP_Add",     function () awful.tag.incmwfact( 0.05)          end,
+    awful.key({ modkey,           }, "KP_Add",     function() awful.tag.incmwfact( 0.05) end,
               {description = "increase master width factor", group = "layout"}),
-    awful.key({ modkey,           }, "KP_Subtract",     function () awful.tag.incmwfact(-0.05)          end,
+    awful.key({ modkey,           }, "KP_Subtract",     function() awful.tag.incmwfact(-0.05) end,
               {description = "decrease master width factor", group = "layout"}),
-    awful.key({ modkey, "Shift"   }, "space", function () awful.layout.inc(1)                end,
+    awful.key({ modkey, "Shift"   }, "space", function() awful.layout.inc(1) end,
               {description = "select previous", group = "layout"}),
 
     awful.key({ modkey, "Control" }, "n",
@@ -237,9 +237,15 @@ globalkeys = gears.table.join(
               {description = "restore minimized", group = "client"}),
 
 
-    -- Menubar
     awful.key({ modkey }, "space", function() awful.util.spawn("rofi -show drun -config ~/.config/rofi/gruvbox.rasi") end,
-              {description = "show app launcher(rofi)", group = "launcher"})
+              {description = "show app launcher(rofi)", group = "launcher"}),
+
+    awful.key({ "Mod1",   }, "l",      function () awful.spawn("screenlock.sh") end,
+              {description = "lock-screen", group = "launcher"}),
+    awful.key({ "Mod1",   }, "p",      function ()  awful.util.spawn("rofi -show powermenu -config ~/.config/rofi/gruvbox.rasi") end,
+              {description = "powermenu", group = "launcher"}),
+    awful.key({ modkey,   }, "s",      function ()  awful.spawn("/home/krishna/.config/rofi/scripts/smart-search") end,
+              {description = "smart-search", group = "launcher"})
 )
 
 clientkeys = gears.table.join(
@@ -249,18 +255,13 @@ clientkeys = gears.table.join(
             c:raise()
         end,
         {description = "toggle fullscreen", group = "client"}),
-    awful.key({ "Mod1",   }, "q",      function (c) c:kill()                         end,
+    awful.key({ "Mod1",   }, "q",      function (c) c:kill() end,
               {description = "close", group = "client"}),
-    awful.key({ "Mod1",   }, "l",      function () awful.spawn("xlock.sh")                     end,
-              {description = "lock-screen", group = "launcher"}),
-    awful.key({ modkey,   }, "p",      function (c)  awful.util.spawn("rofi -show powermenu -config ~/.config/rofi/gruvbox.rasi")                        end,
-              {description = "powermenu", group = "launcher"}),
-
     awful.key({ modkey, "Control" }, "space",  awful.client.floating.toggle                     ,
               {description = "toggle floating", group = "client"}),
     awful.key({ modkey, "Control" }, "Return", function (c) c:swap(awful.client.getmaster()) end,
               {description = "move to master", group = "client"}),
-    awful.key({ modkey,           }, "t",      function (c) c.ontop = not c.ontop            end,
+    awful.key({ modkey,           }, "t",      function (c) c.ontop = not c.ontop end,
               {description = "toggle keep on top", group = "client"}),
     awful.key({ modkey,           }, "n",
         function (c)
@@ -303,7 +304,7 @@ for i = 1, 9 do
                            tag:view_only()
                         end
                   end,
-                  {description = "view tag #"..i, group = "tag"}),
+                  {description = "view tag #i", group = "tag"}),
         -- Toggle tag display.
         awful.key({ modkey, "Control" }, "#" .. i + 9,
                   function ()
@@ -313,7 +314,7 @@ for i = 1, 9 do
                          awful.tag.viewtoggle(tag)
                       end
                   end,
-                  {description = "toggle tag #" .. i, group = "tag"}),
+                  {description = "toggle tag #i", group = "tag"}),
         -- Move client to tag.
         awful.key({ modkey, "Shift" }, "#" .. i + 9,
                   function ()
@@ -324,7 +325,7 @@ for i = 1, 9 do
                           end
                      end
                   end,
-                  {description = "move focused client to tag #"..i, group = "tag"}),
+                  {description = "move focused client to tag #i", group = "tag"}),
         -- Toggle tag on focused client.
         awful.key({ modkey, "Control", "Shift" }, "#" .. i + 9,
                   function ()
@@ -335,22 +336,25 @@ for i = 1, 9 do
                           end
                       end
                   end,
-                  {description = "toggle focused client on tag #" .. i, group = "tag"})
+                  {description = "toggle focused client on tag #i", group = "tag"})
     )
 end
 
 clientbuttons = gears.table.join(
     awful.button({ }, 1, function (c)
         c:emit_signal("request::activate", "mouse_click", {raise = true})
-    end),
+    end,
+    {description = "focus selected client", group = "mouse"}),
     awful.button({ modkey }, 1, function (c)
         c:emit_signal("request::activate", "mouse_click", {raise = true})
         awful.mouse.client.move(c)
-    end),
+    end,
+    {description = "Move selected client", group = "mouse"}),
     awful.button({ modkey }, 3, function (c)
         c:emit_signal("request::activate", "mouse_click", {raise = true})
         awful.mouse.client.resize(c)
-    end)
+    end,
+    {description = "Resize client", group = "mouse"})
 )
 
 -- Set keys
