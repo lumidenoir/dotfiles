@@ -125,6 +125,7 @@
       "status-icons": {
         "paused": " "
       },
+      "tooltip-format": "Mpris player",
       "ignored-players": []
     },
 
