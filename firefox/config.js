@@ -12,7 +12,7 @@ const CONFIG = {
 
 	// General
 	name: "Krishna",
-	imageBackground: true,
+	imageBackground: false,
 	openInNewTab: true,
 	twelveHourFormat: false,
 
@@ -26,7 +26,7 @@ const CONFIG = {
 	bentoLayout: "lists", // 'bento', 'lists', 'buttons'
 
 	// Weather
-	//weatherKey: '11c07c75b965a6e2f7246f507221e49d', // Write here your API Key
+	weatherKey: "11c07c75b965a6e2f7246f507221e49d", // Write here your API Key
 	weatherIcons: "OneDark", // 'Onedark', 'Nord', 'Dark', 'White'
 	weatherUnit: "C", // 'F', 'C'
 	language: "en", // More languages in https://openweathermap.org/current#multi
@@ -161,16 +161,16 @@ const CONFIG = {
 			id: "2",
 			links: [
 				{
-					name: "Linkedin", //TODO
-					link: "https://www.linkedin.com",
+					name: "KeyBr", //TODO
+					link: "https://www.keybr.com/",
 				},
 				{
-					name: "Spotify", // TODO
-					link: "https://www.spotify.com",
+					name: "Youtube",
+					link: "https://www.youtube.com",
 				},
 				{
-					name: "Dribble", //TODO
-					link: "https://www.dribble.com",
+					name: "Dribble",
+					link: "https://dribbble.com/",
 				},
 				{
 					name: "Pocket",
@@ -187,20 +187,20 @@ const CONFIG = {
 			id: "1",
 			links: [
 				{
-					name: "Repos",
+					name: "My Repos",
 					link: "https://github.com/lumidenoir",
 				},
 				{
-					name: "Reddit",
-					link: "https://www.reddit.com",
+					name: "DevDocs",
+					link: "https://devdocs.io/",
 				},
 				{
-					name: "Hashnode", // TODO
-					link: "https://www.hashnode.com",
+					name: "Rust Docs",
+					link: "https://www.rust-lang.org/learn",
 				},
 				{
-					name: "Pocket",
-					link: "https://www.pocket.com",
+					name: "WeChall",
+					link: "https://www.wechall.net/",
 				},
 			],
 		},
@@ -209,8 +209,8 @@ const CONFIG = {
 			id: "2",
 			links: [
 				{
-					name: "Frontend",
-					link: "https://www.reddit.com/r/Frontend/",
+					name: "Unixporn",
+					link: "https://www.reddit.com/r/unixporn/",
 				},
 				{
 					name: "Rust",
@@ -221,8 +221,8 @@ const CONFIG = {
 					link: "https://www.reddit.com/r/golang/",
 				},
 				{
-					name: "Dribbble",
-					link: "https://www.dribbble.com",
+					name: "Frontend",
+					link: "https://www.reddit.com/r/Frontend/",
 				},
 			],
 		},

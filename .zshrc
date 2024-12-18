@@ -114,6 +114,7 @@ export PATH="$PATH:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/cmdline-to
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 alias strel="xrdb merge $HOME/dotfiles/st/xresources && kill -USR1 $(pidof st)"
+alias wmeb="echo 'WELCOME\nBACK\n$(whoami)' | figlet -f ANSI -c -t | lolcat -a -d 3"
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 #[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
