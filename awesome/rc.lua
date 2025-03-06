@@ -200,6 +200,24 @@ globalkeys = gears.table.join(
       end,
       {description = "dec brightness", group = "hotkeys"}
    ),
+   awful.key({}, "XF86AudioPrev",
+      function()
+         awful.spawn("playerctl previous")
+      end,
+      {description = "dec brightness", group = "hotkeys"}
+   ),
+   awful.key({}, "XF86AudioNext",
+      function()
+         awful.spawn("playerctl next")
+      end,
+      {description = "dec brightness", group = "hotkeys"}
+   ),
+   awful.key({}, "XF86AudioPlay",
+      function()
+         awful.spawn("playerctl play-pause")
+      end,
+      {description = "dec brightness", group = "hotkeys"}
+   ),
 
 -- SCREENSHOT SHORT CUT --
     awful.key({},"Print", function () awful.spawn("screenshot.sh") end,
