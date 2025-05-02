@@ -551,7 +551,7 @@ truncated to fit within the limit using `org-reference-contraction-truncate-word
           (goto-char (point-max))
           (insert "\n* Changelog\n" commit-log "\n"))
         (save-buffer)
-        (message "Changelog updated in README.org!")))))
+        (message "Changelog updated in ChangeLog.org!")))))
 
 (map! :leader
       :desc "Update ChangeLog.org"

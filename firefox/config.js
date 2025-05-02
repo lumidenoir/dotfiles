@@ -135,24 +135,24 @@ const CONFIG = {
 	// First Links Container
 	firstlistsContainer: [
 		{
-			icon: "music",
+			icon: "book",
 			id: "1",
 			links: [
 				{
-					name: "Ado",
-					link: "https://music.youtube.com/playlist?list=RDCLAK5uy_nN_ul7B3hDoWnKJcp6474zHT7Y316oVg8",
+					name: "Matlab",
+					link: "https://matlab.mathworks.com",
 				},
 				{
-					name: "Fuji Kaze",
-					link: "https://music.youtube.com/playlist?list=RDCLAK5uy_kSRez2j51cPlJqX2cPs9E-q-3Ap9YA-pU",
+					name: "Hello IITK",
+					link: "https://hello.iitk.ac.in",
 				},
 				{
-					name: "Eve",
-					link: "https://music.youtube.com/playlist?list=RDCLAK5uy_mVCo-luqdn6Gkdq0Cwe7RBgBCd6J5cKjs",
+					name: "Webmail",
+					link: "https://nwm.iitk.ac.in",
 				},
 				{
-					name: "Yoasobi",
-					link: "https://music.youtube.com/playlist?list=RDCLAK5uy_mHAEb33pqvgdtuxsemicZNu-5w6rLRweo",
+					name: "Pingala",
+					link: "https://pingala.iitk.ac.in",
 				},
 			],
 		},

@@ -9,12 +9,12 @@ configuration {
 
 /*****----- Global Properties -----*****/
 * {
-    background:     #1b172aff;
-    background-alt: #7b2cbfFF;/*green  4c2777   492e79  06947f  28896c*/
-    foreground:     #b0a6daff;/*white  9184cd*/
-    selected:       #1E1E2Eff;/*background 504397  */
-    active:         #06947fff;/*shyblue   ae9fca   41397b*/
-    urgent:         #F28FADff;/*peach*/
+    background:     #1c1c1c;
+    background-alt: #9f9f9f;/*green  4c2777   492e79  06947f  28896c*/
+    foreground:     #9f9f9f;/*white  9184cd*/
+    selected:       #1E1E2E;/*background 504397  */
+    active:         #06947f;/*shyblue   ae9fca   41397b*/
+    urgent:         #F28FAD;/*peach*/
     font: "CaskaydiaCove 11";
 }
 
@@ -69,7 +69,7 @@ prompt {
     enabled:                     true;
     padding:                     12px;
     border-radius:               16px;
-    background-color:            #9184cdff;
+    background-color:            #9f9f9f;
     text-color:                  @background;
 }
 textbox-prompt-colon {

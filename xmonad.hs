@@ -23,7 +23,10 @@ import Graphics.X11.ExtraTypes.XF86 (
                                         xF86XK_AudioRaiseVolume,
                                         xF86XK_AudioMute,
                                         xF86XK_MonBrightnessUp,
-                                        xF86XK_MonBrightnessDown
+                                        xF86XK_MonBrightnessDown,
+                                        xF86XK_AudioPrev,
+                                        xF86XK_AudioNext,
+                                        xF86XK_AudioPlay
                                     )
 -- Function to get the current layout and send a notification
 notifyCurrentLayout :: X ()
@@ -56,7 +59,7 @@ myStartupHook = do
     spawn "dunst"
 
     spawnOnce "battery_notifier.sh"
-    spawnonce "auto_network_switch.sh"
+    spawnOnce "auto_network_switch.sh"
 ----------------------------------------------------------------------
 -- Keybinds
 ----------------------------------------------------------------------

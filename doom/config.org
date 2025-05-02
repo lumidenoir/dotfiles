@@ -809,6 +809,10 @@ nov.el is an Emacs mode for reading EPUB files. This configuration customizes th
                        (insert "\n\n")))))))))))))
 
 #+end_src
+** Markdown to Org
+#+begin_src emacs-lisp :tangle no
+
+#+end_src
 
 ** Right align tags in org buffers :HACK:
 
@@ -871,7 +875,7 @@ nov.el is an Emacs mode for reading EPUB files. This configuration customizes th
           (goto-char (point-max))
           (insert "\n* Changelog\n" commit-log "\n"))
         (save-buffer)
-        (message "Changelog updated in README.org!")))))
+        (message "Changelog updated in ChangeLog.org!")))))
 
 (map! :leader
       :desc "Update ChangeLog.org"

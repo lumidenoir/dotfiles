@@ -209,5 +209,8 @@ bindsym XF86AudioMute exec settings_control.sh volmute
 bindsym XF86AudioMicMute exec settings_control.sh micmute
 bindsym XF86MonBrightnessUp exec settings_control.sh briup
 bindsym XF86MonBrightnessDown exec settings_control.sh bridown
+bindsym XF86AudioPrev exec playerctl previous
+bindsym XF86AudioNext exec playerctl next
+bindsym XF86AudioPlay exec playerctl play-pause
 
 include /etc/sway/config.d/*

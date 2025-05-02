@@ -36,7 +36,7 @@
 
     "clock": {
         "format": "  {:%H:%M }",
-        "format-alt":"  {:%a, %b %e}",
+        "format-alt":"  {:%a, %b%e}",
         "tooltip-format": "<tt><small>{calendar}</small></tt>"
     },
 

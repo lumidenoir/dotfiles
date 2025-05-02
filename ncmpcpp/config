@@ -9,7 +9,7 @@ mpd_port = 6600
 mpd_connection_timeout = "5"
 mpd_crossfade_time = "5"
 mpd_music_dir = ~/Music
-
+lyrics_directory = ~/.lyrics
 #execute_on_song_change  = "notify-send -i /usr/share/icons/Papirus-Dark/48x48/categories/multimedia-audio-player.svg -t 3000 "Now Playing" "$(mpc --format '<b>%title%</b>\nby <i>%artist%</i>' current)""
 
 visualizer_data_source = /tmp/mpd.fifo
