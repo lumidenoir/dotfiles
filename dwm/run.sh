@@ -2,9 +2,7 @@
 feh --bg-fill ~/Pictures/wallpaper/onedark/neon.png &
 xset r rate 200 50 &
 dunst &
-picom &
-pgrep -f auto_network_switch.sh >/dev/null || auto_network_switch.sh &
-pgrep -f battery_notifier.sh >/dev/null || battery_notifier.sh &
+picom --corner-radius 0 &
 xrdb merge ~/dotfiles/st/xresources &
 ~/.config/dwm/bar.sh &
 sudo pkill -f gnome-shell & # needed in my case

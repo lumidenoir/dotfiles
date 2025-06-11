@@ -47,7 +47,7 @@ end
 beautiful.init(HOME .. ".config/awesome/theme.lua")
 
 -- This is used later as the default terminal and editor to run.
-terminal = "kitty --config " .. HOME.. ".config/kitty/gruvbox.conf"
+terminal = "kitty"
 editor = "nvim"
 editor_cmd = terminal .. " -e " .. editor
 
@@ -255,14 +255,14 @@ globalkeys = gears.table.join(
               {description = "restore minimized", group = "client"}),
 
 
-    awful.key({ modkey }, "space", function() awful.util.spawn("rofi -show drun -config ~/.config/rofi/gruvbox.rasi") end,
+    awful.key({ modkey }, "space", function() awful.util.spawn("rofi -show drun") end,
               {description = "show app launcher(rofi)", group = "launcher"}),
 
     awful.key({ "Mod1",   }, "l",      function () awful.spawn("screenlock.sh") end,
               {description = "lock-screen", group = "launcher"}),
-    awful.key({ "Mod1",   }, "p",      function ()  awful.util.spawn("rofi -show powermenu -config ~/.config/rofi/gruvbox.rasi") end,
+    awful.key({ "Mod1",   }, "p",      function ()  awful.util.spawn("powermenu.sh") end,
               {description = "powermenu", group = "launcher"}),
-    awful.key({ modkey,   }, "s",      function ()  awful.spawn("/home/krishna/.config/rofi/scripts/smart-search") end,
+    awful.key({ modkey,   }, "s",      function ()  awful.spawn("smart-search") end,
               {description = "smart-search", group = "launcher"})
 )
 

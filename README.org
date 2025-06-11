@@ -13,6 +13,8 @@ This repository contains my custom dotfiles for configuring various aspects of m
 - mpd, mpDris2, ncmpcpp, cava
 - neofetch
 - zathura
+- theme switcher with ~theme.sh~
+- startx session manager using ~sess~
 
 * Installation:
 Due to the diverse nature of these configurations and potential system variations, there's no one-size-fits-all installation process. However you can carefully examine the files and adapt it to your specific requirements. The below script is only for Arch users.
@@ -25,23 +27,23 @@ cd ./dotfiles
 
 * Images
 ** dwm
-[[./screenshots/dwm.png]]
+[[./media/dwm.png]]
 ** i3
-[[./screenshots/i3.png]]
+[[./media/i3.png]]
 ** xmonad
-[[./screenshots/xmonad.png]]
+[[./media/xmonad.png]]
 ** awesome
-[[./screenshots/awesome.png]]
+[[./media/awesome.png]]
 ** bspwm
-[[./screenshots/bspwm.png]]
+[[./media/bspwm.png]]
 ** qtile
-[[./screenshots/qtile.png]]
+[[./media/qtile.png]]
 ** hyprland
-[[./screenshots/hypr.png]]
+[[./media/hypr.png]]
 ** sway
-[[./screenshots/sway.png]]
+[[./media/sway.png]]
 ** river
-[[./screenshots/river.png]]
+[[./media/river.png]]
 
 * Credit:
 - [[https://github.com/dani-lp/dotfiles][qtile]] config from [[https://github.com/dani-lp][dani-lp]]

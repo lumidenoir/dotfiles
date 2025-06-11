@@ -54,12 +54,10 @@ myStartupHook = do
     -- Picom
     spawn "picom --corner-radius 12"
 
-    spawnOnce "polybar -conf=~/.config/polybar/rosepine.ini candy"
+    spawnOnce "polybar -conf=~/.config/polybar/xmonad.ini main"
 
     spawn "dunst"
 
-    spawnOnce "battery_notifier.sh"
-    spawnOnce "auto_network_switch.sh"
 ----------------------------------------------------------------------
 -- Keybinds
 ----------------------------------------------------------------------
@@ -77,7 +75,7 @@ myKeys conf@(XConfig {XMonad.modMask = super}) = M.fromList $
         ((super, xK_l), spawn "xlock.sh"),
 
         ((super, xK_s),
-            spawn "~/.config/rofi/scripts/smart-search"),
+            spawn "smart-search"),
 
         -- Compile XMonad
         ((super, xK_r),
@@ -85,7 +83,7 @@ myKeys conf@(XConfig {XMonad.modMask = super}) = M.fromList $
 
         -- powermenu
         ((super, xK_p),
-            spawn "rofi -show powermenu -theme ~/.config/rofi/rosepine.rasi"),
+            spawn "powermenu.sh"),
 
         -- launch filemanager
         ((super, xK_f),         spawn "thunar"),

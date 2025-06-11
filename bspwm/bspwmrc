@@ -49,16 +49,12 @@ xinput set-prop "ELAN1200:00 04F3:3087 Touchpad" "libinput Natural Scrolling Ena
 #  ╩ ╩╚═╝ ╩ ╚═╝╚═╝ ╩ ╩ ╩╩╚═ ╩
 
 pgrep -x sxhkd >/dev/null || sxhkd &
-picom --config ~/.config/picom/picom.conf --corner-radius 12 &
 feh --bg-fill ~/Pictures/wallpaper/tokyonight/arch.png &
 killall -q polybar
-polybar -conf=~/.config/polybar/tokyonight.ini bar &
+polybar -conf=~/.config/polybar/bspwm.ini main &
 killall -q dunst
 dunst -startup_notification &
 pidof -q polkit-gnome-authentication-agent-1 || { /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 & }
-pgrep -f auto_network_switch.sh >/dev/null || auto_network_switch.sh &
-pgrep -f battery_notifier.sh >/dev/null || battery_notifier.sh &
-mpd &
 
 ## Fix java applications
 export _JAVA_AWT_WM_NONREPARENTING=1

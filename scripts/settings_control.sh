@@ -39,13 +39,13 @@ get_volume_icon() {
     mute=$(get_mute)
 
     if [ "$volume" -eq 0 ] || [ "$mute" == "yes" ]; then
-        volume_icon="/usr/share/icons/Papirus-Dark/32x32@2x/panel/volume-level-muted.svg"
+        volume_icon="/usr/share/icons/Papirus-Dark/48x48/status/notification-audio-volume-off.svg"
     elif [ "$volume" -lt 33 ]; then
-        volume_icon="/usr/share/icons/Papirus-Dark/32x32@2x/panel/volume-level-low.svg"
+        volume_icon="/usr/share/icons/Papirus-Dark/48x48/status/notification-audio-volume-low.svg"
     elif [ "$volume" -lt 66 ]; then
-        volume_icon="/usr/share/icons/Papirus-Dark/32x32@2x/panel/volume-level-medium.svg"
+        volume_icon="/usr/share/icons/Papirus-Dark/48x48/status/notification-audio-volume-medium.svg"
     else
-        volume_icon="/usr/share/icons/Papirus-Dark/32x32@2x/panel/volume-level-high.svg"
+        volume_icon="/usr/share/icons/Papirus-Dark/48x48/status/notification-audio-volume-high.svg"
     fi
 }
 
@@ -64,11 +64,11 @@ get_mic_icon() {
 get_brightness_icon() {
     brightness=$(get_brightness)
     if [ "$brightness" -lt 33 ]; then
-        brightness_icon="/usr/share/icons/Papirus-Dark/32x32@2x/panel/brightness-low-symbolic.svg"
+        brightness_icon="/usr/share/icons/Papirus-Dark/48x48/status/notification-display-brightness-low.svg"
     elif [ "$brightness" -lt 66 ]; then
-        brightness_icon="/usr/share/icons/Papirus-Dark/32x32@2x/panel/brightness-medium-symbolic.svg"
+        brightness_icon="/usr/share/icons/Papirus-Dark/48x48/status/notification-display-brightness-medium.svg"
     else
-        brightness_icon="/usr/share/icons/Papirus-Dark/32x32@2x/panel/brightness-high-symbolic.svg"
+        brightness_icon="/usr/share/icons/Papirus-Dark/48x48/status/notification-display-brightness-high.svg"
     fi
 }
 

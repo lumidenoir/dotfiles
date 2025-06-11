@@ -78,7 +78,7 @@ keys = [
     Key(
         [mod],
         "p",
-        lazy.spawn("rofi -show powermenu -theme ~/.config/rofi/everforest.rasi"),
+        lazy.spawn("powermenu.sh"),
         desc="powermenu",
     ),
     # C U S T O M
@@ -119,7 +119,7 @@ keys = [
     Key(
         [mod],
         "s",
-        lazy.spawn("/home/krishna/.config/rofi/scripts/smart-search"),
+        lazy.spawn("smart-search"),
         desc="book-search",
     ),
 ]
@@ -214,7 +214,7 @@ def search():
 
 
 def power():
-    qtile.cmd_spawn("rofi -show powermenu theme ~/.config/rofi/everforest.rasi")
+    qtile.cmd_spawn("powermenu.sh")
 
 
 # █▄▄ ▄▀█ █▀█

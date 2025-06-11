@@ -1,9 +1,7 @@
 # autostart
-exec waybar -c ~/.config/waybar/catp/config.jsonc -s ~/.config/waybar/catp/style.css
+exec waybar -c ~/.config/waybar/sway/config.jsonc -s ~/.config/waybar/sway/style.css
 exec dunst -start_notification
 exec autotiling
-exec battery_notifier.sh
-exec auto_network_switch.sh
 exec pidof -q polkit-gnome-authentication-agent-1 || { /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 & }
 exec mpd
 exec mpDris2
@@ -61,15 +59,15 @@ set 	$up 	k
 set 	$right 	l
 
 ## terminal emulator
-set 	$term 	kitty --config ~/.config/kitty/catppuccin.conf
+set 	$term 	kitty
 
 # Note: pass the final command to swaymsg so that the resulting window can be opened
 # on the original workspace that the command was run on.
-set 	$menu 	rofi -show drun -config ~/.config/rofi/catpuccin.rasi
+set 	$menu 	rofi -show drun
 
 ## Output configuration
 # Default wallpaper
-output     *   bg      ~/.config/sway/tokyo-night31.png fill
+output     *   bg      ~/Pictures/wallpaper/tokyonight/tokyo-night31.png fill
 
 # Behavior
 focus_follows_mouse 	yes
@@ -82,7 +80,7 @@ focus_follows_mouse 	yes
 
 bindsym		alt+l			exec   screenlock.sh
 
-bindsym		$mod+p			exec   rofi -show powermenu -config ~/.config/rofi/catpuccin.rasi
+bindsym		$mod+p			exec   powermenu.sh
 
 # key bindings
 # start a terminal
@@ -209,8 +207,5 @@ bindsym XF86AudioMute exec settings_control.sh volmute
 bindsym XF86AudioMicMute exec settings_control.sh micmute
 bindsym XF86MonBrightnessUp exec settings_control.sh briup
 bindsym XF86MonBrightnessDown exec settings_control.sh bridown
-bindsym XF86AudioPrev exec playerctl previous
-bindsym XF86AudioNext exec playerctl next
-bindsym XF86AudioPlay exec playerctl play-pause
 
 include /etc/sway/config.d/*

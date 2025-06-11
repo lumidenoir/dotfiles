@@ -17,14 +17,12 @@ gaps bottom 0
 exec xinput set-prop "ELAN1200:00 04F3:3087 Touchpad" "libinput Tapping Enabled" 1
 exec xinput set-prop "ELAN1200:00 04F3:3087 Touchpad" "libinput Natural Scrolling Enabled" 1
 exec feh --bg-fill ~/Pictures/wallpaper/other/pexels.jpg
-exec picom --config ~/.config/picom/picom.conf
-exec polybar --config=~/.config/polybar/whale.ini main
+exec --no-startup-id sh -c "kill \$(pgrep -x picom); picom --corner-radius 0"
+exec polybar --config=~/.config/polybar/i3.ini main
 exec autotiling
 exec mpd
 exec mpDris2
 exec dunst -startup_notification
-exec battery_notifier.sh
-exec auto_network_switch.sh
 
 set $mod Mod4
 
@@ -88,7 +86,7 @@ client.background       $bg
 tiling_drag modifier titlebar
 
 # start a terminal
-bindsym $mod+Return exec kitty --config ~/.config/kitty/whale.conf
+bindsym $mod+Return exec kitty
 
 # kill focused window
 bindsym Mod1+q kill
@@ -99,10 +97,10 @@ bindsym Print exec screenshot.sh
 bindsym $mod+Ctrl+Print exec screenshot.sh --stop
 
 #run rofi
-bindsym $mod+space exec "rofi -theme ~/.config/rofi/whale.rasi -show drun"
+bindsym $mod+space exec "rofi -show drun"
 
 bindsym $mod+l exec screenlock.sh
-bindsym $mod+p exec rofi -show powermenu -theme ~/.config/rofi/whale.rasi
+bindsym $mod+p exec powermenu.sh
 
 # alternatively, you can use the cursor keys:
 bindsym $mod+Left focus left
@@ -145,8 +143,8 @@ bindsym $mod+Shift+space floating toggle
 # focus the parent container
 bindsym $mod+a focus parent
 
-bindsym $mod+s exec "~/.config/rofi/scripts/smart-search"
-bindsym $mod+w exec "~/.config/scripts/WallSelect.sh"
+bindsym $mod+s exec "smart-search"
+bindsym $mod+w exec "WallSelect.sh"
 
 # Define names for default workspaces for which we configure key bindings later on.
 # We use variables to avoid repeating the names in multiple places.

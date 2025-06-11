@@ -23,7 +23,7 @@ base)
     echo "Configuration directory: $CONF"
     echo "Installation source: $INS"
     echo "Creating symlinks for base configuration folders in $CONF"
-    for folder in bspwm sxhkd eww i3 awesome qtile hypr river sway picom rofi kitty polybar mpd mpDris2 neofetch cava dunst ncmpcpp wezterm waybar zathura dwm st dmenu; do
+    for folder in bspwm sxhkd eww i3 awesome qtile hypr river sway picom polybar mpd mpDris2 neofetch cava dunst ncmpcpp wezterm waybar zathura dwm st dmenu; do
         if [ -e "$CONF/$folder" ]; then
             echo "$folder exists at CONF, backing up..."
             mkdir -p "$CONF/old"

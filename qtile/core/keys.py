@@ -90,7 +90,7 @@ keys = [
     Key(
         [mod],
         "Return",
-        lazy.spawn("kitty --config " + home + "/.config/kitty/kanagawa.conf"),
+        lazy.spawn("kitty --config " + home + "/dotfiles/themes/kanagawa/kanagawa.conf"),
         desc="Launch terminal",
     ),
     Key([alt], "q", lazy.window.kill(), desc="Kill active window"),
@@ -102,7 +102,7 @@ keys = [
     Key(
         [mod],
         "space",
-        lazy.spawn("rofi -show drun -theme ~/.config/rofi/kanagawa.rasi"),
+        lazy.spawn("rofi -show drun -theme ~/dotfiles/themes/kanagawa/kanagawa.rasi"),
         desc="Launch Rofi (drun)",
     ),
     # Key([mod], "r", lazy.spawn("rofi -show run -theme ~/.config/rofi/launcher.rasi"), desc="Launch Rofi (run)"),
@@ -252,7 +252,7 @@ keys = [
             Key(
                 [],
                 "s",
-                lazy.spawn("" + home + "/.config/rofi/scripts/smart-search"),
+                lazy.spawn("smart-search"),
                 desc="Launch Book search",
             ),
             Key([], "m", lazy.spawn("spotify"), desc="Launch Spotify"),
@@ -296,7 +296,7 @@ keys.extend(
             lazy.spawn(
                 "sh -c 'echo \""
                 + show_keys()
-                + '" | rofi -dmenu -theme ~/.config/rofi/hotkeys.rasi -i -p ""\''
+                + '" | rofi -dmenu -theme ~/dotfiles/themes/hotkeys.rasi -i -p ""\''
             ),
             desc="Print keyboard bindings",
         ),

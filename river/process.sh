@@ -2,7 +2,7 @@ killall dunst
 dunst -startup_notification &
 
 killall waybar
-waybar -c ~/.config/waybar/nord_red/config -s ~/.config/waybar/nord_red/style.css &
+waybar -c ~/.config/waybar/river/config.jsonc -s ~/.config/waybar/river/style.css &
 
 killall polkit-gnome-authentication-agent-1
 /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &

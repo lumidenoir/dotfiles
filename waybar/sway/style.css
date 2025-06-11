@@ -1,0 +1,196 @@
+@import url("../colors.css");
+
+* {
+  border-radius: 0px;
+  font-family: "Inconsolata";
+  font-weight: 500;
+  font-size: 16px;
+  min-height: 20px;
+}
+
+window#waybar {
+  background: @bar-background;
+  color: @foreground;
+}
+
+tooltip {
+  background: @background;
+  border-radius: 7px;
+  border-width: 2px;
+  border-style: solid;
+  border-color: @background;
+}
+
+#workspaces button {
+  padding: 5px;
+  color: @red;
+  margin-right: 3px;
+}
+
+#workspaces button.active {
+  color: @green;
+  background: @background;
+}
+
+#workspaces button.focused {
+  color: @gray;
+  background: @green;
+  border-radius: 7px;
+}
+
+#workspaces button.urgent {
+  color: @background;
+  background: @red;
+  border-radius: 7px;
+}
+
+#workspaces button:hover {
+  background: @background;
+  color: @foreground;
+  border-radius: 18px;
+}
+
+/* #custom-power_profile, */
+/* #custom-weather, */
+
+#window,
+#clock,
+#battery,
+#mpris,
+#pulseaudio,
+#custom-pacman,
+#network,
+#bluetooth,
+#temperature,
+#workspaces,
+#tray,
+#mpd,
+#custom-pomodoro,
+#cpu,
+#memory,
+#custom-spotify,
+#modbackground {
+  color: @background;
+  opacity: 1;
+  padding: 0px 7px;
+  margin-top: 5px;
+  margin-bottom: 6px;
+}
+
+#backlight {
+  border-radius: 7px 0px 0px 7px;
+  background: @magenta;
+  color: @background;
+  opacity: 1;
+  padding: 0px 7px;
+  margin-top: 5px;
+  margin-bottom: 6px;
+}
+
+#pulseaudio {
+  background: @magenta;
+  border-radius: 0px;
+  border-left: 0px;
+  border-right: 0px;
+}
+
+#pulseaudio.microphone {
+  background: @magenta;
+  border-left: 0px;
+  border-right: 0px;
+  border-radius: 0px 7px 7px 0px;
+  margin-right: 5px;
+}
+
+#cpu {
+  background: @cyan;
+  border-radius: 7px 0px 0px 7px;
+}
+
+#memory {
+  background: @cyan;
+  border-radius: 0px 7px 7px 0px;
+  margin-right: 5px;
+}
+
+#tray {
+  border-radius: 7px;
+  margin-right: 5px;
+}
+
+#workspaces {
+  background: @background;
+  border-radius: 7px;
+  margin-left: 10px;
+  padding-right: 0px;
+  padding-left: 5px;
+}
+
+#window {
+  border-radius: 7px;
+  margin-left: 10px;
+  margin-right: 60px;
+}
+
+#clock {
+  background: @yellow-alt;
+  border-radius: 7px;
+  margin-right: 5px;
+  padding-right: 0px;
+  border-right: 0px;
+}
+
+#network {
+  background: @yellow;
+  border-radius: 7px;
+  margin-right: 5px;
+  border-left: 0px;
+  border-right: 0px;
+}
+
+#bluetooth {
+  background: @blue;
+  border-radius: 7px;
+  margin-right: 5px;
+}
+
+#battery {
+  background: @green;
+  border-radius: 7px;
+  margin-right: 5px;
+  border-left: 0px;
+}
+
+#custom-spotify {
+  border-radius: 7px;
+  margin-right: 5px;
+  border-right: 0px;
+}
+
+#mpris {
+  color: @background;
+  background: @magenta;
+  border-radius: 7px;
+  margin-right: 5px;
+  border-right: 0px;
+}
+
+#mpris.paused {
+  border-bottom: 2px solid @foreground;
+}
+
+#mpd {
+  border-radius: 7px;
+  margin-right: 5px;
+  border-right: 0px;
+}
+
+#mpd.paused {
+  border-bottom: 2px solid @yellow;
+}
+
+#custom-pacman {
+  background: @red;
+  border-radius: 7px;
+  margin-right: 5px;
+}

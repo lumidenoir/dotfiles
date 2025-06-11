@@ -4,11 +4,11 @@
 
 # terminal emulator
 super + Return
-	kitty --config ~/.config/kitty/tokyonight.conf
+	kitty
 
 # Program launcher
 super + space
-    rofi -theme ~/.config/rofi/tokyonight.rasi -show drun -no-lazy-grab
+    rofi -show drun -no-lazy-grab
 
 
 # make sxhkd reload its configuration files:
@@ -158,17 +158,17 @@ XF86AudioPlay
 	playerctl play-pause
 #show powermenu
 super + p
-	rofi -show powermenu -theme ~/.config/rofi/tokyonight.rasi
+	powermenu.sh
 
 # lock screen
 alt + l
    screenlock.sh
 
 super + s
-	  ~/.config/rofi/scripts/smart-search
+	  smart-search
 
 super + shift + w
-    ~/.config/rofi/scripts/WallSelect.sh
+    WallSelect.sh
 #screenshot
 Print
     /usr/local/bin/screenshot.sh --now
@@ -183,7 +183,7 @@ super + m
 
 # notification history
 alt + n
-	  rofi -show message -modi 'message:~/.config/rofi/scripts/rofier.py' -theme ~/.config/rofi/horizon.rasi -eh 2
+	  rofi -show message -modi 'message:~/dotfiles/scripts/rofier.py' -eh 2
 
 # emacs extensions
 super + x

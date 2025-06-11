@@ -1,0 +1,160 @@
+@import url("../colors.css");
+
+* {
+	border-radius: 0;
+	font-family: "JetbrainsMono Nerd Font";
+	font-weight: bold;
+	font-size: 14px;
+}
+
+window#waybar {
+	background: @bar-background;
+}
+
+window#waybar.hidden {
+	opacity: 0.2;
+}
+
+#window {
+	margin-top: 6px;
+	padding-left: 10px;
+	padding-right: 10px;
+	border-radius: 5px;
+	transition: none;
+	background: @background;
+	color: @red;
+}
+
+#custom-powermenu {
+	margin-top: 6px;
+	margin-left: 12px;
+	margin-right: 12px;
+	padding-left: 15px;
+	padding-right: 20px;
+	border-radius: 5px;
+	transition: none;
+	background: @background;
+}
+
+#tags {
+	margin-top: 6px;
+	margin-right: 12px;
+	font-size: 4px;
+	border-radius: 5px;
+	transition: none;
+	background: @background;
+}
+
+#tags button {
+	transition: none;
+	color: @gray;
+	background: transparent;
+	border-radius: 0px;
+}
+
+#tags button.occupied {
+	transition: none;
+	color: @red;
+	background: transparent;
+	font-size: 4px;
+}
+
+#tags button.focused {
+	color: @yellow;
+	border-bottom: 2px solid @yellow;
+}
+
+#tags button:hover {
+	transition: none;
+	box-shadow: inherit;
+	text-shadow: inherit;
+	color: @magenta;
+}
+
+#temperature {
+	margin-top: 6px;
+	margin-right: 12px;
+	border-radius: 5px;
+	transition: none;
+	padding: 0 10px;
+	color: @red;
+	background: @background;
+}
+
+#pulseaudio {
+	margin-top: 6px;
+	margin-left: 12px;
+	border-radius: 5px;
+	transition: none;
+	padding: 0 10px;
+	color: @red;
+	background: @background;
+}
+
+#battery {
+	margin-top: 6px;
+	margin-left: 12px;
+	border-radius: 5px;
+	transition: none;
+	padding: 10px 10px;
+	color: @red;
+	background: @background;
+}
+
+#battery.critical:not(.charging) {
+	background-color: @gray;
+	color: @yellow;
+	animation-name: blink;
+	animation-duration: 0.5s;
+	animation-timing-function: linear;
+	animation-iteration-count: infinite;
+	animation-direction: alternate;
+}
+
+@keyframes blink {
+	to {
+		background-color: @red;
+		color: @gray;
+	}
+}
+
+#backlight {
+	margin-top: 6px;
+	margin-left: 12px;
+	border-radius: 5px;
+	transition: none;
+	padding: 10px 10px;
+	color: @red;
+	background: @background;
+}
+
+#cpu {
+	margin-top: 6px;
+	margin-left: 12px;
+	border-radius: 5px;
+	transition: none;
+	padding: 10px 10px;
+	color: @red;
+	background: @background;
+}
+
+#clock {
+	margin-top: 6px;
+	margin-left: 12px;
+	margin-right: 12px;
+	border-radius: 5px;
+	transition: none;
+	padding: 10px 10px;
+	color: @red;
+	background: @background;
+}
+
+#tray {
+	margin-top: 6px;
+	margin-right: 12px;
+	border-radius: 5px;
+	padding-left: 10px;
+	padding-right: 10px;
+	color: @red;
+	background: @background;
+}

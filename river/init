@@ -13,7 +13,7 @@ riverctl map normal $mod Return spawn "kitty"
 riverctl map normal $mod B spawn "killall -SIGUSR1 waybar"
 
 # Open rofi
-riverctl map normal $mod Space spawn "rofi -no-config -no-lazy-grab -show drun -modi drun -theme ~/.config/rofi/nord_red.rasi"
+riverctl map normal $mod Space spawn "rofi -show drun"
 
 # Open discord
 riverctl map normal $mod+Shift D spawn "discord --ignore-gpu-blocklist --disable-features=UseOzonePlatform --enable-features=VaapiVideoDecoder --use-gl=desktop --enable-gpu-rasterization --enable-zero-copy"

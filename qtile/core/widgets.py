@@ -41,7 +41,7 @@ def open_launcher():
 
 
 def open_powermenu():
-    qtile.cmd_spawn("rofi -show powermenu -config ~/.config/rofi/kanagawa.rasi")
+    qtile.cmd_spawn("powermenu.sh")
 
 
 def parse_window_name(text):

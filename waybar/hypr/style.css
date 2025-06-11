@@ -1,0 +1,210 @@
+@import url("../colors.css");
+
+* {
+  border-radius: 0px;
+  font-family: "JetBrainsMono Nerd Font";
+  font-weight: bold;
+  font-size: 15px;
+  min-height: 20px;
+}
+
+window#waybar {
+  background: @bar-background;
+  color: @foreground;
+}
+
+tooltip {
+  background: @background;
+  border-radius: 7px;
+  border-width: 2px;
+  border-style: solid;
+  border-color: @background;
+}
+
+#workspaces button {
+  padding: 5px;
+  padding-right: 10px;
+  padding-left: 10px;
+  color: @gray;
+  /* margin-right: 5px; */
+  /* margin-left: 10px; */
+}
+
+#workspaces button.active {
+  color: @foreground;
+  background: @background;
+  border-radius: 7px;
+}
+
+#workspaces button.focused {
+  color: @background;
+  background: @red-alt;
+  border-radius: 7px;
+}
+
+#workspaces button.urgent {
+  color: @background;
+  background: @red-alt;
+  border-radius: 7px;
+}
+
+#workspaces button:hover {
+  color: @background;
+  background: @foreground;
+  border-radius: 18px;
+}
+
+/* #custom-power_profile, */
+/* #custom-weather, */
+
+#window,
+#clock,
+#battery,
+#mpris,
+#pulseaudio,
+#custom-pacman,
+#network,
+#bluetooth,
+#temperature,
+#workspaces,
+#tray,
+#mpd,
+#custom-pomodoro,
+#cpu,
+#memory,
+#custom-spotify,
+#custom-weather,
+#modbackground {
+  background: @background;
+  opacity: 1;
+  padding: 0px 7px;
+  margin-top: 5px;
+  margin-bottom: 0px;
+}
+
+#backlight {
+  border-radius: 7px 0px 0px 7px;
+  background: @background;
+  color: @red;
+  opacity: 1;
+  padding: 0px 7px;
+  margin-top: 5px;
+  margin-bottom: 0px;
+}
+
+#pulseaudio {
+  color: @red;
+  border-radius: 0px;
+  border-left: 0px;
+  border-right: 0px;
+}
+
+#pulseaudio.microphone {
+  color: @red;
+  border-left: 0px;
+  border-right: 0px;
+  border-radius: 0px 7px 7px 0px;
+  margin-right: 5px;
+}
+
+#cpu {
+  color: @cyan;
+  border-radius: 7px 0px 0px 7px;
+}
+
+#memory {
+  color: @cyan;
+  border-radius: 0px 7px 7px 0px;
+  margin-right: 5px;
+}
+
+#tray {
+  border-radius: 7px;
+  margin-right: 5px;
+}
+
+#workspaces {
+  background: @background;
+  border-radius: 7px;
+  margin-left: 10px;
+  padding-right: 0px;
+  padding-left: 0px;
+}
+
+#window {
+  border-radius: 7px;
+  margin-left: 10px;
+  margin-right: 60px;
+}
+
+#clock {
+  color: @magenta;
+  border-radius: 7px;
+  /* margin-left: 10px; */
+  margin-right: 5px;
+  padding-right: 0px;
+  border-right: 0px;
+}
+
+#network {
+  color: @yellow;
+  border-radius: 7px;
+  margin-right: 5px;
+  border-left: 0px;
+  border-right: 0px;
+}
+
+#bluetooth {
+  color: @yellow-alt;
+  border-radius: 7px;
+  margin-right: 5px;
+}
+
+#battery {
+  color: @green;
+  border-radius: 7px;
+  margin-right: 5px;
+  border-left: 0px;
+}
+
+#custom-spotify {
+  border-radius: 7px;
+  margin-right: 5px;
+  border-right: 0px;
+}
+
+#mpris {
+  color: @magenta;
+  border-radius: 7px;
+  margin-right: 5px;
+  border-right: 0px;
+}
+
+#mpris.paused {
+  border-bottom: 2px solid @foreground;
+}
+
+#mpd {
+  border-radius: 7px;
+  margin-left: 7px;
+  margin-right: 5px;
+  border-right: 0px;
+}
+
+#mpd.paused {
+  border-bottom: 2px solid @foreground;
+}
+
+#custom-pacman {
+  color: @green;
+  border-radius: 7px;
+  margin-right: 5px;
+}
+
+#custom-weather {
+  color: @blue;
+  border-radius: 7px;
+  margin-right: 5px;
+  font-family: "Weather Icons";
+  font-size: 16px;
+}

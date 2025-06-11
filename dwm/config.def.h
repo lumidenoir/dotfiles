@@ -81,7 +81,7 @@ static const char *colors[][3] = {
 static char *tags[] = {"一", "二", "三", "四", "五"};
 
 static const char *session[] = {
-    "rofi", "-show", "powermenu", "-theme", "~/.config/rofi/onedark.rasi",
+    "/usr/local/bin/powermenu.sh",
     NULL};
 
 static const Launcher launchers[] = {
@@ -178,7 +178,7 @@ static const Key keys[] = {
     {0, XK_Print, spawn, SHCMD("screenshot.sh")},
 
     {MODKEY, XK_space, spawn,
-     SHCMD("rofi -show drun -theme ~/.config/rofi/onedark.rasi")},
+     SHCMD("rofi -show drun -theme ~/dotfiles/themes/onedark/onedark.rasi")},
     {MODKEY, XK_r, spawn, {.v = dmenucmd}},
     {MODKEY, XK_Return, spawn, SHCMD("st")},
 
@@ -270,12 +270,12 @@ static const Key keys[] = {
 
     // powermenu
     {MODKEY, XK_p, spawn,
-     SHCMD("rofi -show powermenu -theme ~/.config/rofi/onedark.rasi")},
+     SHCMD("/usr/local/bin/powermenu.sh")},
 
     // lock screen
     {Mod1Mask, XK_l, spawn, SHCMD("screenlock.sh")},
 
-    {MODKEY, XK_s, spawn, SHCMD("~/.config/rofi/scripts/smart-search")},
+    {MODKEY, XK_s, spawn, SHCMD("smart-search")},
 
     {MODKEY, XK_x, spawn, SHCMD("~/.config/emacs/bin/org-capture")},
 
