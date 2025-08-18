@@ -45,6 +45,9 @@ static const char *mutevol[] = {"/usr/bin/pactl", "set-sink-mute", "0",
                                 "toggle", NULL};
 static const char *light_up[] = {"brightnessctl", "set", "10%+", NULL};
 static const char *light_down[] = {"brightnessctl", "s", "10%-", NULL};
+static const char *play_pause[] = {"playerctl", "play-pause", NULL};
+static const char *play_prev[] ={"playerctl", "previous", NULL};
+static const char *play_next[] = {"playerctl", "next", NULL};
 static const int new_window_attach_on_end =
     1; /*  1 means the new window will attach on the end; 0 means the new window
           will attach on the front,default is front */
@@ -171,6 +174,9 @@ static const Key keys[] = {
     {0, XF86XK_AudioRaiseVolume, spawn, {.v = upvol}},
     {0, XF86XK_MonBrightnessUp, spawn, {.v = light_up}},
     {0, XF86XK_MonBrightnessDown, spawn, {.v = light_down}},
+    {0, XF86XK_AudioPlay, spawn, {.v = play_pause}},
+    {0, XF86XK_AudioPrev, spawn, {.v = play_prev}},
+    {0, XF86XK_AudioNext, spawn, {.v = play_next}},
 
     // screenshot fullscreen and cropped
     {MODKEY | ControlMask, XK_Print, spawn, SHCMD("screenshot.sh --stop")},

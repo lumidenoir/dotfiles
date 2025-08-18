@@ -68,7 +68,8 @@ If you use =org= and don't want your org files in the default location below, ch
 (setq org-cite-csl-styles-dir "/home/krishna/Zotero/styles") ;; Path to CSL styles for citations
 
 (setq reftex-default-bibliography "/home/krishna/org/zotero.bib"
-      org-agenda-files '("/home/krishna/org/todo.org" "/home/krishna/org/calendar.org" "/home/krishna/org/todoist.org"))
+      org-agenda-files '("/home/krishna/org/todo.org" "/home/krishna/org/todoist.org")
+      org-fold-catch-invisible-edits 'smart)
 (after! org
   (setq org-adapt-indentation t)
   ;; Set some faces for various org elements
@@ -116,7 +117,6 @@ If you use =org= and don't want your org files in the default location below, ch
 ;; Make the document title a bit bigger
   (set-face-attribute 'org-document-title nil :font "Alegreya" :weight 'bold :height 1.8))
 (setq org-ellipsis " ▾ ")
-
 #+end_src
 
 ** Export settings
@@ -284,6 +284,15 @@ Org-roam is a tool for managing a personal knowledge base with Org-mode. Here is
   (add-to-list
    'nerd-icons-corfu-mapping
    '(org-roam :style "cod" :icon "symbol_interface" :face font-lock-type-face)))
+
+(defadvice! doom-modeline--buffer-file-name-roam-aware-a (orig-fun)
+  :around #'doom-modeline-buffer-file-name ; takes no args
+  (if (string-match-p (regexp-quote org-roam-directory) (or buffer-file-name ""))
+      (replace-regexp-in-string
+       "\\(?:^\\|.*/\\)\\([0-9]\\{4\\}\\)\\([0-9]\\{2\\}\\)\\([0-9]\\{2\\}\\)[0-9]*-"
+       "(\\1-\\2-\\3) "
+       (subst-char-in-string ?_ ?  buffer-file-name))
+    (funcall orig-fun)))
 #+end_src
 
 ** Org-roam-ui
@@ -428,7 +437,7 @@ Super-agenda groups and filters items in Org-agenda views for better organizatio
 #+end_src
 
 ** org-modern
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp :tangle yes
 (use-package! org-modern
   :hook (org-mode . org-modern-mode)
   :config
@@ -441,7 +450,8 @@ Super-agenda groups and filters items in Org-agenda views for better organizatio
    org-modern-radio-target    '("❰" t "❱")
    org-modern-internal-target '("↪ " t "")
    org-modern-todo nil
-   org-modern-tag nil
+   org-modern-tag t
+   org-modern-star 'replace
    org-modern-block-name nil
    org-modern-timestamp nil
    org-modern-statistics nil
@@ -449,25 +459,34 @@ Super-agenda groups and filters items in Org-agenda views for better organizatio
    org-modern-progress 12
    org-modern-priority nil
    org-modern-horizontal-rule "──────────"
-   org-modern-hide-stars "-"
-   org-modern-star ["⁖"]
    org-modern-keyword nil
    org-agenda-tags-column 0
    org-modern-list '((43 . "•")
                      (45 . "–")
                      (42 . "↪")))
   (custom-set-faces!
-    `((org-modern-tag)
-      :background ,(doom-blend (doom-color 'blue) (doom-color 'bg) 0.1)
-      :foreground ,(doom-color 'grey))
+    ;; `((org-modern-tag)
+    ;;   :background ,(doom-blend (doom-color 'blue) (doom-color 'bg) 0.1)
+    ;;   :foreground ,(doom-color 'grey))
     `((org-modern-radio-target org-modern-internal-target)
       :inherit 'default :foreground ,(doom-color 'blue)))
   )
 #+end_src
 
+#+begin_src emacs-lisp :tangle yes
+(use-package! org-appear
+  :hook (org-mode . org-appear-mode)
+  :config
+  (setq org-appear-autoemphasis t
+        org-appear-autosubmarkers t
+        org-appear-autolinks nil)
+  ;; for proper first-time setup, `org-appear--set-elements'
+  ;; needs to be run after other hooks have acted.
+  (run-at-time nil nil #'org-appear--set-elements))
+#+end_src
 ** svg-tag
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp :tangle yes
 (use-package! svg-tag-mode
   :config
   (defconst date-re "[0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\}")
@@ -514,10 +533,10 @@ Super-agenda groups and filters items in Org-agenda views for better organizatio
                                                      :beg 2 :end -1 :margin 0 :radius 10))))
           ("\\[#C\\]" . ((lambda (tag) (svg-tag-make tag :face 'org-todo :inverse t :height .9
                                                      :beg 2 :end -1 :margin 0 :radius 10))))
-          ("\\(:#[A-Za-z0-9]+\\)" . ((lambda (tag)
-                                     (svg-tag-make tag :beg 2 :inverse t :margin 1 :face (doom-color 'blue) ))))
-          ("\\(:#[A-Za-z0-9]+:\\)$" . ((lambda (tag)
-                                       (svg-tag-make tag :beg 2 :end -1 :inverse t :margin 1 :face (doom-color 'blue)))))
+          ;; ("\\(:#[A-Za-z0-9]+\\)" . ((lambda (tag)
+          ;;                            (svg-tag-make tag :beg 2 :inverse t :margin 1 :face (doom-color 'blue) ))))
+          ;; ("\\(:#[A-Za-z0-9]+:\\)$" . ((lambda (tag)
+          ;;                              (svg-tag-make tag :beg 2 :end -1 :inverse t :margin 1 :face (doom-color 'blue)))))
 
 
         ;; Active date (with or without day name, with or without time)
@@ -623,6 +642,15 @@ Super-agenda groups and filters items in Org-agenda views for better organizatio
   (add-hook 'writeroom-mode-disable-hook #'+zen-nonprose-org-h))
 #+end_src
 
+** journal
+#+begin_src emacs-lisp :tangle yes
+(use-package! org-journal
+    :config
+    (setq org-journal-file-type 'weekly
+          org-journal-enable-agenda-integration t
+          org-journal-date-format "%Y-%m-%d, %A")
+    )
+#+end_src
 * Mu4e
 Mu4e is an email client for Emacs. This configuration sets up multiple email accounts and integrates various functionalities.
 
@@ -857,7 +885,7 @@ nov.el is an Emacs mode for reading EPUB files. This configuration customizes th
 
 ** Changelog automation
 
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp :tangle no
 (defun ldn/update-project-changelog ()
   "Update ChangeLog.org with latest git commits under Changelog heading."
   (interactive)
@@ -963,11 +991,37 @@ nov.el is an Emacs mode for reading EPUB files. This configuration customizes th
 ** gptel
 #+begin_src emacs-lisp :tangle no
 (setq
- gptel-model "mistral:latest"
+ gptel-model "qwen3:0.6b"
  gptel-backend (gptel-make-ollama "Ollama"
                  :host "localhost:11434"
                  :stream t
-                 :models '("mistral:latest")))
+                 :models '("qwen3:0.6b")))
+#+end_src
+** Hippie expand
+#+begin_src emacs-lisp :tangle yes
+(global-set-key [remap dabbrev-expand] #'hippie-expand)
+
+(setq hippie-expand-try-functions-list
+      '(try-expand-list
+        try-expand-dabbrev-visible
+        try-expand-dabbrev
+        try-expand-all-abbrevs
+        try-expand-dabbrev-all-buffers
+        try-complete-file-name-partially
+        try-complete-file-name
+        try-expand-dabbrev-from-kill
+        try-expand-whole-kill
+        try-expand-line
+        try-complete-lisp-symbol-partially
+        try-complete-lisp-symbol))
+#+end_src
+** Ruff format
+#+begin_src emacs-lisp :tangle yes
+(after! apheleia
+  (setf (alist-get 'python-mode apheleia-mode-alist)
+        '(ruff-isort ruff))
+  (setf (alist-get 'python-ts-mode apheleia-mode-alist)
+      '(ruff-isort ruff)))
 #+end_src
 * Flutter & Dart
 #+begin_src emacs-lisp :tangle yes

@@ -34,7 +34,8 @@
 (setq org-cite-csl-styles-dir "/home/krishna/Zotero/styles") ;; Path to CSL styles for citations
 
 (setq reftex-default-bibliography "/home/krishna/org/zotero.bib"
-      org-agenda-files '("/home/krishna/org/todo.org" "/home/krishna/org/calendar.org" "/home/krishna/org/todoist.org"))
+      org-agenda-files '("/home/krishna/org/todo.org" "/home/krishna/org/todoist.org")
+      org-fold-catch-invisible-edits 'smart)
 (after! org
   (setq org-adapt-indentation t)
   ;; Set some faces for various org elements
@@ -232,6 +233,15 @@ truncated to fit within the limit using `org-reference-contraction-truncate-word
    'nerd-icons-corfu-mapping
    '(org-roam :style "cod" :icon "symbol_interface" :face font-lock-type-face)))
 
+(defadvice! doom-modeline--buffer-file-name-roam-aware-a (orig-fun)
+  :around #'doom-modeline-buffer-file-name ; takes no args
+  (if (string-match-p (regexp-quote org-roam-directory) (or buffer-file-name ""))
+      (replace-regexp-in-string
+       "\\(?:^\\|.*/\\)\\([0-9]\\{4\\}\\)\\([0-9]\\{2\\}\\)\\([0-9]\\{2\\}\\)[0-9]*-"
+       "(\\1-\\2-\\3) "
+       (subst-char-in-string ?_ ?  buffer-file-name))
+    (funcall orig-fun)))
+
 (use-package! websocket
   :after org-roam)
 
@@ -331,6 +341,136 @@ truncated to fit within the limit using `org-reference-contraction-truncate-word
   :config
   (org-super-agenda-mode))
 
+(use-package! org-modern
+  :hook (org-mode . org-modern-mode)
+  :config
+  (setq
+   ;; Edit settings
+   org-fold-catch-invisible-edits 'show-and-error
+   org-special-ctrl-a/e t
+   org-insert-heading-respect-content t
+   ;; Appearance
+   org-modern-radio-target    '("❰" t "❱")
+   org-modern-internal-target '("↪ " t "")
+   org-modern-todo nil
+   org-modern-tag t
+   org-modern-star 'replace
+   org-modern-block-name nil
+   org-modern-timestamp nil
+   org-modern-statistics nil
+   org-modern-table nil
+   org-modern-progress 12
+   org-modern-priority nil
+   org-modern-horizontal-rule "──────────"
+   org-modern-keyword nil
+   org-agenda-tags-column 0
+   org-modern-list '((43 . "•")
+                     (45 . "–")
+                     (42 . "↪")))
+  (custom-set-faces!
+    ;; `((org-modern-tag)
+    ;;   :background ,(doom-blend (doom-color 'blue) (doom-color 'bg) 0.1)
+    ;;   :foreground ,(doom-color 'grey))
+    `((org-modern-radio-target org-modern-internal-target)
+      :inherit 'default :foreground ,(doom-color 'blue)))
+  )
+
+(use-package! org-appear
+  :hook (org-mode . org-appear-mode)
+  :config
+  (setq org-appear-autoemphasis t
+        org-appear-autosubmarkers t
+        org-appear-autolinks nil)
+  ;; for proper first-time setup, `org-appear--set-elements'
+  ;; needs to be run after other hooks have acted.
+  (run-at-time nil nil #'org-appear--set-elements))
+
+(use-package! svg-tag-mode
+  :config
+  (defconst date-re "[0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\}")
+  (defconst time-re "[0-9]\\{2\\}:[0-9]\\{2\\}")
+  (defconst day-re "[A-Za-z]\\{3\\}")
+  (defconst day-time-re (format "\\(%s\\)? ?\\(%s\\)?" day-re time-re))
+
+  (defun svg-progress-percent (value)
+    (save-match-data
+    (svg-image (svg-lib-concat
+                (svg-lib-progress-bar
+                 (/ (string-to-number value) 100.0) nil
+                 :height 0.8 :foreground (doom-color 'fg) :background (doom-color 'bg)
+                 :margin 0 :stroke 2 :radius 3 :padding 2 :width 11)
+                (svg-lib-tag (concat value "%") nil
+                             :height 0.8 :foreground (doom-color 'fg) :background (doom-color 'bg)
+                             :stroke 0 :margin 0)) :ascent 'center)))
+
+(defun svg-progress-count (value)
+  (save-match-data
+    (let* ((seq (split-string value "/"))
+           (count (if (stringp (car seq))
+                      (float (string-to-number (car seq)))
+                    0))
+           (total (if (stringp (cadr seq))
+                      (float (string-to-number (cadr seq)))
+                    1000)))
+      (svg-image (svg-lib-concat
+                  (svg-lib-progress-bar (/ count total) nil
+                                        :foreground (doom-color 'fg)
+                                        :background (doom-color 'bg) :height 0.8
+                                        :margin 0 :stroke 2 :radius 3 :padding 2 :width 11)
+                  (svg-lib-tag value nil
+                               :foreground (doom-color 'fg)
+                               :background (doom-color 'bg)
+                               :stroke 0 :margin 0 :height 0.8)) :ascent 'center))))
+
+  (set-face-attribute 'svg-tag-default-face nil :family "Cartograph Sans CF")
+  (setq svg-tag-tags
+        `(;; Task priority e.g. [#A], [#B], or [#C]
+          ("\\[#A\\]" . ((lambda (tag) (svg-tag-make tag :face 'error :inverse t :height .9
+                                                     :beg 2 :end -1 :margin 0 :radius 10))))
+          ("\\[#B\\]" . ((lambda (tag) (svg-tag-make tag :face 'warning :inverse t :height .9
+                                                     :beg 2 :end -1 :margin 0 :radius 10))))
+          ("\\[#C\\]" . ((lambda (tag) (svg-tag-make tag :face 'org-todo :inverse t :height .9
+                                                     :beg 2 :end -1 :margin 0 :radius 10))))
+          ;; ("\\(:#[A-Za-z0-9]+\\)" . ((lambda (tag)
+          ;;                            (svg-tag-make tag :beg 2 :inverse t :margin 1 :face (doom-color 'blue) ))))
+          ;; ("\\(:#[A-Za-z0-9]+:\\)$" . ((lambda (tag)
+          ;;                              (svg-tag-make tag :beg 2 :end -1 :inverse t :margin 1 :face (doom-color 'blue)))))
+
+
+        ;; Active date (with or without day name, with or without time)
+        ;; (,(format "\\(<%s>\\)" date-re) .
+        ;;  ((lambda (tag)
+        ;;     (svg-tag-make tag :beg 1 :end -1 :margin 0))))
+        ;; (,(format "\\(<%s \\)%s>" date-re day-time-re) .
+        ;;  ((lambda (tag)
+        ;;     (svg-tag-make tag :beg 1 :inverse nil :crop-right t :margin 0))))
+        ;; (,(format "<%s \\(%s>\\)" date-re day-time-re) .
+        ;;  ((lambda (tag)
+        ;;     (svg-tag-make tag :end -1 :inverse t :crop-left t :margin 0))))
+
+        ;; ;; Inactive date  (with or without day name, with or without time)
+        ;;  (,(format "\\(\\[%s\\]\\)" date-re) .
+        ;;   ((lambda (tag)
+        ;;      (svg-tag-make tag :beg 1 :end -1 :margin 0 :face 'org-date))))
+        ;;  (,(format "\\(\\[%s \\)%s\\]" date-re day-time-re) .
+        ;;   ((lambda (tag)
+        ;;      (svg-tag-make tag :beg 1 :inverse nil :crop-right t :margin 0 :face 'org-date))))
+        ;;  (,(format "\\[%s \\(%s\\]\\)" date-re day-time-re) .
+        ;;   ((lambda (tag)
+        ;;      (svg-tag-make tag :end -1 :inverse t :crop-left t :margin 0 :face 'org-date))))
+
+          ;; Keywords
+          ("TODO" . ((lambda (tag) (svg-tag-make tag :inverse t :height .85 :face 'org-todo))))
+          ("HOLD" . ((lambda (tag) (svg-tag-make tag :inverse t :height .85 :face '+org-todo-onhold))))
+          ("DONE" . ((lambda (tag) (svg-tag-make tag :height .85 :face 'org-todo))))
+          ("KILL" . ((lambda (tag) (svg-tag-make tag :inverse t :height .85 :face '+org-todo-cancel))))
+          ("STRT\\|WAIT" . ((lambda (tag) (svg-tag-make tag :inverse t :height .85 :face '+org-todo-active))))
+          ("EVNT\\|PROJ\\|IDEA" .
+           ((lambda (tag) (svg-tag-make tag :inverse t :height .85 :face '+org-todo-project))))
+          ("REVI" . ((lambda (tag) (svg-tag-make tag :inverse t :height .85 :face '+org-todo-onhold))))))
+
+  :hook (org-mode . svg-tag-mode))
+
 (setq +zen-text-scale 0.8)
 (defvar +zen-serif-p t
   "Whether to use a serifed font with `mixed-pitch-mode'.")
@@ -378,6 +518,13 @@ truncated to fit within the limit using `org-reference-contraction-truncate-word
             'org-modern-hide-stars)
   (add-hook 'writeroom-mode-enable-hook #'+zen-prose-org-h)
   (add-hook 'writeroom-mode-disable-hook #'+zen-nonprose-org-h))
+
+(use-package! org-journal
+    :config
+    (setq org-journal-file-type 'weekly
+          org-journal-enable-agenda-integration t
+          org-journal-date-format "%Y-%m-%d, %A")
+    )
 
 ;; Add mu4e to the load path
 (add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e/")
@@ -534,29 +681,6 @@ truncated to fit within the limit using `org-reference-contraction-truncate-word
                        (insert-image (create-image image-data 'png t))
                        (insert "\n\n")))))))))))))
 
-(defun ldn/update-project-changelog ()
-  "Update ChangeLog.org with latest git commits under Changelog heading."
-  (interactive)
-  (let ((readme-file (expand-file-name "ChangeLog.org" (projectile-project-root)))
-        (commit-log (shell-command-to-string (expand-file-name "extract_commits.sh" (projectile-project-root)))))
-    (if (string-match-p "No new commits to add." commit-log)
-        (message "No new commits to add.")
-      (with-current-buffer (find-file-noselect readme-file)
-        (goto-char (point-min))
-        ;; Find the Changelog heading
-        (if (re-search-forward "^\\*+ Changelog" nil t)
-            (progn
-              (forward-line)
-              (insert commit-log "\n"))
-          (goto-char (point-max))
-          (insert "\n* Changelog\n" commit-log "\n"))
-        (save-buffer)
-        (message "Changelog updated in ChangeLog.org!")))))
-
-(map! :leader
-      :desc "Update ChangeLog.org"
-      "p u" #'ldn/update-project-changelog)
-
 (defun soph/prettify-symbols-setup ()
   "Beautify keywords"
   (setq prettify-symbols-alist
@@ -629,6 +753,28 @@ truncated to fit within the limit using `org-reference-contraction-truncate-word
 ;; Add a hook to print the value after setup
 (add-hook 'org-mode-hook #'print-prettify-symbols-alist)
 (add-hook 'org-agenda-mode-hook #'print-prettify-symbols-alist)
+
+(global-set-key [remap dabbrev-expand] #'hippie-expand)
+
+(setq hippie-expand-try-functions-list
+      '(try-expand-list
+        try-expand-dabbrev-visible
+        try-expand-dabbrev
+        try-expand-all-abbrevs
+        try-expand-dabbrev-all-buffers
+        try-complete-file-name-partially
+        try-complete-file-name
+        try-expand-dabbrev-from-kill
+        try-expand-whole-kill
+        try-expand-line
+        try-complete-lisp-symbol-partially
+        try-complete-lisp-symbol))
+
+(after! apheleia
+  (setf (alist-get 'python-mode apheleia-mode-alist)
+        '(ruff-isort ruff))
+  (setf (alist-get 'python-ts-mode apheleia-mode-alist)
+      '(ruff-isort ruff)))
 
 (setq lsp-dart-sdk-dir "~/flutter/bin/cache/dart-sdk"
       lsp-dart-flutter-sdk "~/flutter"
