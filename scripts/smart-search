@@ -15,17 +15,21 @@ declare -A ASSET
 
 # Add elements to ASSET array
 get_assets() {
+  local label="$1"
   readarray -t F_ARRAY <<<"$(find "$ASSET_DIR" -type f)"
 
   if [[ -n ${F_ARRAY[*]} ]]; then
     for i in "${!F_ARRAY[@]}"; do
       path="${F_ARRAY[$i]}"
-      file=$(basename "${F_ARRAY[$i]}")
-      ASSET+=(["$file"]="$path")
+      file=$(basename "$path")
+      if [[ -n "$label" ]]; then
+        ASSET["$label $file"]="$path"
+      else
+        ASSET["$file"]="$path"
+      fi
     done
   else
     echo "$ASSET_DIR is empty!"
-    echo "Please put some files in it."
     exit
   fi
 }
@@ -98,8 +102,21 @@ main() {
       xdg-open "${ASSET[$asset]}"
     fi
   elif [[ "$stype" == "movie" ]]; then
-    ASSET_DIR=$MOVIE_DIR
+    MOVIE_DIRS=("$MOVIE_DIR")
+    EXT_MOVIE_DIR="/run/media/krishna/Seagate Backup Plus Drive/movie"
+
+    ASSET=()
+
+    # main movies
+    ASSET_DIR="$MOVIE_DIR"
     get_assets
+
+    # external drive movies
+    if [[ -d "$EXT_MOVIE_DIR" ]]; then
+      ASSET_DIR="$EXT_MOVIE_DIR"
+      get_assets "[EXT]"
+    fi
+
     asset=$( (gen_list) | rofi -dmenu -i -matching normal -no-custom -location 0 -p " " -theme ~/dotfiles/themes/horizon/horizon.rasi)
     if [ -n "$asset" ]; then
       mpv "${ASSET[$asset]}"
