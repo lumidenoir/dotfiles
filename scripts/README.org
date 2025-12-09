@@ -1,0 +1,43 @@
+#+title: Scripts usage
+#+author: Lumi Denoir
+
+** battery_notifier
+#+begin_src toml
+# ~/.config/systemd/user/battery_notifier.service
+
+[Unit]
+Description=Battery level notifier
+
+[Service]
+Type=oneshot
+Environment=DISPLAY=:0
+Environment=XDG_RUNTIME_DIR=%t
+Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=%t/bus
+ExecStart=/usr/local/bin/battery_notifier.sh
+#+end_src
+
+#+begin_src toml
+# ~/.config/systemd/user/battery_notifier.timer
+
+[Unit]
+Description=Run battery notifier every minute
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=1min
+Unit=battery_notifier.service
+
+[Install]
+WantedBy=default.target
+#+end_src
+
+#+begin_src shell
+systemctl --user daemon-reload
+systemctl --user restart battery_notifier.service
+#+end_src
+
+** auto_network_switch
+- Enterprise Wi-Fi sessions rely on periodic re-authentication (EAPOL handshake).
+- Some APs force a rekey / session timeout (often 30–60 min).
+- If the client doesn’t handle it smoothly, the connection looks alive but traffic stops until reconnect.
+- My uni network seems to have a sesion timeout of ~31min hence the reassociation at 30min and a backup switch logic

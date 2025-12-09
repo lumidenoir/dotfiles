@@ -1,0 +1,26 @@
+#+title:My dotfiles for Arch linux
+This repository contains my custom dotfiles for configuring various aspects of my Linux environment adapted from many other's configs. Everything is configured for my personal use. *Use at your own discretion*.
+
+* Collection
+- i3-wm, bspwm, dwm (patched), qtile, xmonad, awesome, hyprland, sway, river
+- kitty (main), wezterm, st (dwm)
+- picom
+- neovim (Nvchad), doom emacs
+- polybar, waybar
+- rofi, dmenu
+- eww
+- dunst
+- mpd, mpDris2, rmpc, cava
+- neofetch
+- zathura
+- theme switcher with ~theme.sh~
+- startx session manager using ~sess~
+
+* Installation:
+Due to the diverse nature of these configurations and potential system variations, there's no one-size-fits-all installation process. However you can carefully examine the files and adapt it to your specific requirements. The below script is only for Arch users.
+
+#+begin_src shell
+git clone https://github.com/lumidenoir/dotfiles
+cd ./dotfiles
+./install.sh
+#+end_src

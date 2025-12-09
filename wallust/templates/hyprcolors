@@ -1,0 +1,4 @@
+general {
+    col.active_border = rgb({{color3 | strip}}) rgb({{color4 | strip}}) rgb({{color5 | strip}}) rgb({{color6 | strip}}) rgb({{color2 | strip}})
+    col.inactive_border = rgba({{background | strip}}ee)
+}

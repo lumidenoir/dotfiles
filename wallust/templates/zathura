@@ -1,0 +1,33 @@
+set recolor
+set database sqlite
+set statusbar-h-padding 8
+set statusbar-v-padding 2
+set page-padding 1
+map i recolor
+map p print
+set font "Jetbrains Mono 10"
+map b toggle_statusbar
+
+# colors
+set default-bg     "{{background}}"
+set default-fg     "{{foreground | complementary | lighten(0.5)}}"
+
+set statusbar-bg   "{{background}}"
+set statusbar-fg   "{{foreground | blend("#eeeeee")}}"
+
+# use it's complementary
+set inputbar-bg    "{{background | complementary}}"
+
+set highlight-color "{{color2}}"
+set highlight-active-color "{{color2 | darken(0.3)}}"
+
+set notification-bg "{{color4}}"
+set notification-fg "#151515"
+
+set recolor-lightcolor "{{background}}"
+set recolor-darkcolor "{{foreground}}"
+set recolor-keephue "true"
+
+set selection-clipboard clipboard
+set synctex true
+set synctex-editor-command "emacsclient +%{line} %{input}"

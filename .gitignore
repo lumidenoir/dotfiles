@@ -1,0 +1,9 @@
+.DS_Store
+.idea
+*.log
+tmp/
+dwm/config.h
+dmenu/config.h
+mpd/state
+qtile/__pycache__/
+qtile/*/__pycache__/

@@ -1,0 +1,12 @@
+$bg: {{background}};
+$bg-alt: {{background | lighten(0.07)}};
+$fg: {{foreground}};
+$black: {{color0}};
+$lightblack: {{background | lighten(0.07)}};
+$red: {{color1}};
+$blue: {{color4}};
+$cyan: {{color6}};
+$magenta: {{color5}};
+$green: {{color2}};
+$yellow: {{color3}};
+$archicon: #0f94d2;

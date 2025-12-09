@@ -1,0 +1,100 @@
+configuration {
+    show-icons: false;
+    icon-theme: "Papirus";
+    font: "JetBrainsMono Nerd Font 10";
+    markup-rows: true;
+    lines: 25;
+    fixed-num-lines: true;
+}
+
+* {
+    background-color: #0b1217;
+    bg: #232a2e;
+    text-color: #b3bbc0;
+    actbg: #8db095;
+    winbg: #b3bbc0;
+
+    selected-normal-foreground: @bg;
+    normal-foreground: @text-color;
+    selected-normal-background: @actbg;
+    normal-background: @background-color;
+
+    line-margin: 2;
+    line-padding: 2;
+    margin: 0;
+    padding: 6;
+}
+
+window {
+    location: east;
+    anchor: east;
+    height: 98%;
+    width: 30%;
+    orientation: horizontal;
+    border-radius: 12 0 0 12;
+    background-color: @background-color;
+}
+
+mainbox {
+    spacing: 0.6em;
+    orientation: vertical;
+    children:
+        [ inputbar,
+        listview];
+}
+
+inputbar {
+    padding: 12px 15px;
+    spacing: 6px;
+}
+
+prompt {
+    padding: 10px 0px 0px 10px;
+    font: "JetBrainsMono Nerd Font 13";
+    text-color: @text-color;
+}
+
+entry {
+    expand: true;
+    text-color: @normal-foreground;
+    padding: 8px 0px 0px 10px;
+    font: "JetBrainsMono Nerd Font 10";
+}
+
+listview {
+    spacing: 0.7em;
+    dynamic: true;
+    cycle: false;
+    padding: 5px 10px 10px 10px;
+    background-color: transparent;
+}
+
+element {
+    border-radius: 8px;
+    padding: 10px 12px;
+    background-color: @bg;
+    text-color: @normal-foreground;
+    border: 0px;
+}
+
+element selected.normal {
+    background-color: @selected-normal-background;
+    text-color: @selected-normal-foreground;
+}
+
+element alternate.normal {
+    background-color: @bg;
+    text-color: @text-color;
+}
+
+element-icon {
+    size: 2.6ch;
+    margin: 0px 8px 0px 2px;
+}
+
+element-text {
+    background-color: inherit;
+    text-color: inherit;
+    vertical-align: 0;
+    highlight: bold underline;
+}

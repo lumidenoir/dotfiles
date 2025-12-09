@@ -1,0 +1,174 @@
+{
+    "layer": "top",
+    "position": "top",
+    "mod": "dock",
+    "exclusive": true,
+    "passthrough": false,
+    "gtk-layer-shell": true,
+    "height": 44,
+    "modules-center": ["hyprland/workspaces"],
+    "modules-left": ["mpris"],
+    "modules-right": ["cpu","memory","network","custom/pacman","custom/weather","backlight","pulseaudio","pulseaudio#microphone", "battery", "clock", "tray"],
+    "hyprland/window": {
+        "format": "{}"
+    },
+
+    "hyprland/workspaces": {
+        "disable-scroll": true,
+        "format": "{icon}",
+        "format-icons": {"1":"一", "2" : "二", "3": "三", "4": "四","5": "五", "6": "六", "7": "七","8": "八","9":"九"},
+        "all-outputs": true,
+        "on-click": "activate"
+    },
+
+    "tray": {
+        "icon-size": 18,
+        "spacing": 10
+    },
+    "cpu" : {
+      "interval": 1,
+      "format": "  {}%"
+    },
+    "memory": {
+      "interval": 1,
+      "format": "  {}%"
+    },
+
+    "clock": {
+        "format": "  {:%H:%M }",
+        "format-alt":"  {:%a, %b %e}",
+        "tooltip-format": "<tt><small>{calendar}</small></tt>"
+    },
+
+    "backlight": {
+      "device": "intel_backlight",
+      "format": "{icon} {percent}%",
+      "format-icons": ["󰃞","󰃟","󰃝", "󰃠"],
+      "min-length": 6
+    },
+
+    "battery": {
+        "states": {
+            "good": 95,
+            "warning": 30,
+            "critical": 20
+        },
+        "format": "{icon} {capacity}%",
+        "format-charging": " {capacity}%",
+        "format-plugged": " {capacity}%",
+        "format-alt": "{time} {icon}",
+        "format-icons": ["󰂎", "󰁺", "󰁻", "󰁼", "󰁽", "󰁿","󰂀","󰂁","󰂂","󰁹"]
+    },
+
+    "pulseaudio": {
+        "format": "{icon} {volume}%",
+        "tooltip": false,
+        "format-muted": " Muted",
+        "on-click": "pamixer -t",
+        "on-right-click": "exec pavucontrol",
+        "on-scroll-up": "pamixer -i 5",
+        "on-scroll-down": "pamixer -d 5",
+        "scroll-step": 5,
+        "format-icons": {
+            "headphone": "",
+            "hands-free": "",
+            "headset": "",
+            "phone": "",
+            "portable": "",
+            "car": "",
+            "default": ["", "", ""]
+        }
+    },
+
+    "pulseaudio#microphone": {
+        "format": "{format_source}",
+        "format-source": "󰍬 {volume}%",
+        "format-source-muted": "󰍭 Muted",
+        "on-click": "pamixer --default-source -t",
+        "on-scroll-up": "pamixer --default-source -i 2",
+        "on-scroll-down": "pamixer --default-source -d 2",
+        "scroll-step": 5
+    },
+
+    "network": {
+        // "interface": "wlp2*", // (Optional) To force the use of this interface
+        "format-wifi": "  {signalStrength}%",
+        "format-ethernet": "{ipaddr}/{cidr} ",
+        "tooltip-format": "{essid} - {ifname} via {gwaddr} ",
+        "format-linked": "{ifname} (No IP) ",
+        "format-disconnected": "Disconnected ⚠",
+        "format-alt": "{ifname} {ipaddr}/{cidr}"
+    },
+
+    "bluetooth": {
+	    "format": " {status}",
+	    "format-disabled": "", // an empty format will hide the module
+	    "format-connected": " {num_connections}",
+	    "tooltip-format": "{device_alias}",
+	    "tooltip-format-connected": " {device_enumerate}",
+	    "tooltip-format-enumerate-connected": "{device_alias}"
+    },
+
+    "mpris": {
+      "title-len": 20,
+      "interval":1,
+      "album-len":0,
+      "max-len": 30,
+      "format": "{player_icon} {dynamic}",
+      "format-paused": "{player_icon} {dynamic}",
+      "player-icons": {
+        "default": "▶ ",
+        "mpv": "󰎆 ",
+        "spotify": " ",
+        "firefox": " "
+      },
+      "status-icons": {
+        "paused": " "
+      },
+      "tooltip-format": "Mpris player",
+      "ignored-players": []
+    },
+
+    "mpd": {
+    "title-len": 20,
+      "max-len": 30,
+      "format": "{stateIcon} {title} - {artist}",
+      "format-disconnected": "Disconnected ",
+      "format-stopped": "Queue Stopped",
+      "interval": 2,
+      "consume-icons": {
+        "on": " " // Icon shows only when "consume" is on
+      },
+      "repeat-icons": {
+        "on": " "
+      },
+      "single-icons": {
+        "on": "1 "
+      },
+      "state-icons": {
+        "paused": " ",
+        "playing": " "
+      },
+      "tooltip-format": "MPD (connected)",
+      "tooltip-format-disconnected": "MPD (disconnected)",
+      "on-click": "mpc toggle"
+    },
+
+    "custom/pacman": {
+      "format": "  {}",
+      "interval" : 100,
+      "exec" : "updates.sh --get-updates",
+      "exec-if" : "exit 0",
+      "on-click": "kitty -e sudo pacman -Syu",
+      "tooltip":false
+    },
+
+    "custom/weather": {
+      "format": "{}",
+      "interval" : 900,
+      "exec" : "weather.sh wmodule",
+      "exec-if" : "exit 0",
+      "tooltip":false
+      }
+
+}

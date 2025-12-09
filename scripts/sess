@@ -1,0 +1,52 @@
+#!/usr/bin/env sh
+
+# List of options
+options="bspwm
+i3
+awesome
+qtile
+dwm
+hyprland
+Quit"
+
+# Choose method
+if command -v gum >/dev/null 2>&1; then
+    choice=$(printf "%s\n" $options | gum choose)
+else
+    PS3="Choose a window manager: "
+    select choice in $options; do
+        [ -n "$choice" ] && break
+        echo "Invalid selection."
+    done
+fi
+
+case "$choice" in
+    "bspwm")
+        echo "Starting bspwm..."
+        exec startx ~/.xinitrc bspwm
+        ;;
+    "awesome")
+        echo "Starting awesome..."
+        exec startx ~/.xinitrc awesome
+        ;;
+    "qtile")
+        echo "Starting qtile..."
+        exec startx ~/.xinitrc qtile
+        ;;
+    "dwm")
+        echo "Starting dwm..."
+        exec startx ~/.xinitrc dwm
+        ;;
+    "hyprland")
+        echo "Starting Hyprland with uwsm..."
+        exec uwsm start default
+        ;;
+    "Quit")
+        echo "Exiting."
+        exit 0
+        ;;
+    *)
+        echo "Invalid choice."
+        exit 1
+        ;;
+esac

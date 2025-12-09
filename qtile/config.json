@@ -1,0 +1,10 @@
+{
+    "bar": "decorated",
+    "colorscheme": "kanagawa",
+    "terminal": "kitty",
+    "wallpaper_main": "~/dotfiles/qtile/hk1.jpg",
+    "wallpaper_sec": "~/.config/qtile/wallpapers/mini_black_hole.png",
+    "with_battery": true,
+    "with_wlan": true,
+    "two_monitors": false
+}
