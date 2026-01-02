@@ -281,7 +281,7 @@ static const Key keys[] = {
     // lock screen
     {Mod1Mask, XK_l, spawn, SHCMD("screenlock.sh")},
 
-    {MODKEY, XK_s, spawn, SHCMD("smart-search")},
+    {MODKEY, XK_s, spawn, SHCMD("spotlight.sh")},
 
     {MODKEY, XK_x, spawn, SHCMD("~/.config/emacs/bin/org-capture")},
 

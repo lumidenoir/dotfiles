@@ -11,7 +11,7 @@ readonly DOWNLOAD_ALBUM_ART=false
 readonly SHOW_ALBUM_ART=true
 
 # Icons
-ICON_PATH="/home/krishna/dotfiles/svgs"
+ICON_PATH="/home/$USER/dotfiles/svgs"
 readonly VOLUME_MUTE_ICON="volume-xmark.svg"
 readonly VOLUME_LOW_ICON="volume-low.svg"
 readonly VOLUME_HIGH_ICON="volume-high.svg"

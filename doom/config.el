@@ -31,10 +31,10 @@
 ;; Enable org-fragtog-mode for automatic LaTeX fragment toggling
 (add-hook 'org-mode-hook 'org-fragtog-mode)
 (setq org-startup-with-latex-preview t) ;; Start with LaTeX preview enabled
-(setq org-cite-csl-styles-dir "/home/krishna/Zotero/styles") ;; Path to CSL styles for citations
+(setq org-cite-csl-styles-dir "/home/lumi/Zotero/styles") ;; Path to CSL styles for citations
 
-(setq reftex-default-bibliography "/home/krishna/org/zotero.bib"
-      org-agenda-files '("/home/krishna/org/todo.org" "/home/krishna/org/todoist.org")
+(setq reftex-default-bibliography "/home/lumi/org/zotero.bib"
+      org-agenda-files '("/home/lumi/org/todo.org" "/home/lumi/org/todoist.org")
       org-fold-catch-invisible-edits 'smart)
 (after! org
   (setq org-adapt-indentation t)
@@ -254,47 +254,6 @@ truncated to fit within the limit using `org-reference-contraction-truncate-word
         org-roam-ui-update-on-save t
         org-roam-ui-open-on-start t))
 
-(use-package! citar
-  :after oc
-  :custom
-  (org-cite-insert-processor 'citar)
-  (org-cite-follow-processor 'citar)
-  (org-cite-activate-processor 'citar)
-  (citar-bibliography '("~/org/zotero.bib"))
-  (citar-org-roam-note-title-template "${author} - ${title}\n"))
-
-;; Additional paths for Citar
-(setq! citar-bibliography '("/home/krishna/org/zotero.bib"))
-(setq! citar-library-paths '("~/org/assets/books/")
-       citar-notes-paths '("~/org/"))
-
-(use-package! citar-org-roam
-  :after (citar org-roam)
-  :config (citar-org-roam-mode))
-
-(after! citar
-  ;; Define advise
-  (defun hp/citar-capf-add-kind-property (orig-fun &rest args)
-    "Advice around `org-roam-complete-link-at-point' to add :company-kind property."
-    (let ((result (apply orig-fun args)))
-      (append result '(:company-kind (lambda (_) 'reference)))))
-  ;; Wraps around the relevant functions
-  (advice-add 'citar-capf :around #'hp/citar-capf-add-kind-property))
-(after! (org-roam kind-icon)
-  (add-to-list
-   'kind-icon-mapping
-   `(org-roam ,(nerd-icons-codicon "nf-cod-symbol_interface") :face font-lock-type-face)))
-
-(setq org-noter-always-create-frame nil
-      org-noter-kill-frame-at-session-end nil)
-
-(use-package! org-habit
-  :custom
-  (org-habit-graph-column 1)
-  (org-habit-preceding-days 7)
-  (org-habit-following-days 3)
-  (org-habit-show-habits-only-for-today nil))
-
 (defun date-three-days-later ()
   "Return the date three days from today in the format YYYY-MM-DD."
   (let* ((today (current-time))                         ;; Get the current time
@@ -471,110 +430,6 @@ truncated to fit within the limit using `org-reference-contraction-truncate-word
 
   :hook (org-mode . svg-tag-mode))
 
-(setq +zen-text-scale 0.8)
-(defvar +zen-serif-p t
-  "Whether to use a serifed font with `mixed-pitch-mode'.")
-(defvar +zen-org-starhide t
-  "The value `org-modern-hide-stars' is set to.")
-
-(after! writeroom-mode
-  (defvar-local +zen--original-org-indent-mode-p nil)
-  (defvar-local +zen--original-mixed-pitch-mode-p nil)
-  (defun +zen-enable-mixed-pitch-mode-h ()
-    "Enable `mixed-pitch-mode' when in `+zen-mixed-pitch-modes'."
-    (when (apply #'derived-mode-p +zen-mixed-pitch-modes)
-      (if writeroom-mode
-          (progn
-            (setq +zen--original-mixed-pitch-mode-p mixed-pitch-mode)
-            (funcall (if +zen-serif-p #'mixed-pitch-serif-mode #'mixed-pitch-mode) 1))
-        (funcall #'mixed-pitch-mode (if +zen--original-mixed-pitch-mode-p 1 -1)))))
-  (defun +zen-prose-org-h ()
-    "Reformat the current Org buffer appearance for prose."
-    (when (eq major-mode 'org-mode)
-      (setq display-line-numbers nil
-            visual-fill-column-width 80
-            org-adapt-indentation nil)
-      (when (featurep 'org-modern)
-        (setq-local org-modern-star '("⚜" "⚜" "⚜" "⚜")
-                    org-modern-hide-stars +zen-org-starhide)
-        (org-modern-mode -1)
-        (org-modern-mode 1))
-      (setq
-       +zen--original-org-indent-mode-p org-indent-mode)
-      (org-indent-mode -1)))
-  (defun +zen-nonprose-org-h ()
-    "Reverse the effect of `+zen-prose-org'."
-    (when (eq major-mode 'org-mode)
-      (when (bound-and-true-p org-modern-mode)
-        (org-modern-mode -1)
-        (org-modern-mode 1))
-      (when +zen--original-org-indent-mode-p (org-indent-mode 1))))
-  (pushnew! writeroom--local-variables
-            'display-line-numbers
-            'visual-fill-column-width
-            'org-adapt-indentation
-            'org-modern-mode
-            'org-modern-star
-            'org-modern-hide-stars)
-  (add-hook 'writeroom-mode-enable-hook #'+zen-prose-org-h)
-  (add-hook 'writeroom-mode-disable-hook #'+zen-nonprose-org-h))
-
-(use-package! org-journal
-    :config
-    (setq org-journal-file-type 'weekly
-          org-journal-enable-agenda-integration t
-          org-journal-date-format "%Y-%m-%d, %A")
-    )
-
-;; Add mu4e to the load path
-(add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e/")
-
-;; Toggle org-msg in mu4e
-(setq +mu4e-compose-org-msg-toggle-next nil)
-
-;; Setting msmtp for sending emails
-(after! mu4e
-  (setq sendmail-program (executable-find "msmtp")
-        send-mail-function #'smtpmail-send-it
-        message-sendmail-f-is-evil t
-        message-sendmail-extra-arguments '("--read-envelope-from")
-        message-send-mail-function #'message-send-mail-with-sendmail))
-
-;; Configure mu4e contexts for different email accounts
-(set-email-account! "iitk"
-                    '((mu4e-sent-folder             . "/iitk/Sent")
-                      (mu4e-drafts-folder           . "/iitk/Drafts")
-                      (mu4e-trash-folder            . "/iitk/Trash")
-                      (mu4e-refile-folder           . "/iitk/All Mail")
-                      (user-mail-address            . "viveksk21@iitk.ac.in")
-                      (user-full-name               . "Krishna Dantu")
-                      (smtpmail-smtp-user           . "viveksk21@iitk.ac.in")
-                      (smtpmail-default-smtp-server . "mmtp.iitk.ac.in")
-                      (smtpmail-smtp-server         . "smtp.cc.iitk.ac.in")
-                      (smtpmail-smtp-service        .  465)
-                      (mu4e-compose-signature       . "Krishna Dantu,\n210299"))
-                    t)
-
-(set-email-account! "gmail"
-                    '((mu4e-sent-folder       . "/gmail/[Gmail]/Sent Mail")
-                      (mu4e-drafts-folder     . "/gmail/[Gmail]/Drafts")
-                      (mu4e-trash-folder      . "/gmail/[Gmail]/Bin")
-                      (mu4e-refile-folder     . "/gmail/[Gmail]/All Mail")
-                      (user-mail-address      . "lumidenoir@gmail.com")
-                      (user-full-name         . "lumi denoir")
-                      (smtpmail-smtp-user     . "lumidenoir@gmail.com")
-                      (smtpmail-smtp-server   . "smtp.gmail.com")
-                      (smtpmail-smtp-service  .  465)
-                      (mu4e-compose-signature . "Yours truly,\nLumi Denoir"))
-                    t)
-
-;; Prompt for context if not specified
-(setq mu4e-context-policy 'ask-if-none
-      mu4e-update-interval 300
-      mu4e-compose-context-policy 'always-ask
-      mu4e-index-cleanup nil
-      mu4e-index-lazy-check t)
-
 (setq +latex-viewers '(zathura))
 (map! :map cdlatex-mode-map
       :i "TAB" #'cdlatex-tab) ;; Use TAB for cdlatex completion
@@ -641,45 +496,6 @@ truncated to fit within the limit using `org-reference-contraction-truncate-word
 (setq yas-triggers-in-field t)
 
 (custom-set-faces! '((corfu-popupinfo) :height 0.9))
-
-(defun ipynb-to-markdown (file)
-  (interactive "f")
-  (let* ((data (with-temp-buffer
-                 (insert-file-contents file)
-                 (json-parse-buffer :object-type 'alist
-                                    :array-type 'list)))
-         (metadata (alist-get 'metadata data))
-         (language-info (alist-get 'language_info metadata))
-         (language (alist-get 'name language-info)))
-    (pop-to-buffer "ipynb-as-markdown")
-    (when (featurep 'markdown-mode)
-      (markdown-mode))
-    (dolist (cell (alist-get 'cells data))
-      (let ((cell-type (alist-get 'cell_type cell))
-            (source (alist-get 'source cell))
-            (outputs (alist-get 'outputs cell)))
-        (pcase cell-type
-          ("markdown"
-           (when source
-             (mapc #'insert source)
-             (insert "\n\n")))
-          ("code"
-           (when source
-             (insert (format "```%s\n" language))
-             (mapc #'insert source)
-             (insert "\n```\n\n")
-             (dolist (output outputs)
-               (let ((output-text (alist-get 'text output))
-                     (output-data (alist-get 'data output)))
-                 (when output-text
-                   (insert "```stdout\n")
-                   (insert (mapconcat #'identity output-text ""))
-                   (insert "\n```\n\n"))
-                 (when output-data
-                   (when-let ((image64 (alist-get 'image/png output-data)))
-                     (let ((image-data (base64-decode-string image64)))
-                       (insert-image (create-image image-data 'png t))
-                       (insert "\n\n")))))))))))))
 
 (defun soph/prettify-symbols-setup ()
   "Beautify keywords"

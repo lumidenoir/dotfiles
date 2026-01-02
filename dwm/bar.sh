@@ -51,9 +51,9 @@ clock() {
 }
 
 vol() {
-    sink_info=$(pactl list sinks)
-    volume=$(echo "$sink_info" | grep '^[[:space:]]Volume:' | head -n $(($SINK + 1)) | tail -n 1 | sed -e 's,.* \([0-9][0-9]*\)%.*,\1,')
-    mute=$(echo "$sink_info" | grep '^[[:space:]]Mute:' | head -n $(($SINK + 1)) | tail -n 1 | awk '{print $2}')
+    DEFAULT_SINK=$(pactl get-default-sink)
+    volume=$(pactl list sinks | grep -A 15 "Name: $DEFAULT_SINK" | grep 'Volume:' | head -n 1 | awk '{print $5}' | sed 's/%//')
+    mute=$(pactl list sinks | grep -A 15 "Name: $DEFAULT_SINK" | grep 'Mute:' | head -n 1 | awk '{print $2}')
 
     if [ "$mute" = "yes" ]; then
         printf "^c$pink^^b$black^ 󰖁 M"

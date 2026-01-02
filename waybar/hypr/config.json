@@ -303,7 +303,7 @@
     "custom/notification": {
         "tooltip": false,
         "format": "<span size='14pt' font='Material Symbols Outlined'>notifications</span>",
-        "on-click": "/home/krishna/dotfiles/scripts/rofier.py",
+        "on-click": "/home/lumi/dotfiles/scripts/rofier.py",
         "escape": true
     }
 }

@@ -35,7 +35,7 @@ fi
 # Set some variables
 wall_dir="${HOME}/Pictures/wallpaper/${theme}"
 cacheDir="${HOME}/.cache/$(whoami)/wallpaper/${theme}"
-rofi_command="rofi -dmenu -theme ${HOME}/old-dots/themes/WallSelect.rasi -theme-str ${rofi_override}"
+rofi_command="rofi -dmenu -theme ${HOME}/dotfiles/rofi/WallSelect.rasi -theme-str ${rofi_override}"
 
 monitor_res=$(xdpyinfo | awk '/dimensions/{print $2}' | cut -d 'x' -f1)
 monitor_scale=$(xdpyinfo | awk '/resolution/{print $2}' | cut -d 'x' -f1)
@@ -66,7 +66,6 @@ wall_path="${wall_dir}/${wall_selection}"
 
 # Apply wallpaper in background so parent script continues
 if [ "$XDG_SESSION_TYPE" = "wayland" ]; then
-    pkill swaybg
     (swww img -t center "$wall_path") >/dev/null 2>&1 &
 else
     (feh --no-fehbg --bg-fill "$wall_path" &) >/dev/null 2>&1 &
@@ -75,5 +74,3 @@ fi
 # Echo full wallpaper path BEFORE applying wallpaper
 echo "$wall_path" >~/.cache/wallpaper
 exit 0
-
-# 869545069722878

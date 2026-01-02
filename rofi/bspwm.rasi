@@ -20,7 +20,7 @@ configuration {
     drun-display-format: "{name}";
     window-format: "{w}{t}";
     font: "JetBrainsMono Nerd Font 10";
-    icon-theme: "Tela-circle-dracula";
+    icon-theme: "Tela-circle-blue";
 }
 
 // Main //
@@ -57,7 +57,7 @@ inputbar {
     children: [ "entry"];
     background-color: transparent;
     background-image: url(
-    "/home/krishna/Pictures/wallpaper/tokyonight/arch.png",
+    "/home/lumi/Pictures/wallpaper/tokyonight/arch.png",
         width
     );
 }

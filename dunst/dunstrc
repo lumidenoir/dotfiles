@@ -83,21 +83,21 @@ timeout = 6
 background = "#171822"
 foreground = "#C0CAF5"
 frame_color = "#7AA2F7"
-icon = /home/krishna/dotfiles/svgs/circle-info.svg
+icon = /home/lumi/dotfiles/svgs/circle-info.svg
 
 [urgency_normal]
 timeout = 8
 background = "#171822"
 foreground = "#C0CAF5"
 frame_color = "#7DCFFF"
-icon = /home/krishna/dotfiles/svgs/triangle-warning.png
+icon = /home/lumi/dotfiles/svgs/triangle-warning.png
 
 [urgency_critical]
 timeout = 0
 background = "#171822"
 foreground = "#C0CAF5"
 frame_color = "#F7768E"
-icon = /home/krishna/dotfiles/svgs/circle-xmark.svg
+icon = /home/lumi/dotfiles/svgs/circle-xmark.svg
 
 [stack-settings]
 summary = "Settings Control"

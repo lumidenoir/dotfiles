@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 DIR=~/org
-MOVIE_DIR=/mnt/shared/movie
+MOVIE_DIR=/mnt/storage/Movies
+EXT_MOVIE_DIR="/run/media/$USER/Seagate Backup Plus Drive/movie"
 BOOKMARK_FILE="$HOME/.cache/.bookmarks"
 EMOJI_FILE="$HOME/dotfiles/emojis.txt"
 
@@ -94,13 +95,12 @@ main() {
     elif [[ "$stype" == "books" || "$stype" == "college" ]]; then
         ASSET_DIR="$DIR/$stype"
         get_assets
-        asset=$( (gen_list) | rofi -dmenu -i -matching normal -no-custom -location 0 -p " " -theme ~/.config/rofi/spotlight.rasi)
+        asset=$( (gen_list) | rofi -dmenu -i -matching normal -no-custom -location 0 -p " " -theme ~/.config/rofi/spotlight.rasi -theme-str "window{width:35em;}")
         if [ -n "$asset" ]; then
             xdg-open "${ASSET[$asset]}"
         fi
     elif [[ "$stype" == "movie" ]]; then
         MOVIE_DIRS=("$MOVIE_DIR")
-        EXT_MOVIE_DIR="/run/media/krishna/Seagate Backup Plus Drive/movie"
 
         ASSET=()
 
@@ -114,7 +114,7 @@ main() {
             get_assets "[EXT]"
         fi
 
-        asset=$( (gen_list) | rofi -dmenu -i -matching normal -no-custom -location 0 -p " " -theme ~/.config/rofi/spotlight.rasi)
+        asset=$( (gen_list) | rofi -dmenu -i -matching normal -no-custom -location 0 -p " " -theme ~/.config/rofi/spotlight.rasi -theme-str "window{width:35em;}")
         if [ -n "$asset" ]; then
             mpv "${ASSET[$asset]}"
         fi

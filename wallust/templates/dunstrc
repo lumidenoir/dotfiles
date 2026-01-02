@@ -83,21 +83,21 @@ timeout = 6
 background = "{{background | darken(0.1)}}"
 foreground = "{{foreground}}"
 frame_color = "{{color4}}"
-icon = /home/krishna/dotfiles/svgs/circle-info.svg
+icon = /home/lumi/dotfiles/svgs/circle-info.svg
 
 [urgency_normal]
 timeout = 8
 background = "{{background | darken(0.1)}}"
 foreground = "{{foreground}}"
 frame_color = "{{color6}}"
-icon = /home/krishna/dotfiles/svgs/triangle-warning.png
+icon = /home/lumi/dotfiles/svgs/triangle-warning.png
 
 [urgency_critical]
 timeout = 0
 background = "{{background | darken(0.1)}}"
 foreground = "{{foreground}}"
 frame_color = "{{color9}}"
-icon = /home/krishna/dotfiles/svgs/circle-xmark.svg
+icon = /home/lumi/dotfiles/svgs/circle-xmark.svg
 
 [stack-settings]
 summary = "Settings Control"

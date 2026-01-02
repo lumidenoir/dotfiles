@@ -57,8 +57,6 @@ take_screenshot() {
     local img
     img="$(make_img_name)"
 
-    play_sound "camera-shutter"
-
     if [[ -n "${WAYLAND_DISPLAY:-}" ]]; then
         need grim
         grim "$@" "$img"
@@ -68,6 +66,8 @@ take_screenshot() {
         maim -u "$@" "$img"
         command -v xclip >/dev/null && xclip -selection clipboard -t image/png -i "$img"
     fi
+
+    play_sound "camera-shutter"
 
     show_notification "$img"
 }

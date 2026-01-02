@@ -65,10 +65,10 @@ If you use =org= and don't want your org files in the default location below, ch
 ;; Enable org-fragtog-mode for automatic LaTeX fragment toggling
 (add-hook 'org-mode-hook 'org-fragtog-mode)
 (setq org-startup-with-latex-preview t) ;; Start with LaTeX preview enabled
-(setq org-cite-csl-styles-dir "/home/krishna/Zotero/styles") ;; Path to CSL styles for citations
+(setq org-cite-csl-styles-dir "/home/lumi/Zotero/styles") ;; Path to CSL styles for citations
 
-(setq reftex-default-bibliography "/home/krishna/org/zotero.bib"
-      org-agenda-files '("/home/krishna/org/todo.org" "/home/krishna/org/todoist.org")
+(setq reftex-default-bibliography "/home/lumi/org/zotero.bib"
+      org-agenda-files '("/home/lumi/org/todo.org" "/home/lumi/org/todoist.org")
       org-fold-catch-invisible-edits 'smart)
 (after! org
   (setq org-adapt-indentation t)
@@ -315,7 +315,7 @@ Org-roam-ui provides a graphical interface for visualizing the network of your O
 ** Citar
 Citar is a citation management package. The following setup integrates it with Org-mode and Org-roam.
 
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp :tangle no
 (use-package! citar
   :after oc
   :custom
@@ -326,7 +326,7 @@ Citar is a citation management package. The following setup integrates it with O
   (citar-org-roam-note-title-template "${author} - ${title}\n"))
 
 ;; Additional paths for Citar
-(setq! citar-bibliography '("/home/krishna/org/zotero.bib"))
+(setq! citar-bibliography '("/home/lumi/org/zotero.bib"))
 (setq! citar-library-paths '("~/org/assets/books/")
        citar-notes-paths '("~/org/"))
 
@@ -360,13 +360,13 @@ Configuration for integrating Todoist with Emacs.
 ** Noter
 Settings for org-noter, a tool for annotating PDFs and other documents with Org-mode.
 
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp :tangle no
 (setq org-noter-always-create-frame nil
       org-noter-kill-frame-at-session-end nil)
 #+end_src
 
 ** Org-habit
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp :tangle no
 (use-package! org-habit
   :custom
   (org-habit-graph-column 1)
@@ -380,7 +380,7 @@ Settings for org-noter, a tool for annotating PDFs and other documents with Org-
 (use-package! org-heatmap
   :after (org)
   :custom
-  (org-heatmap-db-location "/home/krishna/org/org-heatmap.db")
+  (org-heatmap-db-location "/home/lumi/org/org-heatmap.db")
   :config
   (org-heatmap-mode))
 #+end_src
@@ -592,7 +592,7 @@ Super-agenda groups and filters items in Org-agenda views for better organizatio
 #+end_src
 
 ** zen mode
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp :tangle no
 (setq +zen-text-scale 0.8)
 (defvar +zen-serif-p t
   "Whether to use a serifed font with `mixed-pitch-mode'.")
@@ -643,7 +643,7 @@ Super-agenda groups and filters items in Org-agenda views for better organizatio
 #+end_src
 
 ** journal
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp :tangle no
 (use-package! org-journal
     :config
     (setq org-journal-file-type 'weekly
@@ -654,7 +654,7 @@ Super-agenda groups and filters items in Org-agenda views for better organizatio
 * Mu4e
 Mu4e is an email client for Emacs. This configuration sets up multiple email accounts and integrates various functionalities.
 
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp :tangle no
 ;; Add mu4e to the load path
 (add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e/")
 
@@ -676,7 +676,7 @@ Mu4e is an email client for Emacs. This configuration sets up multiple email acc
                       (mu4e-trash-folder            . "/iitk/Trash")
                       (mu4e-refile-folder           . "/iitk/All Mail")
                       (user-mail-address            . "viveksk21@iitk.ac.in")
-                      (user-full-name               . "Krishna Dantu")
+                      (user-full-name               . "Lumi Dantu")
                       (smtpmail-smtp-user           . "viveksk21@iitk.ac.in")
                       (smtpmail-default-smtp-server . "mmtp.iitk.ac.in")
                       (smtpmail-smtp-server         . "smtp.cc.iitk.ac.in")
@@ -796,7 +796,7 @@ nov.el is an Emacs mode for reading EPUB files. This configuration customizes th
 * Tools
 ** IPYNB to markdown
 
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp :tangle no
 (defun ipynb-to-markdown (file)
   (interactive "f")
   (let* ((data (with-temp-buffer

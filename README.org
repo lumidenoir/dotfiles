@@ -2,7 +2,7 @@
 This repository contains my custom dotfiles for configuring various aspects of my Linux environment adapted from many other's configs. Everything is configured for my personal use. *Use at your own discretion*.
 
 * Collection
-- i3-wm, bspwm, dwm (patched), qtile, xmonad, awesome, hyprland, sway, river
+- bspwm, dwm (patched), qtile, awesome, hyprland
 - kitty (main), wezterm, st (dwm)
 - picom
 - neovim (Nvchad), doom emacs

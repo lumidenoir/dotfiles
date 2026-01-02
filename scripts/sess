@@ -39,7 +39,7 @@ case "$choice" in
         ;;
     "hyprland")
         echo "Starting Hyprland with uwsm..."
-        exec uwsm start default
+        exec start-hyprland
         ;;
     "Quit")
         echo "Exiting."

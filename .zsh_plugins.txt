@@ -2,7 +2,7 @@
 
 
 # prompt
-romkatv/powerlevel10k
+# romkatv/powerlevel10k
 
 # use-omz needs to be FIRST
 getantidote/use-omz

@@ -4,7 +4,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(org-agenda-files
-   '("/home/krishna/org/todo.org" "/home/krishna/org/todoist.org")))
+   '("/home/lumi/org/todo.org" "/home/lumi/org/todoist.org")))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

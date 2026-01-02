@@ -4,7 +4,7 @@ xset r rate 200 50 &
 dunst &
 picom -b --corner-radius 0 &
 xrdb merge ~/dotfiles/st/xresources &
-~/.config/dwm/bar.sh &
+~/dotfiles/dwm/bar.sh &
 
 while true; do
     # Log stderror to a file

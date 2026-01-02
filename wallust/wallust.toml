@@ -55,4 +55,4 @@ check_contrast = true
  rofi-hypr = {template = 'hypr.rasi', target='~/.config/rofi/hypr.rasi'}
  waybar = { src = 'hyprbar', target = '~/.config/waybar/colors.css' }
  border = {src='hyprcolors', target = '~/.config/hypr/colors.conf'}
- spotlight = {src='spotlight', target = '~/.config/rofi/spotlight.rasi'}
+ spotlight = {src='spotlight.rasi', target = '~/.config/rofi/spotlight.rasi'}

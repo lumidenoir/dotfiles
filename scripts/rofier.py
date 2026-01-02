@@ -79,7 +79,7 @@ result = subprocess.run(
         "-eh",
         "2",
         "-config",
-        "/home/krishna/.config/rofi/notification.rasi",
+        "/home/lumi/.config/rofi/notification.rasi",
     ],
     input="|".join(entries),
     text=True,
