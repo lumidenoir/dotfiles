@@ -34,7 +34,7 @@
 (setq org-cite-csl-styles-dir "/home/lumi/Zotero/styles") ;; Path to CSL styles for citations
 
 (setq reftex-default-bibliography "/home/lumi/org/zotero.bib"
-      org-agenda-files '("/home/lumi/org/todo.org" "/home/lumi/org/todoist.org")
+      org-agenda-files '("/home/lumi/org/todo.org" "/home/lumi/org/todoist.org" "~/org/daily/")
       org-fold-catch-invisible-edits 'smart)
 (after! org
   (setq org-adapt-indentation t)
@@ -86,79 +86,6 @@
 
 (setq org-export-headline-levels 5) ; I like nesting
 
-(defvar org-reference-contraction-max-words 3
-  "Maximum number of words in a reference reference.")
-(defvar org-reference-contraction-max-length 35
-  "Maximum length of resulting reference reference, including joining characters.")
-(defvar org-reference-contraction-stripped-words
-  '("the" "on" "in" "off" "a" "for" "by" "of" "and" "is" "to" "as")
-  "Superfluous words to be removed from a reference.")
-(defvar org-reference-contraction-joining-char "-"
-  "Character used to join words in the reference reference.")
-
-(defun org-reference-contraction-truncate-words (words)
-  "Using `org-reference-contraction-max-length' as the total character 'budget' for the WORDS
-and truncate individual words to conform to this budget.
-
-To arrive at a budget that accounts for words undershooting their requisite average length,
-the number of characters in the budget freed by short words is distributed among the words
-exceeding the average length.  This adjusts the per-word budget to be the maximum feasable for
-this particular situation, rather than the universal maximum average.
-
-This budget-adjusted per-word maximum length is given by the mathematical expression below:
-
-max length = \\floor{ \\frac{total length - chars for seperators - \\sum_{word \\leq average length} length(word) }{num(words) > average length} }"
-  ;; trucate each word to a max word length determined by
-  ;;
-  (let* ((total-length-budget (- org-reference-contraction-max-length  ; how many non-separator chars we can use
-                                 (1- (length words))))
-         (word-length-budget (/ total-length-budget                      ; max length of each word to keep within budget
-                                org-reference-contraction-max-words))
-         (num-overlong (-count (lambda (word)                            ; how many words exceed that budget
-                                 (> (length word) word-length-budget))
-                               words))
-         (total-short-length (-sum (mapcar (lambda (word)                ; total length of words under that budget
-                                             (if (<= (length word) word-length-budget)
-                                                 (length word) 0))
-                                           words)))
-         (max-length (/ (- total-length-budget total-short-length)       ; max(max-length) that we can have to fit within the budget
-                        num-overlong)))
-    (mapcar (lambda (word)
-              (if (<= (length word) max-length)
-                  word
-                (substring word 0 max-length)))
-            words)))
-
-(defun org-reference-contraction (reference-string)
-  "Give a contracted form of REFERENCE-STRING that is only contains alphanumeric characters.
-Strips 'joining' words present in `org-reference-contraction-stripped-words',
-and then limits the result to the first `org-reference-contraction-max-words' words.
-If the total length is > `org-reference-contraction-max-length' then individual words are
-truncated to fit within the limit using `org-reference-contraction-truncate-words'."
-  (let ((reference-words
-         (cl-remove-if-not
-          (lambda (word)
-            (not (member word org-reference-contraction-stripped-words)))
-          (let ((str reference-string))
-            (setq str (downcase str))
-            (setq str (replace-regexp-in-string "\\[\\[[^]]+\\]\\[\\([^]]+\\)\\]\\]" "\\1" str)) ; get description from org-link
-            (setq str (replace-regexp-in-string "[-/ ]+" " " str)) ; replace seperator-type chars with space
-            (setq str (puny-encode-string str))
-            (setq str (replace-regexp-in-string "^xn--\\(.*?\\) ?-?\\([a-z0-9]+\\)$" "\\2 \\1" str)) ; rearrange punycode
-            (setq str (replace-regexp-in-string "[^A-Za-z0-9 ]" "" str)) ; strip chars which need %-encoding in a uri
-            (split-string str " +")))))
-    (when (> (length reference-words)
-             org-reference-contraction-max-words)
-      (setq reference-words
-            (cl-subseq reference-words 0 org-reference-contraction-max-words)))
-
-    (when (> (apply #'+ (1- (length reference-words))
-                    (mapcar #'length reference-words))
-             org-reference-contraction-max-length)
-      (setq reference-words (org-reference-contraction-truncate-words reference-words)))
-
-    (string-join reference-words org-reference-contraction-joining-char)))
-
 ;; Set Deft to use the first non-empty line as the title, and specify the directory
 (setq deft-use-filename-as-title nil
       deft-directory "~/org/")
@@ -204,7 +131,12 @@ truncated to fit within the limit using `org-reference-contraction-truncate-word
 (setq org-roam-capture-templates
     '(("d" "default" plain "%?" :target
        (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+TITLE:${title}\n#+filetags: :incomplete:\n#+DATE: %U\n#+EXPORT_FILE_NAME: ${slug}\n")
-       :unnarrowed t)))
+       :unnarrowed t)
+("p" "problem" plain "%?"
+         :if-new (file+head "problems/${slug}.org"
+                            "#+title: ${title}\n#+filetags: :cp:cf:lc:\n\n* Problem Link\n[[%^{Link}]]\n\n* Thought Process\n\n* Notes\n\n* Solution\n#+begin_src cpp :tangle ${slug}.cpp\n#include <bits/stdc++.h>\nusing namespace std;\n\ntypedef long long ll;\n\nvoid solve() {\n    // Problem logic goes here\n    string s;\n    if (!(cin >> s)) return;\n    cout << s << \"\\\\n\";\n}\n\nint main() {\n    ios_base::sync_with_stdio(false);\n    cin.tie(nullptr);\n    \n    int t = 1;\n    // cin >> t; // Uncomment if problem has multiple test cases\n    while (t--) {\n        solve();\n    }\n    return 0;\n}\n#+end_src\n\n* Test Input\n#+NAME: test_input\n: \n\n* Expected Output\n#+NAME: expected_output\n: \n\n* Runner\n#+begin_src sh :var input=test_input :var expected=expected_output :results output\nif [ ! -f ${slug}.out ] || [ ${slug}.cpp -nt ${slug}.out ]; then\n  g++ -std=c++20 -O2 -Wall -Wextra ${slug}.cpp -o ${slug}.out\nfi\n\necho \"===== PROGRAM OUTPUT =====\"\noutput=$(printf \"%s\\\\n\" \"$input\" | ./${slug}.out)\necho \"$output\"\n\necho \"===== DIFF =====\"\ndiff -wB <(echo \"$output\") <(echo \"$expected\") && echo \"All tests passed!\" || echo \"Mismatch detected!\"\n#+end_src\n")
+         :unnarrowed t)
+      ))
 
 ;; Configure timestamp format for Org-roam
 (setq time-stamp-active t
@@ -430,6 +362,55 @@ truncated to fit within the limit using `org-reference-contraction-truncate-word
 
   :hook (org-mode . svg-tag-mode))
 
+;; Add mu4e to the load path
+(add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e/")
+
+;; Toggle org-msg in mu4e
+(setq +mu4e-compose-org-msg-toggle-next nil)
+
+;; Setting msmtp for sending emails
+(after! mu4e
+  (setq sendmail-program (executable-find "msmtp")
+        send-mail-function #'smtpmail-send-it
+        message-sendmail-f-is-evil t
+        message-sendmail-extra-arguments '("--read-envelope-from")
+        message-send-mail-function #'message-send-mail-with-sendmail))
+
+;; Configure mu4e contexts for different email accounts
+(set-email-account! "iitk"
+                    '((mu4e-sent-folder             . "/iitk/Sent")
+                      (mu4e-drafts-folder           . "/iitk/Drafts")
+                      (mu4e-trash-folder            . "/iitk/Trash")
+                      (mu4e-refile-folder           . "/iitk/All Mail")
+                      (user-mail-address            . "viveksk21@iitk.ac.in")
+                      (user-full-name               . "Lumi Dantu")
+                      (smtpmail-smtp-user           . "viveksk21@iitk.ac.in")
+                      (smtpmail-default-smtp-server . "mmtp.iitk.ac.in")
+                      (smtpmail-smtp-server         . "smtp.cc.iitk.ac.in")
+                      (smtpmail-smtp-service        .  465)
+                      (mu4e-compose-signature       . "Krishna Dantu,\n210299"))
+                    t)
+
+;; (set-email-account! "gmail"
+;;                     '((mu4e-sent-folder       . "/gmail/[Gmail]/Sent Mail")
+;;                       (mu4e-drafts-folder     . "/gmail/[Gmail]/Drafts")
+;;                       (mu4e-trash-folder      . "/gmail/[Gmail]/Bin")
+;;                       (mu4e-refile-folder     . "/gmail/[Gmail]/All Mail")
+;;                       (user-mail-address      . "lumidenoir@gmail.com")
+;;                       (user-full-name         . "lumi denoir")
+;;                       (smtpmail-smtp-user     . "lumidenoir@gmail.com")
+;;                       (smtpmail-smtp-server   . "smtp.gmail.com")
+;;                       (smtpmail-smtp-service  .  465)
+;;                       (mu4e-compose-signature . "Yours truly,\nLumi Denoir"))
+;;                     t)
+
+;; Prompt for context if not specified
+(setq mu4e-context-policy 'ask-if-none
+      mu4e-update-interval 300
+      mu4e-compose-context-policy 'always-ask
+      mu4e-index-cleanup nil
+      mu4e-index-lazy-check t)
+
 (setq +latex-viewers '(zathura))
 (map! :map cdlatex-mode-map
       :i "TAB" #'cdlatex-tab) ;; Use TAB for cdlatex completion
@@ -496,6 +477,16 @@ truncated to fit within the limit using `org-reference-contraction-truncate-word
 (setq yas-triggers-in-field t)
 
 (custom-set-faces! '((corfu-popupinfo) :height 0.9))
+
+(with-eval-after-load 'lsp-clangd
+  (setq lsp-clients-clangd-args
+        '("-j=3"
+          "--background-index"
+          "--clang-tidy"
+          "--completion-style=detailed"
+          "--header-insertion=never"
+          "--header-insertion-decorators=0"))
+  (set-lsp-priority! 'clangd 2))
 
 (defun soph/prettify-symbols-setup ()
   "Beautify keywords"
@@ -591,6 +582,9 @@ truncated to fit within the limit using `org-reference-contraction-truncate-word
         '(ruff-isort ruff))
   (setf (alist-get 'python-ts-mode apheleia-mode-alist)
       '(ruff-isort ruff)))
+
+(after! python
+  (set-formatter! 'ruff :modes '(python-mode python-ts-mode)))
 
 (setq lsp-dart-sdk-dir "~/flutter/bin/cache/dart-sdk"
       lsp-dart-flutter-sdk "~/flutter"

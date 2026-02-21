@@ -1,148 +1,83 @@
 #!/usr/bin/env bash
 DIR=~/org
-MOVIE_DIR=/mnt/storage/Movies
-EXT_MOVIE_DIR="/run/media/$USER/Seagate Backup Plus Drive/movie"
+MOVIE_DIRS=("/mnt/storage/Movies" "/run/media/$USER/Seagate Backup Plus Drive/movie")
+DOC_DIRS=("books" "college")
 BOOKMARK_FILE="$HOME/.cache/.bookmarks"
 EMOJI_FILE="$HOME/dotfiles/emojis.txt"
+ROFI_CMD="rofi -dmenu -i -theme ~/.config/rofi/spotlight.rasi"
 
 touch "$BOOKMARK_FILE"
-
-# Function to prompt user for the folder choice
-choose_search() {
-    echo -e "theme\nweb\nbooks\ncollege\nscreenshot\nmovie\nemoji" | rofi -dmenu -i -matching normal -no-custom -location 0 -p "Select search " -theme ~/.config/rofi/spotlight.rasi
-}
-
-# Associative array for storing assets
 declare -A ASSET
 
-# Add elements to ASSET array
-get_assets() {
-    local label="$1"
-    readarray -t F_ARRAY <<<"$(find "$ASSET_DIR" -type f)"
-
-    if [[ -n ${F_ARRAY[*]} ]]; then
-        for i in "${!F_ARRAY[@]}"; do
-            path="${F_ARRAY[$i]}"
-            file=$(basename "$path")
-            if [[ -n "$label" ]]; then
-                ASSET["$label $file"]="$path"
-            else
-                ASSET["$file"]="$path"
-            fi
-        done
-    else
-        echo "$ASSET_DIR is empty!"
-        exit
-    fi
-}
-
-# List for rofi
-gen_list() {
-    for i in "${!ASSET[@]}"; do
-        echo "$i"
-    done
-}
-
-#List for screenshot
-get_options() {
-    echo "  Capture Region"
-    echo "  Capture Screen in 3sec"
-    echo "  Capture Active"
-    echo "  Record Screen"
-    echo "  Record Region"
-    echo "Stop recording"
+load_assets() {
+    local label="$1" search_dir="$2"
+    [[ ! -d "$search_dir" ]] && return
+    while IFS= read -r path; do
+        ASSET["${label}$(basename "$path")"]="$path"
+    done < <(find "$search_dir" -type f 2>/dev/null)
 }
 
 main() {
-    stype=$(choose_search)
-    if [[ "$stype" == "screenshot" ]]; then
-        choice=$( (get_options) | rofi -dmenu -i -fuzzy -p " " -theme ~/.config/rofi/spotlight.rasi)
-        case $choice in
-        '  Capture Region')
-            screenshot.sh --sel
-            ;;
-        '  Capture Screen in 3sec')
-            screenshot.sh --in 3
-            ;;
-        '  Capture Active')
-            screenshot.sh --active
-            ;;
-        '  Record Region')
-            screenshot.sh --record-sel
-            ;;
-        '  Record Screen')
-            screenshot.sh --record
-            ;;
-        'Stop recording')
-            screenshot.sh --stop
-            ;;
-        esac
-    elif [[ "$stype" == "web" ]]; then
-        query=$( (echo) | rofi -dmenu -i -lines 0 -matching fuzzy -location 0 -p " " -input "$BOOKMARK_FILE" -theme ~/.config/rofi/spotlight.rasi)
-        if [[ -n "$query" ]]; then
-            # If the query is a URL, open it directly
-            if [[ "$query" == "http"* || "$query" == "www"* ]]; then
-                xdg-open "$query"
-            else
-                # Construct DuckDuckGo search URL
-                url="https://www.duckduckgo.com/?q=$query"
-                # Open the URL using qutebrowser
-                qutebrowser "$url"
-            fi
-        else
-            echo "no url"
-        fi
-    elif [[ "$stype" == "books" || "$stype" == "college" ]]; then
-        ASSET_DIR="$DIR/$stype"
-        get_assets
-        asset=$( (gen_list) | rofi -dmenu -i -matching normal -no-custom -location 0 -p " " -theme ~/.config/rofi/spotlight.rasi -theme-str "window{width:35em;}")
-        if [ -n "$asset" ]; then
-            xdg-open "${ASSET[$asset]}"
-        fi
-    elif [[ "$stype" == "movie" ]]; then
-        MOVIE_DIRS=("$MOVIE_DIR")
-
-        ASSET=()
-
-        # main movies
-        ASSET_DIR="$MOVIE_DIR"
-        get_assets
-
-        # external drive movies
-        if [[ -d "$EXT_MOVIE_DIR" ]]; then
-            ASSET_DIR="$EXT_MOVIE_DIR"
-            get_assets "[EXT]"
-        fi
-
-        asset=$( (gen_list) | rofi -dmenu -i -matching normal -no-custom -location 0 -p " " -theme ~/.config/rofi/spotlight.rasi -theme-str "window{width:35em;}")
-        if [ -n "$asset" ]; then
-            mpv "${ASSET[$asset]}"
-        fi
-    elif [[ "$stype" == "theme" ]]; then
-        theme.sh
-    elif [[ "$stype" == "emoji" ]]; then
-        if command -v wl-copy &>/dev/null; then
-            CLIP="wl-copy"
-        else
-            CLIP="xclip -selection clipboard"
-        fi
-        [[ ! -f "$EMOJI_FILE" ]] && {
-            echo "Emoji file not found: $EMOJI_FILE" >&2
-            curl https://raw.githubusercontent.com/Mange/rofi-emoji/refs/heads/master/all_emojis.txt -o $EMOJI_FILE
-            exit 1
-        }
-        CHOSEN=$(awk -F'\t' '{printf "%s\t%s\n", $1, $4}' "$EMOJI_FILE" | rofi -dmenu -i -p "Select emoji" -format s -theme ~/.config/rofi/spotlight.rasi)
-
-        [[ -n "$CHOSEN" ]] && {
-            EMOJI=$(echo "$CHOSEN" | cut -f1)
-            echo -n "$EMOJI" | eval "$CLIP"
-            notify-send "Copied: $EMOJI"
-        }
+    # If an argument is passed (e.g., ./spotlight.sh clipboard), use it.
+    # Otherwise, open the Rofi menu to select the mode.
+    if [[ -n "$1" ]]; then
+        stype="$1"
     else
-        echo "none selected"
+        stype=$(echo -e "theme\nweb\nlibrary\nscreenshot\nmovie\nemoji\nclipboard" | $ROFI_CMD -p "Select search ")
     fi
+
+    case "$stype" in
+        screenshot)
+            choice=$(echo -e "  Capture Region\n  Capture Screen in 3sec\n  Capture Active\n  Record Screen\n  Record Region\nStop recording" | $ROFI_CMD -p " ")
+            case "$choice" in
+                *'Region') screenshot.sh --sel ;;
+                *'3sec')   screenshot.sh --in 3 ;;
+                *'Active') screenshot.sh --active ;;
+                *'Record'*) screenshot.sh --record${choice/*Region/-sel} ;;
+                'Stop'*)   screenshot.sh --stop ;;
+            esac ;;
+        web)
+            query=$($ROFI_CMD -p " " -input "$BOOKMARK_FILE" -lines 0)
+            [[ -z "$query" ]] && exit
+            [[ "$query" =~ ^(http|www) ]] && xdg-open "$query" || qutebrowser "https://duckduckgo.com/?q=$query" ;;
+        library|movie)
+            if [[ "$stype" == "library" ]]; then
+                for sub in "${DOC_DIRS[@]}"; do load_assets "[$sub] " "$DIR/$sub"; done
+                opener="xdg-open"
+            else
+                load_assets "" "${MOVIE_DIRS[0]}"
+                load_assets "[EXT] " "${MOVIE_DIRS[1]}"
+                opener="mpv"
+            fi
+            choice=$(printf "%s\n" "${!ASSET[@]}" | $ROFI_CMD -p " " -theme-str "window{width:35em;}")
+            [[ -n "$choice" ]] && $opener "${ASSET[$choice]}" ;;
+        theme) theme.sh ;;
+        emoji)
+            [[ ! -f "$EMOJI_FILE" ]] && curl -s https://raw.githubusercontent.com/Mange/rofi-emoji/master/all_emojis.txt -o "$EMOJI_FILE"
+            CHOSEN=$(awk -F'\t' '{printf "%s\t%s\n", $1, $4}' "$EMOJI_FILE" | $ROFI_CMD -p "Emoji")
+            
+            if [[ -n "$CHOSEN" ]]; then
+                EMOJI=$(echo "$CHOSEN" | awk '{print $1}' | tr -d '\n\r')
+                if [[ -n "$WAYLAND_DISPLAY" ]]; then
+                    echo -n "$EMOJI" | wl-copy
+                else
+                    echo -n "$EMOJI" | xclip -selection clipboard
+                fi
+                notify-send "Copied $EMOJI"
+            fi ;;
+        clipboard)
+            if [[ -n "$WAYLAND_DISPLAY" ]]; then
+                CHOSEN=$(cliphist list | $ROFI_CMD -p "Clipboard")
+                if [[ -n "$CHOSEN" ]]; then
+                    echo "$CHOSEN" | cliphist decode | wl-copy
+                fi
+            else
+                rofi -modi "clipboard:greenclip print" -show clipboard \
+                    -theme-str "window{width:45em;}" \
+                    -theme ~/.config/rofi/spotlight.rasi
+            fi ;;
+    esac
 }
 
-main
-
-exit 0
+# Pass all script arguments to the main function
+main "$@"

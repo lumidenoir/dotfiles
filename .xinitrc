@@ -1,29 +1,43 @@
 #!/usr/bin/env sh
 
-# Default WM if no argument is given
-DEFAULT_WM="bspwm"
+DEFAULT_WM="LG3D"
 
+# Session identity
+export XDG_SESSION_TYPE=x11
+export XDG_CURRENT_DESKTOP="$1"
+export DESKTOP_SESSION="$1"
+
+# Background helpers
 pgrep -f auto_network_switch.sh >/dev/null || auto_network_switch.sh &
+pgrep -f battery_notifier.sh >/dev/null || battery_notifier.sh &
 
-# Parse the argument to startx
+# Start portals
+/usr/lib/xdg-desktop-portal &
+/usr/lib/xdg-desktop-portal-gtk &
+/usr/lib/kf6/kiod6 &
+
 case "$1" in
-bspwm)
-    exec /usr/bin/bspwm
-    ;;
-i3)
-    exec /usr/bin/i3
-    ;;
-awesome)
-    exec /usr/bin/awesome
-    ;;
-dwm)
-    exec ~/dotfiles/dwm/run.sh
-    ;;
-qtile)
-    exec /usr/bin/qtile start
-    ;;
-*)
-    echo "No valid X11 WM specified. Starting $DEFAULT_WM..."
-    exec "$DEFAULT_WM"
-    ;;
+    LG3D)
+        exec dbus-run-session /usr/bin/bspwm
+        ;;
+    i3)
+        exec dbus-run-session /usr/bin/i3
+        ;;
+    awesome)
+        exec dbus-run-session /usr/bin/awesome
+        ;;
+    dwm)
+        exec dbus-run-session ~/dotfiles/dwm/run.sh
+        ;;
+    qtile)
+        exec dbus-run-session /usr/bin/qtile start
+        ;;
+    "")
+        echo "No WM specified, starting $DEFAULT_WM"
+        exec dbus-run-session /usr/bin/bspwm
+        ;;
+    *)
+        echo "Invalid WM: $1"
+        exit 1
+        ;;
 esac

@@ -66,7 +66,7 @@ wall_path="${wall_dir}/${wall_selection}"
 
 # Apply wallpaper in background so parent script continues
 if [ "$XDG_SESSION_TYPE" = "wayland" ]; then
-    (swww img -t center "$wall_path") >/dev/null 2>&1 &
+    (swww img --transition-bezier .43,1.19,1,.4 --transition-fps 30 --transition-type grow --transition-pos 0.925,0.977 --transition-duration 2 "$wall_path") >/dev/null 2>&1 &
 else
     (feh --no-fehbg --bg-fill "$wall_path" &) >/dev/null 2>&1 &
 fi

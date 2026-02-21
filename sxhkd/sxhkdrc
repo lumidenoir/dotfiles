@@ -184,3 +184,6 @@ alt + n
 # emacs extensions
 super + x
       ~/.config/emacs/bin/org-capture
+
+super + v
+      spotlight.sh clipboard

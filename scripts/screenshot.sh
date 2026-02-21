@@ -92,7 +92,8 @@ start_recording() {
         need xdpyinfo
         screen_size="$(xdpyinfo | awk '/dimensions/ {print $2}')"
         ffmpeg -y -video_size "$screen_size" -framerate 25 -f x11grab -i "$DISPLAY" \
-            -c:v libx264 -preset ultrafast -crf 18 "$video" &
+            -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv420p" \
+            -c:v libx264 -preset veryfast -crf 18 -movflags +faststart "$video" &
     fi
 
     pid=$!
@@ -120,8 +121,9 @@ start_region_recording() {
         need xdpyinfo
         sel="$(slop -f '%w:%h:%x:%y')"
         play_sound "service-login"
-        ffmpeg -y -f x11grab -framerate 25 -i "$DISPLAY" -vf "crop=$sel" \
-            -c:v libx264 -preset ultrafast -crf 18 "$video" &
+        ffmpeg -y -f x11grab -framerate 25 -i "$DISPLAY" \
+            -vf "crop=$sel,scale=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv420p" \
+            -c:v libx264 -preset ultrafast -crf 18 -movflags +faststart "$video" &
     fi
 
     pid=$!

@@ -26,6 +26,7 @@ Account iitk
 MaildirStore iitk-local
 Path ~/Mail/iitk/
 Inbox ~/Mail/iitk/INBOX
+SubFolders Verbatim
 
 Channel iitk
 Far :iitk-remote:

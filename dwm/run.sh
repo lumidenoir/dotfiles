@@ -5,6 +5,7 @@ dunst &
 picom -b --corner-radius 0 &
 xrdb merge ~/dotfiles/st/xresources &
 ~/dotfiles/dwm/bar.sh &
+clipse -listen &
 
 while true; do
     # Log stderror to a file

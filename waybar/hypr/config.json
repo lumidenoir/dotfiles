@@ -4,11 +4,9 @@
     "position": "top",
     "spacing": 0,
     "margin": "8px 8px 0 8px",
-    "modules-left": ["custom/arch", "hyprland/workspaces"],
+    "modules-left": ["custom/arch", "hyprland/workspaces", "group/group-extras", "tray"],
     "modules-center": ["mpris"],
     "modules-right": [
-        "tray",
-        "group/group-extras",
         "privacy",
         "network",
         "bluetooth",
@@ -25,7 +23,7 @@
         "drawer": {
             "transition-duration": 400,
             "children-class": "extras",
-            "transition-left-to-right": false
+            "transition-left-to-right": true
         },
         "modules": ["custom/menu", "custom/updates", "power-profiles-daemon"]
     },
@@ -48,7 +46,7 @@
         "modules": ["pulseaudio", "pulseaudio/slider"]
     },
     "custom/arch": {
-        "format": "󰣇  btw",
+        "format": "󰣇",
         "tooltip": false,
         "on-click": "kitty",
         "on-click-right": ""

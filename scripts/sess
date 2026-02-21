@@ -2,11 +2,11 @@
 
 # List of options
 options="bspwm
-i3
 awesome
 qtile
 dwm
 hyprland
+niri
 Quit"
 
 # Choose method
@@ -23,7 +23,7 @@ fi
 case "$choice" in
     "bspwm")
         echo "Starting bspwm..."
-        exec startx ~/.xinitrc bspwm
+        exec startx ~/.xinitrc LG3D
         ;;
     "awesome")
         echo "Starting awesome..."
@@ -38,8 +38,12 @@ case "$choice" in
         exec startx ~/.xinitrc dwm
         ;;
     "hyprland")
-        echo "Starting Hyprland with uwsm..."
+        echo "Starting Hyprland..."
         exec start-hyprland
+        ;;
+    "niri")
+        echo "Starting niri..."
+        exec niri-session
         ;;
     "Quit")
         echo "Exiting."

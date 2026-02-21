@@ -56,7 +56,7 @@ killall -q dunst
 dunst &
 pidof -q polkit-gnome-authentication-agent-1 || { /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 & }
 picom -b &
-
+greenclip daemon &
 ## Fix java applications
 export _JAVA_AWT_WM_NONREPARENTING=1
 wmname LG3D

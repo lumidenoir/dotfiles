@@ -46,7 +46,7 @@ static const char *mutevol[] = {"/usr/bin/pactl", "set-sink-mute", "0",
 static const char *light_up[] = {"brightnessctl", "set", "10%+", NULL};
 static const char *light_down[] = {"brightnessctl", "s", "10%-", NULL};
 static const char *play_pause[] = {"playerctl", "play-pause", NULL};
-static const char *play_prev[] ={"playerctl", "previous", NULL};
+static const char *play_prev[] = {"playerctl", "previous", NULL};
 static const char *play_next[] = {"playerctl", "next", NULL};
 static const int new_window_attach_on_end =
     1; /*  1 means the new window will attach on the end; 0 means the new window
@@ -83,9 +83,7 @@ static const char *colors[][3] = {
 /* tagging */
 static char *tags[] = {"一", "二", "三", "四", "五"};
 
-static const char *session[] = {
-    "/usr/local/bin/powermenu.sh",
-    NULL};
+static const char *session[] = {"/usr/local/bin/powermenu.sh", NULL};
 
 static const Launcher launchers[] = {
     /* command     name to display */
@@ -162,7 +160,6 @@ static const Layout layouts[] = {
     }
 static const char *dmenucmd[] = {"dmenu_run", "-c", "-l",    "20", "-g",
                                  "2",         "-p", "Run :", NULL};
-
 /* commands */
 
 static const Key keys[] = {
@@ -266,6 +263,7 @@ static const Key keys[] = {
 
     // kill window
     {Mod1Mask, XK_q, killclient, {0}},
+    {MODKEY, XK_v, spawn, SHCMD("spotlight.sh clipboard")},
 
     // restart
     {MODKEY | ShiftMask, XK_r, restart, {0}},
@@ -275,8 +273,7 @@ static const Key keys[] = {
     {MODKEY | ShiftMask, XK_e, restorewin, {0}},
 
     // powermenu
-    {MODKEY, XK_p, spawn,
-     SHCMD("/usr/local/bin/powermenu.sh")},
+    {MODKEY, XK_p, spawn, SHCMD("/usr/local/bin/powermenu.sh")},
 
     // lock screen
     {Mod1Mask, XK_l, spawn, SHCMD("screenlock.sh")},
