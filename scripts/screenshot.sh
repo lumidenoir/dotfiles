@@ -215,7 +215,8 @@ case "${1:-}" in
         take_screenshot -s -o
     fi
     ;;
--active)
+--active)
+    countdown 3
     if [[ -n "${WAYLAND_DISPLAY:-}" ]]; then
         rect=""
 
@@ -223,6 +224,7 @@ case "${1:-}" in
         if [[ -z "$rect" && $(command -v hyprctl) ]]; then
             rect=$(hyprctl -j activewindow 2>/dev/null | jq -r \
                 '"\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])"' || echo "")
+            echo $rect
         fi
 
         # --- Fallback to fullscreen if rect is empty ---

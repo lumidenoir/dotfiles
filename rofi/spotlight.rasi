@@ -13,12 +13,12 @@ configuration {
 }
 
 * {
-    main-bg: #1A1B26;
-    main-fg: #C0CAF5;
-    main-br: #F7768E;
-    main-ex: #F7768E;
-    select-bg: #9ECE6A;
-    select-fg: #1A1B26e6;
+    main-bg: #282828;
+    main-fg: #EBDBB2;
+    main-br: #CC241D;
+    main-ex: #FB4934;
+    select-bg: #98971A;
+    select-fg: #282828e6;
     separatorcolor: transparent;
     border-color: transparent;
 }
@@ -56,7 +56,7 @@ inputbar {
     padding:                     4em;
     children:                    [ "entry" ];
     background-color:            @main-bg;
-    background-image:            url("/home/lumi/Pictures/wallpaper/tokyonight/arch.png", width);
+    background-image:            url("/home/lumi/Pictures/wallpaper/gruvbox/air.jpg", width);
     border-radius:               1em 1em 0em 0em;
 }
 entry {
