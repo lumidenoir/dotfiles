@@ -5,16 +5,14 @@ This repository contains my custom dotfiles for configuring various aspects of m
 - bspwm, dwm (patched), qtile, awesome, hyprland
 - kitty (main), wezterm, st (dwm)
 - picom
-- neovim (Nvchad), doom emacs
+- neovim (Nvchad), doom emacs, helix
 - polybar, waybar
 - rofi, dmenu
-- eww
 - dunst
-- mpd, mpDris2, rmpc, cava
-- neofetch
+- mpd, mpDris2, ncmpcpp, rmpc, cava
 - zathura
 - theme switcher with ~theme.sh~
-- startx session manager using ~sess~
+- session manager using ~sess~
 
 * Installation:
 Due to the diverse nature of these configurations and potential system variations, there's no one-size-fits-all installation process. However you can carefully examine the files and adapt it to your specific requirements. The below script is only for Arch users.

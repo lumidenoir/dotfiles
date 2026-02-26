@@ -11,7 +11,7 @@
 
 # How the image is parse, in order to get the colors:
 # full - resized - wal - thumb -  fastresize - kmeans
-backend = "kmeans"
+backend = "full"
 
 # What color space to use to produce and select the most prominent colors:
 # lab - labmixed - lch - lchmixed
@@ -50,7 +50,6 @@ check_contrast = true
  kitty = {template = 'kitty.conf' , target = '~/.config/kitty/kitty.conf'}
  rofi-bspwm  = {template = 'bspwm.rasi' , target = '~/.config/rofi/bspwm.rasi'}
  polybar-bspwm = {template = 'bspwm.ini' , target = '~/.config/polybar/bspwm.ini'}
- eww = {template = 'eww', target = '~/dotfiles/eww/colors.scss'}
  rofi-qt ={template = 'qtile.rasi', target = '~/.config/rofi/qtile.rasi'}
  hotkeys = {template = 'hotkeys.rasi', target = '~/.config/rofi/hotkeys.rasi'}
  netdm = {template = 'netman.rasi' , target = '~/.config/rofi/NetManagerDM.rasi'}
