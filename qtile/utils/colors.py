@@ -10,7 +10,7 @@ colorscheme = {
     "everforest": "everforest.json",
     "gruvbox": "gruvbox.json",
     "dracula": "dracula.json",
-}.get(config["colorscheme"], "catppuccin.json")
+}.get(config["colorscheme"], "wallust.json")
 
 path = f"{dir.get()}/utils/colorscheme/{colorscheme}"
 

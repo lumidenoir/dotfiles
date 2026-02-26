@@ -63,3 +63,4 @@ check_contrast = true
  helix = {src='helix.toml', target='~/.config/helix/themes/wallust.toml'}
  notification = {src='notification.rasi', target="~/.config/rofi/notification.rasi"}
  wallselect = {src='WallSelect.rasi', target='~/.config/rofi/WallSelect.rasi'}
+ qtilecolor = {src='qtile.json', target='~/dotfiles/qtile/utils/colorscheme/wallust.json'}

@@ -60,5 +60,6 @@ fi
 polybar-msg cmd restart >/dev/null 2>&1
 restart_dunst
 pkill -USR2 -x waybar 2>/dev/null
+pkill -SIGUSR1 -x qtile 2>/dev/null
 
 exit 0

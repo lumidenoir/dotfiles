@@ -204,36 +204,41 @@ keys = [
     Key(
         [],
         "XF86AudioRaiseVolume",
-        lazy.spawn("settings_control.sh volup"),
+        lazy.spawn("settings_control.sh volume_up"),
         desc="Increase volume",
     ),
     Key(
         [],
         "XF86AudioLowerVolume",
-        lazy.spawn("settings_control.sh voldown"),
+        lazy.spawn("settings_control.sh volume_down"),
         desc="Decrease volume",
     ),
     Key(
         [],
         "XF86AudioMute",
-        lazy.spawn("settings_control.sh volmute"),
+        lazy.spawn("settings_control.sh volume_mute"),
         desc="Toggle volume mute",
     ),
     # brightness
     Key(
         [],
         "XF86MonBrightnessUp",
-        lazy.spawn("settings_control.sh briup"),
+        lazy.spawn("settings_control.sh brightness_up"),
         desc="Increase brightness",
     ),
     Key(
         [],
         "XF86MonBrightnessDown",
-        lazy.spawn("settings_control.sh bridown"),
+        lazy.spawn("settings_control.sh brightness_down"),
         desc="Decrease brightness",
     ),
     # misc
-    # Key([mod], "w", lazy.spawn("" + home + "/.local/bin/wmname"), desc='Get wmname of a window',),
+    Key(
+        [mod],
+        "s",
+        lazy.spawn("spotlight.sh"),
+        desc="Launch spotlight",
+    ),
     # bar
     Key([mod, "control"], "0", toggle_bar(), desc="Toggle bar"),
     Key(
@@ -241,23 +246,6 @@ keys = [
         "1",
         lazy.widget["widgetbox"].toggle(),
         desc="Toggle widgetbox",
-    ),
-    # keychords
-    KeyChord(
-        [mod],
-        "l",
-        [
-            Key([], "d", lazy.spawn("discord"), desc="Launch Discord"),
-            Key([], "f", lazy.spawn("thunar"), desc="Launch Thunar"),
-            Key(
-                [],
-                "s",
-                lazy.spawn("smart-search"),
-                desc="Launch Book search",
-            ),
-            Key([], "m", lazy.spawn("spotify"), desc="Launch Spotify"),
-        ],
-        name="Launcher",
     ),
 ]
 

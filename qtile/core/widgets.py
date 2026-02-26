@@ -34,7 +34,7 @@ group_box_settings = {
 
 
 def open_launcher():
-    qtile.cmd_spawn("rofi -show drun -theme ~/.config/rofi/kanagawa.rasi")
+    qtile.cmd_spawn("rofi -show drun -theme ~/.config/rofi/qtile.rasi")
 
 
 def open_powermenu():
@@ -364,7 +364,7 @@ def w_updates():
             display_format="󰊠",
             distro="Arch",
             initial_text="󰊠",
-            no_update_string="󰧵",  # "󰧵",
+            no_update_string="󰊠",  # "󰧵",
             font="JetBrainsMono Nerd Font",
             fontsize=18,
             foreground=color["dark"],  # blue
@@ -448,7 +448,7 @@ def music_name():
         widget.TextBox(
             text="⏮ ",
             font="JetBrainsMono Nerd Font",
-            fontsize=24,
+            fontsize=20,
             foreground="#ffffff",
             padding=2,
             mouse_callbacks={"Button1": play_prev},
@@ -467,12 +467,12 @@ def music_name():
             format="{xesam:title}",
             stopped_text="~ sweet ~",
             font="JetBrainsMono Nerd Font",
-            fontsize=18,
+            fontsize=16,
         ),
         widget.TextBox(
             text=" ⏭",
             font="JetBrainsMono Nerd Font",
-            fontsize=24,
+            fontsize=20,
             foreground="#ffffff",
             padding=2,
             mouse_callbacks={"Button1": play_next},
