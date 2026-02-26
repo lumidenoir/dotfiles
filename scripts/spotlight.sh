@@ -67,10 +67,7 @@ main() {
             fi ;;
         clipboard)
             if [[ -n "$WAYLAND_DISPLAY" ]]; then
-                CHOSEN=$(cliphist list | $ROFI_CMD -p "Clipboard")
-                if [[ -n "$CHOSEN" ]]; then
-                    echo "$CHOSEN" | cliphist decode | wl-copy
-                fi
+                kitty --class clipse -e 'clipse'
             else
                 rofi -modi "clipboard:greenclip print" -show clipboard \
                     -theme-str "window{width:45em;}" \

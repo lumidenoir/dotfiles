@@ -7,3 +7,6 @@ dmenu/config.h
 mpd/state
 qtile/__pycache__/
 qtile/*/__pycache__/
+waybar/color.css
+eww/colors.scss
+hypr/colors.conf

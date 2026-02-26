@@ -35,7 +35,7 @@ fi
 # Set some variables
 wall_dir="${HOME}/Pictures/wallpaper/${theme}"
 cacheDir="${HOME}/.cache/$(whoami)/wallpaper/${theme}"
-rofi_command="rofi -dmenu -theme ${HOME}/dotfiles/rofi/WallSelect.rasi -theme-str ${rofi_override}"
+rofi_command="rofi -dmenu -theme ${HOME}/.config/rofi/WallSelect.rasi -theme-str ${rofi_override}"
 
 monitor_res=$(xdpyinfo | awk '/dimensions/{print $2}' | cut -d 'x' -f1)
 monitor_scale=$(xdpyinfo | awk '/resolution/{print $2}' | cut -d 'x' -f1)

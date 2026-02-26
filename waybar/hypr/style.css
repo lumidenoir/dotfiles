@@ -135,6 +135,14 @@ window#waybar {
     min-height: 30px;
 }
 
+#memory {
+    background: @background;
+    padding: 0 12px;
+    border-radius: 10px;
+    margin: 0 4px;
+    min-height: 30px
+}
+
 /* ======================= */
 /* System Indicators       */
 /* ======================= */
@@ -359,7 +367,7 @@ tooltip class {
     min-height: 8px;
     min-width: 100px;
     border-radius: 4px;
-    background: @background;
+    background-color: rgba(255, 255, 255, 0.1);
 }
 #backlight-slider highlight {
     min-width: 8px;

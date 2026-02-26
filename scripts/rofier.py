@@ -33,52 +33,59 @@ def relative_time(ts):
         return f"{d}d {h}h ago"
 
 
-if len(sys.argv) > 1:
-    subprocess.run(["dunstctl", "history-pop", sys.argv[1]])
-    sys.exit(0)
+def get_notifications():
+    try:
+        result = subprocess.run(
+            ["dunstctl", "history"], capture_output=True, text=True, check=True
+        )
+        history = json.loads(result.stdout)
+        if not history or "data" not in history or not history["data"][0]:
+            return [], {}
 
-try:
-    result = subprocess.run(
-        ["dunstctl", "history"], capture_output=True, text=True, check=True
-    )
-    history = json.loads(result.stdout)
-except (subprocess.CalledProcessError, json.JSONDecodeError, KeyError) as e:
-    print(f"Error fetching notification history: {e}", file=sys.stderr)
-    sys.exit(1)
+        entries = []
+        id_map = {}
 
-entries = []
-id_map = {}
+        for msg in history["data"][0]:
+            notif_id = msg["id"]["data"]
+            appname = msg.get("appname", {}).get("data", "System").upper()
+            summary = msg.get("summary", {}).get("data", "")
+            body = msg.get("body", {}).get("data", "")
+            timestamp = msg.get("timestamp", {}).get("data")
+            rel_time = relative_time(timestamp) if timestamp else ""
 
-for msg in history["data"][0]:
-    notif_id = msg["id"]["data"]
-    appname = msg.get("appname", {}).get("data", "Unknown")
-    summary = msg.get("summary", {}).get("data", "(no summary)")
-    body = msg.get("body", {}).get("data", "")
-    timestamp = msg.get("timestamp", {}).get("data")
-    rel_time = relative_time(timestamp) if timestamp else "(no timestamp)"
+            entry_text = (
+                f"<span size='small' alpha='70%'>{appname} • {rel_time}</span>\n"
+                f"<b>{summary}</b>\n"
+                f"<span size='small' alpha='80%'>{body[:80]}...</span>"
+            )
 
-    body = (body[:100] + "…") if len(body) > 100 else body
-    entry_text = f"<b>{appname}</b> — {summary}  <i>({rel_time})</i>\n{body}"
+            entries.append(entry_text)
+            id_map[entry_text] = notif_id
 
-    entries.append(entry_text)
-    id_map[entry_text] = notif_id
+        return entries, id_map
+    except Exception:
+        return [], {}
+
+
+entries, id_map = get_notifications()
 
 if not entries:
+    subprocess.run(["notify-send", "No notifications in history"])
     sys.exit(0)
 
-result = subprocess.run(
+rofi_proc = subprocess.run(
     [
         "rofi",
         "-dmenu",
         "-markup-rows",
+        "-eh",
+        "3",
         "-i",
         "-p",
-        "󰛩 ",
+        " ",
         "-sep",
         "|",
-        "-eh",
-        "2",
-        "-config",
+        "-theme",
         "/home/lumi/.config/rofi/notification.rasi",
     ],
     input="|".join(entries),
@@ -86,6 +93,6 @@ result = subprocess.run(
     capture_output=True,
 )
 
-selected = result.stdout.strip()
+selected = rofi_proc.stdout.strip()
 if selected and selected in id_map:
     subprocess.run(["dunstctl", "history-pop", str(id_map[selected])])

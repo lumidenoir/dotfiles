@@ -1,23 +1,19 @@
-// # z0mbi3 -  https://github.com/gh0stzk/dotfiles
-
 configuration {
     modi:                        "drun";
     show-icons:                  true;
     drun-display-format:         "{name}";
     font:                        "JetBrainsMono NF Bold 11";
-    
-    //hover-select:				 true;
-	//me-select-entry:			 "";
-	//me-accept-entry:			 "MousePrimary";
+
+    hover-select:              true;
 }
 
 //----- Global Properties -----//
 
 * {
-main-bg: #282828E6;
-main-fg: #fbf1c7;
-select-bg: #d79921;
-select-fg: #282828;
+main-bg: {{background}}E6;
+main-fg: {{foreground}};
+select-bg: {{color2}};
+select-fg: {{color0}};
 }
 
 //----- Main Window -----//

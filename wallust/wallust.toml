@@ -11,7 +11,7 @@
 
 # How the image is parse, in order to get the colors:
 # full - resized - wal - thumb -  fastresize - kmeans
-backend = "full"
+backend = "kmeans"
 
 # What color space to use to produce and select the most prominent colors:
 # lab - labmixed - lch - lchmixed
@@ -61,3 +61,5 @@ check_contrast = true
  gtk3  ={src='gtk.css', target = '~/.config/gtk-3.0/gtk.css'}
  gtk4  ={src='gtk.css', target = '~/.config/gtk-4.0/gtk.css'}
  helix = {src='helix.toml', target='~/.config/helix/themes/wallust.toml'}
+ notification = {src='notification.rasi', target="~/.config/rofi/notification.rasi"}
+ wallselect = {src='WallSelect.rasi', target='~/.config/rofi/WallSelect.rasi'}

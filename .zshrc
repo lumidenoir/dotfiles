@@ -27,6 +27,7 @@ export ANDROID_SDK_ROOT=$HOME/Android/Sdk
 export PATH="$PATH:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin"
 
 alias strel="xrdb merge $HOME/dotfiles/st/xresources && kill -USR1 $(pidof st)"
+alias yay="paru"
 
 # matlab java options
 export JAVA_TOOL_OPTIONS='-Djogl.disable.openglarbcontext=1'

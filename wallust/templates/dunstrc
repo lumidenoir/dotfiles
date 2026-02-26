@@ -8,7 +8,7 @@ title = Dunst
 class = Dunst
 
 # Dimensions
-width = (350, 450)
+width = (300, 400)
 height = (100, 400)
 offset = (12,50)
 gap_size = 8
@@ -82,21 +82,21 @@ per_monitor_dpi = false
 timeout = 6
 background = "{{background | darken(0.1)}}"
 foreground = "{{foreground}}"
-frame_color = "{{color4}}"
-icon = /home/lumi/dotfiles/svgs/circle-info.svg
+frame_color = "{{color2}}"
+# icon = /home/lumi/dotfiles/svgs/circle-info.svg
 
 [urgency_normal]
 timeout = 8
 background = "{{background | darken(0.1)}}"
 foreground = "{{foreground}}"
-frame_color = "{{color6}}"
-icon = /home/lumi/dotfiles/svgs/triangle-warning.png
+frame_color = "{{color3}}"
+# icon = /home/lumi/dotfiles/svgs/triangle-warning.png
 
 [urgency_critical]
 timeout = 0
 background = "{{background | darken(0.1)}}"
 foreground = "{{foreground}}"
-frame_color = "{{color9}}"
+frame_color = "{{color1}}"
 icon = /home/lumi/dotfiles/svgs/circle-xmark.svg
 
 [stack-settings]
