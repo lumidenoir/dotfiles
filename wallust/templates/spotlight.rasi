@@ -1,6 +1,6 @@
 // Config //
 configuration {
-    modi:                        "drun,run";
+    modi:                        "drun,run,window";
     show-icons:                  false;
     display-drun:                " ";
     display-run:                 " ";
@@ -110,8 +110,18 @@ element selected.normal {
     text-color:                  @select-fg;
     border-radius: 8;
 }
+element active {
+    background-color:            @main-ex;
+    text-color:                  @select-fg;
+    border-radius: 8;
+}
+element selected.active {
+    background-color:            @main-ex;
+    text-color:                  @select-fg;
+    border-radius: 8;
+}
 element-icon {
-    size:                        2em;
+    size:                        1.7em;
     cursor:                      inherit;
     background-color:            transparent;
     text-color:                  inherit;

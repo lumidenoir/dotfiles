@@ -16,7 +16,7 @@ command -v wallust >/dev/null 2>&1 || {
 }
 
 declare -A theme_map=(
-    [gruvbox]="gruvbox"
+    [gruvbox]="Gruvbox-Material-Dark"
     [nord]="base16-nord"
     [onedark]="base16-onedark"
     [rosepine]="Rosé-Pine"
@@ -26,10 +26,6 @@ declare -A theme_map=(
     [kanagawa]="Kanagawa-Wave"
 )
 
-# Detect WM
-wm=$(echo "$XDG_CURRENT_DESKTOP" | tr '[:upper:]' '[:lower:]' 2>/dev/null)
-[[ -z "$wm" ]] && wm=$(wmctrl -m 2>/dev/null | awk '/Name:/ {print tolower($2)}')
-
 # Run WallSelect and get wallpaper
 "$wallselect_script"
 selected_wall=$(cat ~/.cache/wallpaper 2>/dev/null)
@@ -37,7 +33,6 @@ selected_wall=$(cat ~/.cache/wallpaper 2>/dev/null)
 
 theme_folder=$(basename "$(dirname "$selected_wall")")
 
-# Helper functions
 restart_dunst() {
     pkill -x dunst
     dunst &
@@ -61,5 +56,6 @@ polybar-msg cmd restart >/dev/null 2>&1
 restart_dunst
 pkill -USR2 -x waybar 2>/dev/null
 pkill -SIGUSR1 -x qtile 2>/dev/null
+pkill -HUP -x awesome 2>/dev/null
 
 exit 0

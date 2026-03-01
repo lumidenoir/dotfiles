@@ -23,7 +23,7 @@ base)
     echo "Configuration directory: $CONF"
     echo "Installation source: $INS"
     echo "Creating symlinks for base configuration folders in $CONF"
-    for folder in bspwm sxhkd eww awesome qtile hypr picom polybar mpd mpDris2 ncmpcpp cava dunst rofi wallust wezterm waybar zathura; do
+    for folder in bspwm sxhkd awesome qtile hypr picom polybar mpd mpDris2 ncmpcpp cava wallust wezterm waybar; do
         if [ -e "$CONF/$folder" ]; then
             echo "$folder exists at CONF, backing up..."
             mkdir -p "$CONF/old"
@@ -35,6 +35,8 @@ base)
     sudo mkdir -p "/usr/local/bin/"
     sudo ln -sf $INS/scripts/* "/usr/local/bin"
     echo "Linked scripts to /usr/local/bin"
+    mv "$HOME/.xinitrc" "$HOME/.xinitrc_old"
+    create_symlink "$INS/.xinitrc" "$HOME/.xinitrc"
     echo "Finished moving folders pls install dependencies. To use dwm as WM, build dwm, st, and dmenu."
     ;;
 zsh)

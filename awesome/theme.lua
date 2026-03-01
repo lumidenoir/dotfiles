@@ -8,25 +8,25 @@ local dpi = xresources.apply_dpi
 
 local gfs = require("gears.filesystem")
 local themes_path = gfs.get_themes_dir()
-
+local wallust = require("colors")
 local theme = {}
 
 theme.font          = "Inconsolata Expanded Medium 12"
 theme.taglist_font  = "Inconsolata Black 12"
 
 --wallpaper--
-theme.wallpaper = "/home/lumi/Pictures/wallpaper/gruvbox/url.jpg"
+-- theme.wallpaper = "/home/lumi/Pictures/wallpaper/gruvbox/url.jpg"
 
 -- gruv colors -- 
-theme.gruv_green = "#a9b665"
-theme.gruv_base = "#1d2021"
+theme.gruv_green = wallust.color2
+theme.gruv_base = wallust.background
 theme.gruv_mantle = "#31302e"
 theme.gruv_surface0 = "#242424"
 theme.gruv_surface1 = "#504945"
-theme.gruv_surface2 = "#e7d7ad"
-theme.gruv_red = "#ea6962"
-theme.gruv_peach = "#e78a4e"
-theme.gruv_sky = "#7daea3"
+theme.gruv_surface2 = wallust.color7
+theme.gruv_red = wallust.color1
+theme.gruv_peach = wallust.color3
+theme.gruv_sky = wallust.color4
 
 --Notification variables--
 theme.notification_max_width = 300
@@ -40,7 +40,7 @@ theme.notification_font = "CaskaydiaCove Nerd Font Regular 12"
 theme.bg_normal = theme.gruv_base
 theme.bg_dark = "#000000"
 theme.bg_focus = theme.gruv_green
-theme.bg_urgent = "#ea6962"
+theme.bg_urgent = theme.gruv_red
 theme.bg_minimize = "#444444"
 
 -- Foreground
@@ -54,7 +54,7 @@ theme.border_width  = 2
 theme.border_radius = 4
 theme.gap_single_client = true
 theme.border_normal = "#1d2021"
-theme.border_focus  = "#d4be98"
+theme.border_focus  = wallust.foreground
 theme.border_marked = "#BB553F"
 
 -- There are other variable sets

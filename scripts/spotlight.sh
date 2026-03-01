@@ -3,7 +3,7 @@ DIR=~/org
 MOVIE_DIRS=("/mnt/storage/Movies" "/run/media/$USER/Seagate Backup Plus Drive/movie")
 DOC_DIRS=("books" "college")
 BOOKMARK_FILE="$HOME/.cache/.bookmarks"
-EMOJI_FILE="$HOME/dotfiles/emojis.txt"
+EMOJI_FILE="$HOME/dotfiles/misc/emojis.txt"
 ROFI_CMD="rofi -dmenu -i -theme ~/.config/rofi/spotlight.rasi"
 
 touch "$BOOKMARK_FILE"

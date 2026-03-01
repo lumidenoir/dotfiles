@@ -120,7 +120,7 @@ screen.connect_signal("property::geometry", set_wallpaper)
 
 awful.screen.connect_for_each_screen(function(s)
     -- Wallpaper
-    set_wallpaper(s)
+    -- set_wallpaper(s)
 
     -- Each screen has its own tag table.
     awful.tag({ "1", "2", "3", "4", "5", "6", "7", "8", "9"}, s, awful.layout.layouts[1])
@@ -172,31 +172,31 @@ globalkeys = gears.table.join(
 -- FUNCTION KEYS
    awful.key({}, "XF86AudioRaiseVolume",
       function()
-         awful.spawn("settings_control.sh volup")
+         awful.spawn("settings_control.sh volume_up")
       end,
       {description = "volume up", group = "hotkeys"}
    ),
    awful.key({}, "XF86AudioLowerVolume",
       function()
-         awful.spawn("settings_control.sh voldown")
+         awful.spawn("settings_control.sh volume_down")
       end,
       {description = "volume down", group = "hotkeys"}
    ),
    awful.key({}, "XF86AudioMute",
       function()
-         awful.spawn("settings_control.sh volmute")
+         awful.spawn("settings_control.sh volume_mute")
       end,
       {description = "toggle mute", group = "hotkeys"}
    ),
    awful.key({}, "XF86MonBrightnessUp",
       function()
-         awful.spawn("settings_control.sh briup")
+         awful.spawn("settings_control.sh brightness_up")
       end,
       {description = "inc brightness", group = "hotkeys"}
    ),
    awful.key({}, "XF86MonBrightnessDown",
       function()
-         awful.spawn("settings_control.sh bridown")
+         awful.spawn("settings_control.sh brightness_down")
       end,
       {description = "dec brightness", group = "hotkeys"}
    ),
@@ -204,19 +204,19 @@ globalkeys = gears.table.join(
       function()
          awful.spawn("playerctl previous")
       end,
-      {description = "dec brightness", group = "hotkeys"}
+      {description = "play previous", group = "hotkeys"}
    ),
    awful.key({}, "XF86AudioNext",
       function()
          awful.spawn("playerctl next")
       end,
-      {description = "dec brightness", group = "hotkeys"}
+      {description = "play next", group = "hotkeys"}
    ),
    awful.key({}, "XF86AudioPlay",
       function()
          awful.spawn("playerctl play-pause")
       end,
-      {description = "dec brightness", group = "hotkeys"}
+      {description = "play-pause", group = "hotkeys"}
    ),
 
 -- SCREENSHOT SHORT CUT --
@@ -255,7 +255,7 @@ globalkeys = gears.table.join(
               {description = "restore minimized", group = "client"}),
 
 
-    awful.key({ modkey }, "space", function() awful.util.spawn("rofi -show drun") end,
+    awful.key({ modkey }, "space", function() awful.util.spawn("rofi -show drun -theme ~/.config/rofi/spotlight.rasi -show-icons") end,
               {description = "show app launcher(rofi)", group = "launcher"}),
 
     awful.key({ "Mod1",   }, "l",      function () awful.spawn("screenlock.sh") end,

@@ -63,3 +63,5 @@ check_contrast = true
  notification = {src='notification.rasi', target="~/.config/rofi/notification.rasi"}
  wallselect = {src='WallSelect.rasi', target='~/.config/rofi/WallSelect.rasi'}
  qtilecolor = {src='qtile.json', target='~/dotfiles/qtile/utils/colorscheme/wallust.json'}
+ awesome = {src='awesome.lua', target='~/dotfiles/awesome/colors.lua'}
+ awepoly = {src='awesome.ini', target='~/dotfiles/polybar/awesome.ini'}
