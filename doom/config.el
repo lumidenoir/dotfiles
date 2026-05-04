@@ -1,15 +1,139 @@
-;;; ~/.config/doom/config.el
+;;; ~/.config/doom/config.el -*- lexical-binding: t; -*-
 (setq user-full-name "Lumi Denoir"
       user-mail-address "lumidenoir@gmail.com")
 
-(setq doom-font (font-spec :family "Iosevka" :size 15 :weight 'regular :slant 'normal :width 'expanded :spacing 90)
-      doom-big-font-mode (font-spec :family "Iosevka" :size 25)
-      doom-variable-pitch-font (font-spec :family "Iosevka Etoile" :size 16)
-      doom-emoji-font (font-spec :family "Noto Color Emoji")
-      doom-symbol-font (font-spec :family "Iosevka")
-      doom-serif-font (font-spec :family "IBM Plex Mono" :size 17 :weight 'light)
-      doom-theme 'doom-one
-      display-line-numbers-type nil)
+(defvar lumi-ui-presets
+  '(("JBM" . (:font "JetBrains Mono" :size 15 :weight regular :slant normal
+              :big-font "JetBrains Mono" :big-size 25
+              :vp-font "Inter 28pt" :vp-size 16
+              :emoji-font "Noto Color Emoji"
+              :symbol-font "JuliaMono Nerd Font"
+              :serif-font "JetBrains Mono" :serif-size 15 :serif-weight light
+              :theme doom-one
+              :org-heading-font "Inter 28pt" :org-heading-weight bold))
+    ("Metric Perfect" . (:font "Iosevka" :size 15 :weight regular :slant normal :width expanded :spacing 90
+              :big-font "Iosevka" :big-size 25
+              :vp-font "Iosevka Aile" :vp-size 15
+              :emoji-font "Noto Color Emoji"
+              :symbol-font "Iosevka"
+              :serif-font "IosevkaTermSlab Nerd Font" :serif-size 15 :serif-weight light
+              :theme doom-one
+              :org-heading-font "Iosevka Aile" :org-heading-weight bold))
+    ("Studio Tech" . (:font "Lilex Nerd Font Mono" :size 15 :weight medium :slant normal
+              :big-font "Lilex Nerd Font" :big-size 25
+              :vp-font "IBM Plex Sans" :vp-size 15
+              :emoji-font "Noto Color Emoji"
+              :symbol-font "Iosevka"
+              :serif-font "IosevkaTermSlab Nerd Font" :serif-size 15 :serif-weight light
+              :theme doom-one
+              :org-heading-font "IBM Plex Sans" :org-heading-weight bold))
+    ("Recursive" . (:font "Recursive Monospace" :size 15 :weight regular :slant normal
+              :big-font "Recursive Monospace" :big-size 25
+              :vp-font "Recursive" :vp-size 15
+              :emoji-font "Noto Color Emoji"
+              :symbol-font "Iosevka"
+              :serif-font "Space Grotesk" :serif-size 15 :serif-weight light
+              :theme doom-one
+              :org-heading-font "Space Grotesk" :org-heading-weight bold))
+    ("Neutral Architect" . (:font "CommitMono" :size 15 :weight regular :slant normal
+              :big-font "CommitMono" :big-size 25
+              :vp-font "Inter 28pt" :vp-size 16
+              :emoji-font "Noto Color Emoji"
+              :symbol-font "Iosevka"
+              :serif-font "Inter 28pt" :serif-size 15 :serif-weight light
+              :theme doom-one
+              :org-heading-font "Inter 28pt" :org-heading-weight bold))
+    ("Rounded Modernist" . (:font "Maple Mono" :size 15 :weight regular :slant normal
+              :big-font "Maple Mono" :big-size 25
+              :vp-font "Satoshi" :vp-size 16
+              :emoji-font "Noto Color Emoji"
+              :symbol-font "Iosevka"
+              :serif-font "IosevkaTermSlab Nerd Font" :serif-size 15 :serif-weight light
+              :theme doom-one
+              :org-heading-font "Satoshi" :org-heading-weight semibold
+              :org-title-font "Bricolage Grotesque" :org-title-weight semibold))
+    ("Quiet minimalist" . (:font "CommitMono" :size 15 :weight regular :slant normal
+              :big-font "Commit Mono" :big-size 25
+              :vp-font "Recursive" :vp-size 16
+              :emoji-font "Noto Color Emoji"
+              :symbol-font "Iosevka"
+              :serif-font "IBM Plex Serif" :serif-size 15 :serif-weight light
+              :theme doom-one
+              :org-heading-font "IBM Plex Serif" :org-heading-weight semibold
+              :org-title-font "IBM Plex Serif" :org-title-weight bold))
+    ("Monaspace" . (:font "Monaspace Radon" :size 15 :weight regular :slant normal
+              :big-font "Monaspace Radon" :big-size 25
+              :vp-font "Iosevka Charon" :vp-size 16
+              :emoji-font "Noto Color Emoji"
+              :symbol-font "Iosevka"
+              :serif-font "Monaspace Xenon" :serif-size 15 :serif-weight light
+              :theme doom-one
+              :org-heading-font "Iosevka Charon" :org-heading-weight semibold
+              :org-title-font "Iosevka Charon" :org-title-weight bold))
+    ("Sharp Functionalist" . (:font "Ioskeley Mono" :size 15 :weight regular :slant normal
+              :big-font "Ioskeley Mono" :big-size 25
+              :vp-font "Iosevka Charon" :vp-size 16
+              :emoji-font "Noto Color Emoji"
+              :symbol-font "Iosevka"
+              :serif-font "GeistMono Nerd Font" :serif-size 15 :serif-weight light
+              :theme doom-one
+              :org-heading-font "Geist" :org-heading-weight semibold
+              :org-title-font "Geist" :org-title-weight bold))
+    ("Highway" . (:font "FiraCode Nerd Font" :size 15 :weight regular :slant normal
+              :big-font "FiraCode Nerd Font" :big-size 25
+              :vp-font "Overpass Nerd Font" :vp-size 16
+              :emoji-font "Noto Color Emoji"
+              :symbol-font "JuliaMono Nerd Font"
+              :serif-font "IBM Plex Mono" :serif-size 15 :serif-weight light
+              :theme doom-one
+              :org-heading-font "Overpass Nerd Font" :org-heading-weight bold))
+    )
+  "Alist of UI preset properties.")
+
+(defun lumi/apply-ui-preset (preset-name)
+  "Apply the UI preset defined in `lumi-ui-presets`."
+  (let* ((props (cdr (assoc preset-name lumi-ui-presets)))
+         (font-alist `(:family ,(plist-get props :font) :size ,(plist-get props :size)
+                       :weight ,(plist-get props :weight) :slant ,(plist-get props :slant)))
+         ;; Add width and spacing if available
+         (font-alist (if (plist-get props :width) (plist-put font-alist :width (plist-get props :width)) font-alist))
+         (font-alist (if (plist-get props :spacing) (plist-put font-alist :spacing (plist-get props :spacing)) font-alist)))
+
+    (setq doom-font (apply #'font-spec font-alist)
+          doom-big-font-mode (font-spec :family (plist-get props :big-font) :size (plist-get props :big-size))
+          doom-variable-pitch-font (font-spec :family (plist-get props :vp-font) :size (plist-get props :vp-size))
+          doom-emoji-font (font-spec :family (plist-get props :emoji-font))
+          doom-symbol-font (font-spec :family (plist-get props :symbol-font))
+          doom-serif-font (font-spec :family (plist-get props :serif-font) :size (plist-get props :serif-size) :weight (plist-get props :serif-weight))
+          doom-theme (plist-get props :theme)
+          display-line-numbers-type nil)
+
+    (doom/reload-font)
+
+    (let* ((heading-font (plist-get props :org-heading-font))
+           (heading-weight (plist-get props :org-heading-weight))
+           (title-font (or (plist-get props :org-title-font) (plist-get props :org-heading-font)))
+           (title-weight (or (plist-get props :org-title-weight) (plist-get props :org-heading-weight)))
+           (apply-fn
+            (lambda ()
+              (dolist (face '((org-level-1 . 1.4) (org-level-2 . 1.3) (org-level-3 . 1.2)
+                              (org-level-4 . 1.1) (org-level-5 . 1.1) (org-level-6 . 1.1)
+                              (org-level-7 . 1.1) (org-level-8 . 1.1)))
+                (set-face-attribute (car face) nil :font heading-font :weight heading-weight :height (cdr face)))
+              (set-face-attribute 'org-document-title nil :font title-font :weight title-weight :height 1.8))))
+      (if (featurep 'org)
+          (funcall apply-fn)
+        (eval-after-load 'org `(funcall ,apply-fn))))
+    (message "Applied UI Preset: %s" preset-name)))
+
+(defun lumi/load-ui-preset ()
+  "Interactively pick and load a UI preset."
+  (interactive)
+  (let ((preset (completing-read "Select UI Preset: " (mapcar #'car lumi-ui-presets))))
+    (lumi/apply-ui-preset preset)))
+
+;; Set default on startup
+(lumi/apply-ui-preset "JBM")
 
 ;;HACK to replace evil keyword in which-key popup
 (setq which-key-idle-delay 0.5)
@@ -27,32 +151,35 @@
       org-noter-notes-search-path '("~/org/") ;; Path for org-noter notes
       org-hide-emphasis-markers t  ;; Hide markers like *, /, =, etc.
       org-log-done 'time) ;; Log the time when a TODO is marked as DONE
-(add-hook 'org-mode-hook #'+org-pretty-mode)
+
 ;; Enable org-fragtog-mode for automatic LaTeX fragment toggling
 (add-hook 'org-mode-hook 'org-fragtog-mode)
 (setq org-startup-with-latex-preview t) ;; Start with LaTeX preview enabled
+(setq org-preview-latex-default-process 'dvisvgm)
+(after! org
+  (setq org-format-latex-options
+        (plist-put org-format-latex-options :scale 0.85)))
 (setq org-cite-csl-styles-dir "/home/lumi/Zotero/styles") ;; Path to CSL styles for citations
-
 (setq reftex-default-bibliography "/home/lumi/org/zotero.bib"
-      org-agenda-files '("/home/lumi/org/todo.org" "/home/lumi/org/todoist.org" "~/org/daily/")
+      org-agenda-files '("/home/lumi/org/todo.org" "/home/lumi/org/todoist.org")
       org-fold-catch-invisible-edits 'smart)
+(setq org-export-headline-levels 5) ; I like nesting
+(setq org-ellipsis " ▾ ")
+
 (after! org
   (setq org-adapt-indentation t)
   ;; Set some faces for various org elements
   (custom-set-faces!
     ;; Customize org-quote
-    `((org-quote)
-      :foreground ,(doom-color 'blue) :extend t :italic t)
+    `((org-quote) :foreground ,(doom-color 'blue) :extend t :italic t)
     ;; Customize org-verse
-    `((org-verse)
-      :foreground ,(doom-color 'yellow)  :extend t :italic t))
+    `((org-verse) :foreground ,(doom-color 'yellow)  :extend t :italic t))
   ;; Change how LaTeX and image previews are shown
   (setq org-highlight-latex-and-related '(native entities script)))
-(setq org-src-window-setup 'current-window)
 
-(setq org-src-fontify-natively t
-      org-src-tab-acts-natively t
-      org-edit-src-content-indentation 0)
+;; Use Doom's native popup engine to push Org Edit buffers to the right
+(setq org-src-window-setup 'other-window)
+(set-popup-rule! "^\\*Org Src" :side 'right :size 0.5 :quit nil :select t :modeline t)
 
 (defun locally-defer-font-lock ()
   "Set jit-lock defer and stealth, when buffer is over a certain size."
@@ -66,46 +193,6 @@
         (1.0 . org-warning)
         (0.5 . org-upcoming-deadline)
         (0.0 . org-upcoming-distant-deadline)))
-
-
-(after! org
-;;Resize Org headings
-(dolist (face '((org-level-1 . 1.4)
-                (org-level-2 . 1.3)
-                (org-level-3 . 1.2)
-                (org-level-4 . 1.1)
-                (org-level-5 . 1.1)
-                (org-level-6 . 1.1)
-                (org-level-7 . 1.1)
-                (org-level-8 . 1.1)))
-  (set-face-attribute (car face) nil :font "Iosevka Etoile" :weight 'bold :height (cdr face)))
-
-;; Make the document title a bit bigger
-  (set-face-attribute 'org-document-title nil :font "Alegreya" :weight 'bold :height 1.8))
-(setq org-ellipsis " ▾ ")
-
-(setq org-export-headline-levels 5) ; I like nesting
-
-;; Set Deft to use the first non-empty line as the title, and specify the directory
-(setq deft-use-filename-as-title nil
-      deft-directory "~/org/")
-
-;; Customize Deft's summary parsing to ignore org labels and properties
-(setq deft-strip-summary-regexp
-      (concat "\\("
-              "[\n\t]" ;; blank
-              "\\|^#\\+[[:alpha:]_]+:.*$" ;; org-mode metadata
-              "\\|^:PROPERTIES:\n\\(.+\n\\)+:END:\n" ;; roam metadata
-              "\\)"))
-
-;; Function to parse the title in Deft, looking for #+TITLE: in the contents
-(defun cm/deft-parse-title (file contents)
-  (let ((begin (string-match "^#\\+[tT][iI][tT][lL][eE]: .*$" contents)))
-    (if begin
-        (string-trim (substring contents begin (match-end 0)) "#\\+[tT][iI][tT][lL][eE]: *" "[\n\t ]+")
-      (deft-base-filename file))))
-
-(advice-add 'deft-parse-title :override #'cm/deft-parse-title)
 
 (setq org-todo-keywords
       '((sequence "TODO(t)" "PROJ(p)" "EVNT(e)" "STRT(s)" "WAIT(w)" "HOLD(h)" "REVI(r)" "IDEA(i)" "|" "DONE(d)" "KILL(k)")
@@ -123,114 +210,6 @@
         ("PROJ" . +org-todo-project)
         ("NO" . +org-todo-cancel)
         ("KILL" . +org-todo-cancel)))
-
-;; Set the directory for Org-roam files
-(setq org-roam-directory (file-truename "~/org/"))
-
-;; Define capture templates for Org-roam
-(setq org-roam-capture-templates
-    '(("d" "default" plain "%?" :target
-       (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+TITLE:${title}\n#+filetags: :incomplete:\n#+DATE: %U\n#+EXPORT_FILE_NAME: ${slug}\n")
-       :unnarrowed t)
-("p" "problem" plain "%?"
-         :if-new (file+head "problems/${slug}.org"
-                            "#+title: ${title}\n#+filetags: :cp:cf:lc:\n\n* Problem Link\n[[%^{Link}]]\n\n* Thought Process\n\n* Notes\n\n* Solution\n#+begin_src cpp :tangle ${slug}.cpp\n#include <bits/stdc++.h>\nusing namespace std;\n\ntypedef long long ll;\n\nvoid solve() {\n    // Problem logic goes here\n    string s;\n    if (!(cin >> s)) return;\n    cout << s << \"\\\\n\";\n}\n\nint main() {\n    ios_base::sync_with_stdio(false);\n    cin.tie(nullptr);\n    \n    int t = 1;\n    // cin >> t; // Uncomment if problem has multiple test cases\n    while (t--) {\n        solve();\n    }\n    return 0;\n}\n#+end_src\n\n* Test Input\n#+NAME: test_input\n: \n\n* Expected Output\n#+NAME: expected_output\n: \n\n* Runner\n#+begin_src sh :var input=test_input :var expected=expected_output :results output\nif [ ! -f ${slug}.out ] || [ ${slug}.cpp -nt ${slug}.out ]; then\n  g++ -std=c++20 -O2 -Wall -Wextra ${slug}.cpp -o ${slug}.out\nfi\n\necho \"===== PROGRAM OUTPUT =====\"\noutput=$(printf \"%s\\\\n\" \"$input\" | ./${slug}.out)\necho \"$output\"\n\necho \"===== DIFF =====\"\ndiff -wB <(echo \"$output\") <(echo \"$expected\") && echo \"All tests passed!\" || echo \"Mismatch detected!\"\n#+end_src\n")
-         :unnarrowed t)
-      ))
-
-;; Configure timestamp format for Org-roam
-(setq time-stamp-active t
-      time-stamp-start "#\\+DATE:[ \t]*"
-      time-stamp-end "$"
-      time-stamp-format "\[%Y-%02m-%02d %3a %02H:%02M\]")
-(add-hook 'before-save-hook 'time-stamp nil)
-
-;; Display Org-roam buffer in a side window
-(add-to-list 'display-buffer-alist
-             '("\\*org-roam\\*"
-               (display-buffer-in-side-window)
-               (side . right)
-               (slot . 0)
-               (window-width . 0.33)
-               (window-parameters . ((no-other-window . t)
-                                     (no-delete-other-windows . t)))))
-
-;; Define sections to display in Org-roam mode
-(setq org-roam-mode-sections
-      '((org-roam-backlinks-section :unique t)
-        org-roam-reflinks-section))
-
-(after! (org-roam nerd-icons-corfu)
-  (add-to-list
-   'nerd-icons-corfu-mapping
-   '(org-roam :style "cod" :icon "symbol_interface" :face font-lock-type-face)))
-
-(defadvice! doom-modeline--buffer-file-name-roam-aware-a (orig-fun)
-  :around #'doom-modeline-buffer-file-name ; takes no args
-  (if (string-match-p (regexp-quote org-roam-directory) (or buffer-file-name ""))
-      (replace-regexp-in-string
-       "\\(?:^\\|.*/\\)\\([0-9]\\{4\\}\\)\\([0-9]\\{2\\}\\)\\([0-9]\\{2\\}\\)[0-9]*-"
-       "(\\1-\\2-\\3) "
-       (subst-char-in-string ?_ ?  buffer-file-name))
-    (funcall orig-fun)))
-
-(use-package! websocket
-  :after org-roam)
-
-(use-package! org-roam-ui
-  :after org-roam
-  :config
-  ;; Sync theme, follow the node in the graph, update on save, and open on start
-  (setq org-roam-ui-sync-theme t
-        org-roam-ui-follow t
-        org-roam-ui-update-on-save t
-        org-roam-ui-open-on-start t))
-
-(defun date-three-days-later ()
-  "Return the date three days from today in the format YYYY-MM-DD."
-  (let* ((today (current-time))                         ;; Get the current time
-         (three-days-later (time-add today (* 3 24 60 60))) ;; Add three days to current time
-         (date-string (format-time-string "%Y-%m-%d" three-days-later))) ;; Format the new date
-    date-string))
-
-;; Calculate the date three days later and store it in a variable
-(let ((date-three-days-later (date-three-days-later)))
-  (setq org-agenda-custom-commands
-        `(("c" "Super view"
-           ((alltodo "" ((org-agenda-overriding-header "")
-                         (org-super-agenda-groups
-                          '((:name "Actionable Today"
-                             :deadline today
-                             :scheduled today
-                             :face (:foreground "green")
-                             :order 1)
-                            (:name "Overdue"
-                             :deadline past
-                             :face (:foreground "red")
-                             :order 2)
-                            (:name "Deadline soon"
-                                   :face (:foreground "orange")
-                                   :deadline (before ,date-three-days-later)
-                                   :order 3)
-                            (:habit t)
-                            (:name "Scheduled for Future"
-                             :scheduled future
-                             :face (:foreground "blue")
-                             :order 4)
-                            (:name "In Progress"
-                             :todo ("STRT" "WAIT" "HOLD")
-                             :and (:scheduled past :deadline future)
-                             :order 5)
-                            (:name "Not yet started"
-                             :todo ("TODO" "PROJ" "IDEA")
-                             :scheduled nil
-                             :deadline nil
-                             :order 6))))))))))
-
-(use-package! org-super-agenda
-  :after org-agenda
-  :config
-  (org-super-agenda-mode))
 
 (use-package! org-modern
   :hook (org-mode . org-modern-mode)
@@ -259,22 +238,15 @@
                      (45 . "–")
                      (42 . "↪")))
   (custom-set-faces!
-    ;; `((org-modern-tag)
-    ;;   :background ,(doom-blend (doom-color 'blue) (doom-color 'bg) 0.1)
-    ;;   :foreground ,(doom-color 'grey))
     `((org-modern-radio-target org-modern-internal-target)
-      :inherit 'default :foreground ,(doom-color 'blue)))
-  )
+      :inherit 'default :foreground ,(doom-color 'blue))))
 
 (use-package! org-appear
   :hook (org-mode . org-appear-mode)
   :config
   (setq org-appear-autoemphasis t
         org-appear-autosubmarkers t
-        org-appear-autolinks nil)
-  ;; for proper first-time setup, `org-appear--set-elements'
-  ;; needs to be run after other hooks have acted.
-  (run-at-time nil nil #'org-appear--set-elements))
+        org-appear-autolinks nil))
 
 (use-package! svg-tag-mode
   :config
@@ -322,34 +294,6 @@
                                                      :beg 2 :end -1 :margin 0 :radius 10))))
           ("\\[#C\\]" . ((lambda (tag) (svg-tag-make tag :face 'org-todo :inverse t :height .9
                                                      :beg 2 :end -1 :margin 0 :radius 10))))
-          ;; ("\\(:#[A-Za-z0-9]+\\)" . ((lambda (tag)
-          ;;                            (svg-tag-make tag :beg 2 :inverse t :margin 1 :face (doom-color 'blue) ))))
-          ;; ("\\(:#[A-Za-z0-9]+:\\)$" . ((lambda (tag)
-          ;;                              (svg-tag-make tag :beg 2 :end -1 :inverse t :margin 1 :face (doom-color 'blue)))))
-
-
-        ;; Active date (with or without day name, with or without time)
-        ;; (,(format "\\(<%s>\\)" date-re) .
-        ;;  ((lambda (tag)
-        ;;     (svg-tag-make tag :beg 1 :end -1 :margin 0))))
-        ;; (,(format "\\(<%s \\)%s>" date-re day-time-re) .
-        ;;  ((lambda (tag)
-        ;;     (svg-tag-make tag :beg 1 :inverse nil :crop-right t :margin 0))))
-        ;; (,(format "<%s \\(%s>\\)" date-re day-time-re) .
-        ;;  ((lambda (tag)
-        ;;     (svg-tag-make tag :end -1 :inverse t :crop-left t :margin 0))))
-
-        ;; ;; Inactive date  (with or without day name, with or without time)
-        ;;  (,(format "\\(\\[%s\\]\\)" date-re) .
-        ;;   ((lambda (tag)
-        ;;      (svg-tag-make tag :beg 1 :end -1 :margin 0 :face 'org-date))))
-        ;;  (,(format "\\(\\[%s \\)%s\\]" date-re day-time-re) .
-        ;;   ((lambda (tag)
-        ;;      (svg-tag-make tag :beg 1 :inverse nil :crop-right t :margin 0 :face 'org-date))))
-        ;;  (,(format "\\[%s \\(%s\\]\\)" date-re day-time-re) .
-        ;;   ((lambda (tag)
-        ;;      (svg-tag-make tag :end -1 :inverse t :crop-left t :margin 0 :face 'org-date))))
-
           ;; Keywords
           ("TODO" . ((lambda (tag) (svg-tag-make tag :inverse t :height .85 :face 'org-todo))))
           ("HOLD" . ((lambda (tag) (svg-tag-make tag :inverse t :height .85 :face '+org-todo-onhold))))
@@ -362,137 +306,9 @@
 
   :hook (org-mode . svg-tag-mode))
 
-;; Add mu4e to the load path
-(add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e/")
-
-;; Toggle org-msg in mu4e
-(setq +mu4e-compose-org-msg-toggle-next nil)
-
-;; Setting msmtp for sending emails
-(after! mu4e
-  (setq sendmail-program (executable-find "msmtp")
-        send-mail-function #'smtpmail-send-it
-        message-sendmail-f-is-evil t
-        message-sendmail-extra-arguments '("--read-envelope-from")
-        message-send-mail-function #'message-send-mail-with-sendmail))
-
-;; Configure mu4e contexts for different email accounts
-(set-email-account! "iitk"
-                    '((mu4e-sent-folder             . "/iitk/Sent")
-                      (mu4e-drafts-folder           . "/iitk/Drafts")
-                      (mu4e-trash-folder            . "/iitk/Trash")
-                      (mu4e-refile-folder           . "/iitk/All Mail")
-                      (user-mail-address            . "viveksk21@iitk.ac.in")
-                      (user-full-name               . "Lumi Dantu")
-                      (smtpmail-smtp-user           . "viveksk21@iitk.ac.in")
-                      (smtpmail-default-smtp-server . "mmtp.iitk.ac.in")
-                      (smtpmail-smtp-server         . "smtp.cc.iitk.ac.in")
-                      (smtpmail-smtp-service        .  465)
-                      (mu4e-compose-signature       . "Krishna Dantu,\n210299"))
-                    t)
-
-;; (set-email-account! "gmail"
-;;                     '((mu4e-sent-folder       . "/gmail/[Gmail]/Sent Mail")
-;;                       (mu4e-drafts-folder     . "/gmail/[Gmail]/Drafts")
-;;                       (mu4e-trash-folder      . "/gmail/[Gmail]/Bin")
-;;                       (mu4e-refile-folder     . "/gmail/[Gmail]/All Mail")
-;;                       (user-mail-address      . "lumidenoir@gmail.com")
-;;                       (user-full-name         . "lumi denoir")
-;;                       (smtpmail-smtp-user     . "lumidenoir@gmail.com")
-;;                       (smtpmail-smtp-server   . "smtp.gmail.com")
-;;                       (smtpmail-smtp-service  .  465)
-;;                       (mu4e-compose-signature . "Yours truly,\nLumi Denoir"))
-;;                     t)
-
-;; Prompt for context if not specified
-(setq mu4e-context-policy 'ask-if-none
-      mu4e-update-interval 300
-      mu4e-compose-context-policy 'always-ask
-      mu4e-index-cleanup nil
-      mu4e-index-lazy-check t)
-
-(setq +latex-viewers '(zathura))
-(map! :map cdlatex-mode-map
-      :i "TAB" #'cdlatex-tab) ;; Use TAB for cdlatex completion
-
-(use-package! nov
-  :mode ("\\.epub\\'" . nov-mode)
-  :config
-  (map! :map nov-mode-map
-        :n "RET" #'nov-scroll-up)
-
-  (advice-add 'nov-render-title :override #'ignore)
-
-  (defun +nov-mode-setup ()
-    "Tweak nov-mode to our liking."
-    (face-remap-add-relative 'variable-pitch
-                             :family "Alegreya"
-                             :height 1.1
-                             :width 'semi-expanded)
-    (face-remap-add-relative 'default :height 1.1)
-    (variable-pitch-mode 1)
-    (setq-local line-spacing 0.2
-                next-screen-context-lines 4
-                shr-use-colors nil)
-    (when (require 'visual-fill-column nil t)
-      (setq-local visual-fill-column-center-text t
-                  visual-fill-column-width 64
-                  nov-text-width 106)
-      (visual-fill-column-mode 1))
-    (when (featurep 'hl-line-mode)
-      (hl-line-mode -1))
-    ;; Re-render with new display settings
-    (nov-render-document)
-    ;; Look up words with the dictionary.
-    (add-to-list '+lookup-definition-functions #'+lookup/dictionary-definition))
-
-  (add-hook 'nov-mode-hook #'+nov-mode-setup))
-
-(defun org-nov-open-new-window (path)
-  "Open nov.el link in a new window."
-  (setq available-windows
-        (delete (selected-window) (window-list)))
-  (setq new-window
-        (or (car available-windows)
-            (split-window-sensibly)
-            (split-window-right)))
-  (select-window new-window)
-  (nov-org-link-follow path))
-
-(use-package! corfu
-  :config
-  (defun corfu-enable-in-minibuffer ()
-    "Enable Corfu in the minibuffer if `completion-at-point' is bound."
-    (when (where-is-internal #'completion-at-point (list (current-local-map)))
-      ;; (setq-local corfu-auto nil) ;; Enable/disable auto completion
-      (setq-local corfu-echo-delay nil ;; Disable automatic echo and popup
-                  corfu-popupinfo-delay nil)
-      (corfu-mode 1)))
-  (add-hook 'minibuffer-setup-hook #'corfu-enable-in-minibuffer))
-(use-package! orderless
-  :config
-  (add-to-list 'orderless-matching-styles 'char-fold-to-regexp))
-
-(setq corfu-auto-delay 0.3)
-(setq yas-triggers-in-field t)
-
-(custom-set-faces! '((corfu-popupinfo) :height 0.9))
-
-(with-eval-after-load 'lsp-clangd
-  (setq lsp-clients-clangd-args
-        '("-j=3"
-          "--background-index"
-          "--clang-tidy"
-          "--completion-style=detailed"
-          "--header-insertion=never"
-          "--header-insertion-decorators=0"))
-  (set-lsp-priority! 'clangd 2))
-
-(defun soph/prettify-symbols-setup ()
-  "Beautify keywords"
-  (setq prettify-symbols-alist
-        (mapcan (lambda (x) (list x (cons (upcase (car x)) (cdr x))))
-                '(("#+name:" . "»")
+(defvar lumi-prettify-org-symbols-alist
+  (mapcan (lambda (x) (list x (cons (upcase (car x)) (cdr x))))
+          '(("#+name:" . "»")
                   ("#+title:" . "")
                   ("#+author:" . "")
                   ("#+description:" . "")
@@ -508,8 +324,6 @@
                   ("#+cite_export" . "⮭")
                   ("#+filetags:" . "󰓹")
                   ("#+EXPORT_FILE_NAME" . "")
-                ;;("print_glossary" . "󰌱ᴬᶻ")
-                ;;("glossary_sources" . "󰒻")
                   ("#+include" . "⇤")
                   ("#+setupfile" . "⇚")
                   ("#+html_head" . "🅷")
@@ -546,21 +360,187 @@
                   ("SCHEDULED:" . "󱡡")
                   ("DEADLINE:" . "󰥕")
                   ("CLOSED:" . "󰾨"))))
+
+(defun soph/prettify-symbols-setup ()
+  "Beautify keywords using pre-computed mapping."
+  (setq prettify-symbols-alist lumi-prettify-org-symbols-alist)
   (prettify-symbols-mode))
 
 (add-hook 'org-mode-hook        #'soph/prettify-symbols-setup)
 (add-hook 'org-agenda-mode-hook #'soph/prettify-symbols-setup)
 
-;; Function to print the final value of prettify-symbols-alist for debugging
-(defun print-prettify-symbols-alist ()
-  "Print the prettify-symbols-alist for debugging."
-  (interactive)
-  (message "prettify-symbols-alist: %s" prettify-symbols-alist))
+(after! org
+  (setq org-src-preserve-indentation t)
+  (setq org-src-fontify-natively t
+        org-src-tab-acts-natively t
+        org-edit-src-content-indentation 0))
 
-;; Add a hook to print the value after setup
-(add-hook 'org-mode-hook #'print-prettify-symbols-alist)
-(add-hook 'org-agenda-mode-hook #'print-prettify-symbols-alist)
+(defun date-three-days-later ()
+  "Return the date three days from today in the format YYYY-MM-DD."
+  (let* ((today (current-time))
+         (three-days-later (time-add today (* 3 24 60 60)))
+         (date-string (format-time-string "%Y-%m-%d" three-days-later)))
+    date-string))
 
+(defadvice! lumi/update-agenda-dates-a (&rest _)
+  :before #'org-agenda
+  (let ((date-three-days-later (date-three-days-later)))
+    (setq org-agenda-custom-commands
+          `(("c" "Super view"
+             ((alltodo "" ((org-agenda-overriding-header "")
+                           (org-super-agenda-groups
+                            '((:name "Actionable Today" :deadline today :scheduled today :face (:foreground "green") :order 1)
+                              (:name "Overdue" :deadline past :face (:foreground "red") :order 2)
+                              (:name "Deadline soon" :face (:foreground "orange") :deadline (before ,date-three-days-later) :order 3)
+                              (:habit t)
+                              (:name "Scheduled for Future" :scheduled future :face (:foreground "blue") :order 4)
+                              (:name "In Progress" :todo ("STRT" "WAIT" "HOLD") :and (:scheduled past :deadline future) :order 5)
+                              (:name "Not yet started" :todo ("TODO" "PROJ" "IDEA") :scheduled nil :deadline nil :order 6)))))))))))
+
+(use-package! org-super-agenda
+  :after org-agenda
+  :config
+  (org-super-agenda-mode))
+
+;; Set the directory for Org-roam files
+(setq org-roam-directory (file-truename "~/org/"))
+
+;; Define capture templates for Org-roam
+(setq org-roam-capture-templates
+    '(("d" "default" plain "%?" :target
+       (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+TITLE:${title}\n#+filetags: :incomplete:\n#+DATE: %U\n#+EXPORT_FILE_NAME: ${slug}\n")
+       :unnarrowed t)
+("p" "problem" plain "%?"
+         :if-new (file+head "problems/${slug}.org"
+                            "#+title: ${title}\n#+filetags: :cp:cf: \n\n* Notes\n\n* Solution\n#+begin_src cpp :tangle /tmp/cp/${slug}.cpp\n#include <bits/stdc++.h>\nusing namespace std;\n\ntypedef long long ll;\n\nint main() {\n  ios_base::sync_with_stdio(false);\n  cin.tie(nullptr);\n  \n  return 0;\n}\n#+end_src\n\n")
+         :unnarrowed t)
+      ))
+
+;; Configure timestamp format for Org-roam
+(setq time-stamp-active t
+      time-stamp-start "#\\+DATE:[ \t]*"
+      time-stamp-end "$"
+      time-stamp-format "\[%Y-%02m-%02d %3a %02H:%02M\]")
+(add-hook 'before-save-hook 'time-stamp nil)
+
+;; Display Org-roam buffer in a side window
+(add-to-list 'display-buffer-alist
+             '("\\*org-roam\\*"
+               (display-buffer-in-side-window)
+               (side . right)
+               (slot . 0)
+               (window-width . 0.33)
+               (window-parameters . ((no-other-window . t)
+                                     (no-delete-other-windows . t)))))
+
+;; Define sections to display in Org-roam mode
+(setq org-roam-mode-sections
+      '((org-roam-backlinks-section :unique t)
+        org-roam-reflinks-section))
+
+(after! (org-roam nerd-icons-corfu)
+  (add-to-list
+   'nerd-icons-corfu-mapping
+   '(org-roam :style "cod" :icon "symbol_interface" :face font-lock-type-face)))
+
+(defadvice! doom-modeline--buffer-file-name-roam-aware-a (orig-fun)
+  :around #'doom-modeline-buffer-file-name ; takes no args
+  (if (string-match-p (regexp-quote org-roam-directory) (or buffer-file-name ""))
+      (replace-regexp-in-string
+       "\\(?:^\\|.*/\\)\\([0-9]\\{4\\}\\)\\([0-9]\\{2\\}\\)\\([0-9]\\{2\\}\\)[0-9]*-"
+       "(\\1-\\2-\\3) "
+       (subst-char-in-string ?_ ?  buffer-file-name))
+    (funcall orig-fun)))
+
+(use-package! websocket
+  :after org-roam)
+
+(use-package! org-roam-ui
+  :after org-roam
+  :config
+  (setq org-roam-ui-sync-theme t
+        org-roam-ui-follow t
+        org-roam-ui-update-on-save t
+        org-roam-ui-open-on-start t))
+
+;; Set Deft to use the first non-empty line as the title, and specify the directory
+(setq deft-use-filename-as-title nil
+      deft-directory "~/org/")
+
+;; Customize Deft's summary parsing to ignore org labels and properties
+(setq deft-strip-summary-regexp
+      (concat "\\("
+              "[\n\t]" ;; blank
+              "\\|^#\\+[[:alpha:]_]+:.*$" ;; org-mode metadata
+              "\\|^:PROPERTIES:\n\\(.+\n\\)+:END:\n" ;; roam metadata
+              "\\)"))
+
+;; Function to parse the title in Deft, looking for #+TITLE: in the contents
+(defun cm/deft-parse-title (file contents)
+  (let ((begin (string-match "^#\\+[tT][iI][tT][lL][eE]: .*$" contents)))
+    (if begin
+        (string-trim (substring contents begin (match-end 0)) "#\\+[tT][iI][tT][lL][eE]: *" "[\n\t ]+")
+      (deft-base-filename file))))
+
+(advice-add 'deft-parse-title :override #'cm/deft-parse-title)
+
+;; Add mu4e to the load path
+(add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e/")
+
+;; Toggle org-msg in mu4e
+(setq +mu4e-compose-org-msg-toggle-next nil)
+
+;; Setting msmtp for sending emails
+(after! mu4e
+  (setq sendmail-program (executable-find "msmtp")
+        send-mail-function #'smtpmail-send-it
+        message-sendmail-f-is-evil t
+        message-sendmail-extra-arguments '("--read-envelope-from")
+        message-send-mail-function #'message-send-mail-with-sendmail))
+
+;; Configure mu4e contexts for different email accounts
+(set-email-account! "iitk"
+                    '((mu4e-sent-folder             . "/iitk/Sent")
+                      (mu4e-drafts-folder           . "/iitk/Drafts")
+                      (mu4e-trash-folder            . "/iitk/Trash")
+                      (mu4e-refile-folder           . "/iitk/All Mail")
+                      (user-mail-address            . "viveksk21@iitk.ac.in")
+                      (user-full-name               . "Lumi Dantu")
+                      (smtpmail-smtp-user           . "viveksk21@iitk.ac.in")
+                      (smtpmail-default-smtp-server . "mmtp.iitk.ac.in")
+                      (smtpmail-smtp-server         . "smtp.cc.iitk.ac.in")
+                      (smtpmail-smtp-service        .  465)
+                      (mu4e-compose-signature       . "Krishna Dantu,\n210299"))
+                    t)
+
+;; Prompt for context if not specified
+(setq mu4e-context-policy 'ask-if-none
+      mu4e-update-interval 300
+      mu4e-compose-context-policy 'always-ask
+      mu4e-index-cleanup nil
+      mu4e-index-lazy-check t)
+
+(use-package! corfu
+  :config
+  (defun corfu-enable-in-minibuffer ()
+    "Enable Corfu in the minibuffer if `completion-at-point' is bound."
+    (when (where-is-internal #'completion-at-point (list (current-local-map)))
+      (setq-local corfu-echo-delay nil
+                  corfu-popupinfo-delay nil)
+      (corfu-mode 1)))
+  (add-hook 'minibuffer-setup-hook #'corfu-enable-in-minibuffer))
+
+(use-package! orderless
+  :config
+  (add-to-list 'orderless-matching-styles 'char-fold-to-regexp))
+
+(setq corfu-auto-delay 0.3)
+(setq yas-triggers-in-field t)
+
+(custom-set-faces! '((corfu-popupinfo) :height 0.9))
+
+;; Hippie Expand
+;; An advanced autocomplete module in Emacs that tries to guess the completion of a word based on an evolving list of rules.
 (global-set-key [remap dabbrev-expand] #'hippie-expand)
 
 (setq hippie-expand-try-functions-list
@@ -577,15 +557,53 @@
         try-complete-lisp-symbol-partially
         try-complete-lisp-symbol))
 
-(after! apheleia
-  (setf (alist-get 'python-mode apheleia-mode-alist)
-        '(ruff-isort ruff))
-  (setf (alist-get 'python-ts-mode apheleia-mode-alist)
-      '(ruff-isort ruff)))
-
-(after! python
+;; Ruff Format (Python)
+(with-eval-after-load 'python
   (set-formatter! 'ruff :modes '(python-mode python-ts-mode)))
 
+;; Flutter & Dart Development
 (setq lsp-dart-sdk-dir "~/flutter/bin/cache/dart-sdk"
       lsp-dart-flutter-sdk "~/flutter"
       flutter-sdk-path "~/flutter")
+
+;; Latex mode
+(setq +latex-viewers '(zathura))
+(map! :map cdlatex-mode-map
+      :i "TAB" #'cdlatex-tab) ;; Use TAB for cdlatex completion
+
+(defun lumi/cf-sync-tags-in-buffer ()
+  "Update #+filetags in the current buffer using cf_tags.py."
+  (interactive)
+  (let* ((filename (buffer-file-name))
+         (problem-id (file-name-nondirectory filename))
+         (tags (string-trim
+                (shell-command-to-string
+                 (format "echo %s | cf_tags.py"
+                         (shell-quote-argument problem-id))))))
+    (when (and tags (not (string-empty-p tags)) (string-prefix-p ":" tags) (string-suffix-p ":" tags))
+      (save-excursion
+        (goto-char (point-min))
+        (if (re-search-forward "^#\\+filetags:.*" nil t)
+            (replace-match (concat "#+filetags: " tags))
+          (goto-char (point-min))
+          (if (re-search-forward "^#\\+title:.*" nil t)
+              (progn (forward-line 1)
+                     (insert "#+filetags: " tags "\n"))
+            (insert "#+filetags: " tags "\n"))))
+      (save-buffer)
+      (message "CF tags updated: %s" tags))))
+
+(defun lumi/run-cf-sync-after-capture ()
+  "Run CodeForces sync when finishing a cf_ problem capture."
+  (unless org-note-abort
+    (when-let* ((marker org-capture-last-stored-marker)
+                (file   (buffer-file-name (marker-buffer marker))))
+      (when (string-match-p "cf_" (file-name-nondirectory file))
+        (let ((buf (or (get-file-buffer file)
+                       (find-file-noselect file))))
+          (with-current-buffer buf
+            (lumi/cf-sync-tags-in-buffer))
+          (unless (get-file-buffer file)
+            (kill-buffer buf)))))))
+
+(add-hook 'org-capture-after-finalize-hook #'lumi/run-cf-sync-after-capture)

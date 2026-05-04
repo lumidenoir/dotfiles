@@ -6,6 +6,7 @@ awesome
 qtile
 dwm
 hyprland
+niri
 Quit"
 
 # Choose method
@@ -39,6 +40,10 @@ case "$choice" in
     "hyprland")
         echo "Starting Hyprland..."
         exec start-hyprland
+        ;;
+    "niri")
+        echo "Starting Niri..."
+        exec niri-session
         ;;
     "Quit")
         echo "Exiting."

@@ -1,174 +1,120 @@
 #!/bin/bash
+
 NETWORK_1="iitk-sec"
 NETWORK_2="iitk-sec(Highspeed-5GHz)"
-SWITCH_COOLDOWN=30
+SWITCH_COOLDOWN=10
 CHECK_INTERVAL=10
-REASSOCIATE_INTERVAL=1800
+REASSOCIATE_INTERVAL=$((30 * 60))
+FAILURE_THRESHOLD=1        # consecutive failures before switching
+PING_COUNT=3               # pings per check
+PING_TIMEOUT=3             # seconds per ping attempt
 
 last_switch_time=0
-last_reassociate_time=$(date +%s)
+last_reassociate_time=0
+consecutive_failures=0     # track streak of failures
 
 log() { echo "$(date '+%F %T') - $1"; }
 
+get_current_network() { nmcli -t -f active,ssid dev wifi | grep '^yes' | cut -d ':' -f2; }
+
+is_traffic_flowing() {
+    # Check if bytes are actively being transferred on the wifi interface
+    local iface
+    iface=$(nmcli -t -f DEVICE,TYPE dev | grep ':wifi' | cut -d: -f1 | head -1)
+    [[ -z "$iface" ]] && return 1
+
+    local rx1 tx1 rx2 tx2
+    rx1=$(cat /sys/class/net/"$iface"/statistics/rx_bytes 2>/dev/null)
+    tx1=$(cat /sys/class/net/"$iface"/statistics/tx_bytes 2>/dev/null)
+    sleep 2
+    rx2=$(cat /sys/class/net/"$iface"/statistics/rx_bytes 2>/dev/null)
+    tx2=$(cat /sys/class/net/"$iface"/statistics/tx_bytes 2>/dev/null)
+
+    local delta=$(( (rx2 - rx1) + (tx2 - tx1) ))
+    log "Traffic delta: $delta bytes/2s"
+    (( delta > 10240 ))  # >10KB/2s = active transfer, don't switch
+}
+
 check_connection() {
-    ip route | grep -q default || return 1
-    ping -c 2 -W 1 -i 0.3 8.8.8.8 >/dev/null 2>&1 || \
-    ping -c 2 -W 1 -i 0.3 1.1.1.1 >/dev/null 2>&1
-}
-
-get_current_network() {
-    nmcli -t -f ACTIVE,SSID dev wifi list | while IFS='' read -r line; do
-        if [[ "$line" == yes:* ]]; then
-            echo "${line#yes:}"
-            return
-        fi
-    done
-}
-
-is_known_network() {
-    local net="$1"
-    [[ "$net" == "$NETWORK_1" || "$net" == "$NETWORK_2" ]]
-}
-
-connect_to() {
-    local target="$1"
-    local now="$2"
-    local current
-    current=$(get_current_network)
-
-    if [[ -n "$current" && "$current" != "$target" ]]; then
-        log "Bringing down $current"
-        nmcli con down "$current" &>/dev/null
-        sleep 2
-    fi
-
-    local attempt
-    for attempt in 1 2 3; do
-        log "Connecting to $target (attempt $attempt/3)"
-        if nmcli --wait 15 con up "$target" &>/dev/null; then
-            last_switch_time=$now
-            last_reassociate_time=$now
-            log "Connected to $target"
-            notify-send -u low "WiFi" "Connected to $target" -t 1500
-            return 0
-        fi
-        sleep 3
-    done
-
-    log "Failed to connect to $target: $(nmcli --wait 10 con up "$target" 2>&1 | tail -1)"
-    return 1
-}
-
-handle_no_network() {
-    local now="$1"
-    (( now - last_switch_time < SWITCH_COOLDOWN )) && { log "Cooldown active, waiting..."; return; }
-
-    log "No network — attempting $NETWORK_1"
-    local attempt
-    for attempt in 1 2 3; do
-        if nmcli --wait 15 con up "$NETWORK_1" &>/dev/null; then
-            last_switch_time=$now
-            last_reassociate_time=$now
-            log "Connected to $NETWORK_1"
-            notify-send -u low "WiFi" "Connected to $NETWORK_1" -t 1500
-            return
-        fi
-        sleep 3
-    done
-
-    log "Fallback: attempting $NETWORK_2"
-    for attempt in 1 2 3; do
-        if nmcli --wait 15 con up "$NETWORK_2" &>/dev/null; then
-            last_switch_time=$now
-            last_reassociate_time=$now
-            log "Connected to $NETWORK_2"
-            notify-send -u low "WiFi" "Connected to $NETWORK_2" -t 1500
-            return
-        fi
-        sleep 3
-    done
-
-    log "Could not connect to any known network"
+    ping -c "$PING_COUNT" -W "$PING_TIMEOUT" iitk.ac.in >/dev/null 2>&1
 }
 
 switch_network() {
-    local now="$1"
-    local current="$2"
-    (( now - last_switch_time < SWITCH_COOLDOWN )) && { log "Switch on cooldown"; return; }
-
-    local target
-    [[ "$current" == "$NETWORK_1" ]] && target="$NETWORK_2" || target="$NETWORK_1"
-
-    log "Switching: $current -> $target"
-    connect_to "$target" "$now" || {
-        log "Switch failed, restoring $current"
-        connect_to "$current" "$now"
+    local now=$(date +%s)
+    (( now - last_switch_time < SWITCH_COOLDOWN )) && {
+        log "Cooldown active, skipping switch"
+        return
     }
+
+    local current
+    current=$(get_current_network)
+    local target
+    target=$([[ "$current" == "$NETWORK_1" ]] && echo "$NETWORK_2" || echo "$NETWORK_1")
+
+    log "Switching: $current → $target"
+    if nmcli con up "$target" &>/dev/null; then
+        last_switch_time=$now
+        consecutive_failures=0
+        log "Switched to $target"
+        notify-send -u low "Network Monitor" "Connected to $target" -t 1000
+    else
+        log "Failed to connect to $target"
+        notify-send -u normal "Network Error" "Failed to connect to $target. Retrying soon." -t 1000
+    fi
 }
 
-reassociate() {
-    local current="$1"
-    local now="$2"
-    log "Reassociating: $current (EAPOL refresh)"
-    nmcli con down "$current" &>/dev/null
-    sleep 2
-    if nmcli --wait 15 con up "$current" &>/dev/null; then
+reassociate_network() {
+    local now=$(date +%s)
+    local current
+    current=$(get_current_network)
+    [[ -z "$current" ]] && return
+    (( now - last_reassociate_time < REASSOCIATE_INTERVAL )) && return
+
+    log "Proactive re-association on $current"
+    if nmcli con up "$current" &>/dev/null; then
+        notify-send -u low "Network Monitor" "Connection refreshed: $current" -t 1000
         last_reassociate_time=$now
-        last_switch_time=$now
-        log "Reassociation OK"
-        notify-send -u low "WiFi" "Reassociated $current" -t 1500
+        log "Reassociated with $current"
     else
-        log "Reassociation failed — switching"
-        switch_network "$now" "$current"
+        notify-send -u normal "Network Warning" "Refresh failed for $current" -t 1000
+        log "Failed to reassociate with $current"
     fi
 }
 
 monitor_loop() {
-    local fail_count=0
-
     while true; do
-        local now
-        now=$(date +%s)
-        local current
-        current=$(get_current_network)
-
-        if [[ -z "$current" ]]; then
-            log "No active network"
-            handle_no_network "$now"
-            fail_count=0
-            sleep "$CHECK_INTERVAL"
-            continue
-        fi
-
-        if ! is_known_network "$current"; then
-            log "Unknown network '$current' — not interfering"
-            sleep "$CHECK_INTERVAL"
-            continue
-        fi
-
-        if (( now - last_reassociate_time >= REASSOCIATE_INTERVAL )); then
-            reassociate "$current" "$now"
-            fail_count=0
-            sleep "$CHECK_INTERVAL"
-            continue
-        fi
+        reassociate_network
 
         if ! check_connection; then
-            (( fail_count++ ))
-            log "Check failed (count: $fail_count) on $current"
-            if (( fail_count >= 2 )); then
-                notify-send -u critical "WiFi" "Connection lost, switching..." -t 1500
-                switch_network "$now" "$current"
-                fail_count=0
+            (( consecutive_failures++ ))
+            log "Ping failed (streak: $consecutive_failures/$FAILURE_THRESHOLD)"
+
+            if (( consecutive_failures >= FAILURE_THRESHOLD )); then
+                # Final guard: don't switch if data is actively flowing
+                if is_traffic_flowing; then
+                    log "Traffic still flowing despite ping failures — skipping switch (load-induced latency?)"
+                    consecutive_failures=0
+                else
+                    log "Connection genuinely lost, switching networks..."
+                    notify-send -u critical "Network Lost" \
+                        "Internet unreachable after $FAILURE_THRESHOLD checks. Switching..." -t 2000
+                    switch_network
+                fi
+            else
+                log "Waiting for more failures before switching..."
             fi
         else
-            fail_count=0
+            if (( consecutive_failures > 0 )); then
+                log "Connection recovered after $consecutive_failures failure(s)"
+                consecutive_failures=0
+            fi
         fi
 
-        sleep "$CHECK_INTERVAL"
+        sleep $CHECK_INTERVAL
     done
 }
 
-trap "log 'Stopped'; exit 0" SIGINT SIGTERM
-log "Wi-Fi monitor started (EAPOL refresh every $((REASSOCIATE_INTERVAL/60)) min)"
+trap "log 'Exiting...'; exit 0" SIGINT SIGTERM
+log "Wi-Fi monitor started — checks every ${CHECK_INTERVAL}s, switches after ${FAILURE_THRESHOLD} consecutive failures, reassociates every 30m"
+notify-send -u normal "Network Monitor" "Wi-Fi monitoring service started." -t 1000
 monitor_loop

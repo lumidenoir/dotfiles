@@ -35,7 +35,7 @@
        doom-quit         ; DOOM quit-message prompts when you quit Emacs
        ;;(emoji +unicode)  ; 🙂
        hl-todo           ; highlight TODO/FIXME/NOTE/DEPRECATED/HACK/REVIEW
-       ;;indent-guides     ; highlighted indent columns
+       indent-guides     ; highlighted indent columns
        (ligatures)         ; ligatures and symbols to make your code pretty again
        ;;minimap           ; show a map of the code on the side
        modeline          ; snazzy, Atom-inspired modeline, plus API
@@ -84,8 +84,8 @@
        vterm             ; the best terminal emulation in Emacs
 
        :checkers
-       syntax              ; tasing you for every semicolon you forget
-       (spell +hunspell +flyspell) ; tasing you for misspelling mispelling
+       (syntax +childframe +flymake)              ; tasing you for every semicolon you forget
+       (spell +flyspell +hunspell) ; tasing you for misspelling mispelling
        ;;grammar           ; tasing grammar mistake every you make
 
        :tools
@@ -99,14 +99,14 @@
        ;;ein               ; tame Jupyter notebooks with emacs
        (eval +overlay)     ; run code, run (also, repls)
        (lookup +docsets)              ; navigate your code and its documentation
-       (lsp +peek)               ; M-x vscode
+       (lsp +eglot)               ; M-x vscode
        magit             ; a git porcelain for Emacs
        ;;make              ; run make tasks from Emacs
        ;;pass              ; password manager for nerds
        ;;pdf               ; pdf enhancements
        ;;terraform         ; infrastructure as code
        ;;tmux              ; an API for interacting with tmux
-       tree-sitter       ; syntax and parsing, sitting in a tree...
+       ;;tree-sitter       ; syntax and parsing, sitting in a tree...
        ;;upload            ; map local to remote projects via ssh/ftp
 
        :os
@@ -117,7 +117,7 @@
        ;;ada               ; In strong typing we (blindly) trust
        ;;agda              ; types of types of types of types...
        ;;beancount         ; mind the GAAP
-       (cc +lsp +tree-sitter)         ; C > C++ == 1
+       (cc +lsp)         ; C > C++ == 1
        ;;clojure           ; java with a lisp
        ;;common-lisp       ; if you've seen one lisp, you've seen them all
        ;;coq               ; proofs-as-programs
@@ -144,14 +144,14 @@
        ;;idris             ; a language you can depend on
        ;;json              ; At least it ain't XML
        ;;(java +lsp)       ; the poster child for carpal tunnel syndrome
-       (javascript +tree-sitter)        ; all(hope(abandon(ye(who(enter(here))))))
+       (javascript)        ; all(hope(abandon(ye(who(enter(here))))))
        ;;julia             ; a better, faster MATLAB
        ;;kotlin            ; a better, slicker Java(Script)
        (latex +cdlatex)            ; writing papers in Emacs has never been so fun
        ;;lean              ; for folks with too much to prove
        ;;ledger            ; be audit you can be
        lua               ; one-based indices? one-based indices
-       markdown          ; writing docs for people to ignore
+       (markdown +grip)          ; writing docs for people to ignore
        ;;nim               ; python + lisp at the speed of c
        ;;nix               ; I hereby declare "nix geht mehr!"
        ;;ocaml             ; an objective camel
@@ -159,7 +159,7 @@
        ;;php               ; perl's insecure younger brother
        ;;plantuml          ; diagrams for confusing people more
        ;;purescript        ; javascript, but functional
-       (python +lsp +poetry +uv +tree-sitter)            ; beautiful is better than ugly
+       (python +lsp +uv)            ; beautiful is better than ugly
        ;;qt                ; the 'cutest' gui framework ever
        ;;racket            ; a DSL for DSLs
        ;;raku              ; the artist formerly known as perl6
@@ -174,7 +174,7 @@
        ;;solidity          ; do you need a blockchain? No.
        ;;swift             ; who asked for emoji variables?
        ;;terra             ; Earth and Moon in alignment for performance.
-       (web +tree-sitter)               ; the tubes
+       (web)               ; the tubes
        yaml              ; JSON, but readable
        ;;zig               ; C, but simpler
 
