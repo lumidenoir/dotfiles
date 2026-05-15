@@ -43,19 +43,9 @@ mapped_theme="${theme_map[$theme_folder]}"
 if [[ -n "$mapped_theme" ]]; then
     echo "Applying mapped theme: $mapped_theme"
     wallust theme "$mapped_theme"
-    if [[ -f "$rofi_theme" ]]; then
-        echo "Wallpaper patching with $theme_folder and $selected_wall"
-        sed -i "s|\"$mapped_theme\"|\"$selected_wall\"|" "$rofi_theme" "$spotlight_theme"
-    fi
 else
     echo "No map found, generating colors from image"
     wallust run "$selected_wall"
 fi
-
-polybar-msg cmd restart >/dev/null 2>&1
-restart_dunst
-pkill -USR2 -x waybar 2>/dev/null
-pkill -SIGUSR1 -x qtile 2>/dev/null
-pkill -HUP -x awesome 2>/dev/null
 
 exit 0

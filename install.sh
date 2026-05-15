@@ -3,13 +3,16 @@
 CONF="$HOME/.config"
 INS="$PWD"
 
-# Function for creating symlinks with confirmation
-create_symlink() {
-    local src="$1"
-    local dest="$2"
-    echo "$src --> $dest"
-    ln -sf "$src" "$dest"
+# Function to check and install dependencies (Arch only for now)
+install_pkg() {
+    if ! command -v "$1" >/dev/null 2>&1; then
+        echo "Installing $1..."
+        sudo pacman -S --noconfirm "$1"
+    fi
 }
+
+# Ensure stow is installed
+install_pkg stow
 
 # Case options for different setups
 case "$1" in
@@ -19,73 +22,47 @@ base)
         echo "Installation canceled."
         exit 1
     fi
-    echo "Starting installation script..."
-    echo "Configuration directory: $CONF"
-    echo "Installation source: $INS"
-    echo "Creating symlinks for base configuration folders in $CONF"
-    for folder in bspwm sxhkd awesome qtile hypr picom polybar mpd mpDris2 ncmpcpp cava wallust wezterm waybar; do
-        if [ -e "$CONF/$folder" ]; then
-            echo "$folder exists at CONF, backing up..."
-            mkdir -p "$CONF/old"
-            mv "$CONF/$folder" "$CONF/old/$folder"
+    echo "Starting installation with GNU Stow..."
+    
+    # List of packages to stow
+    PACKAGES="awesome bspwm hypr picom polybar mpd mpDris2 ncmpcpp cava wallust wezterm waybar sxhkd qtile x11"
+    
+    for pkg in $PACKAGES; do
+        if [ -d "$pkg" ]; then
+            echo "Stowing $pkg..."
+            # Backup existing dir if not a symlink
+            if [ -d "$CONF/$pkg" ] && [ ! -L "$CONF/$pkg" ]; then
+                echo "Backing up existing $pkg config..."
+                mv "$CONF/$pkg" "$CONF/${pkg}_backup"
+            fi
+            stow -R "$pkg"
         fi
-        create_symlink "$INS/$folder/" "$CONF"
     done
-    echo "Ensuring /usr/local/bin exists"
-    sudo mkdir -p "/usr/local/bin/"
-    sudo ln -sf $INS/scripts/* "/usr/local/bin"
-    echo "Linked scripts to /usr/local/bin"
-    mv "$HOME/.xinitrc" "$HOME/.xinitrc_old"
-    create_symlink "$INS/.xinitrc" "$HOME/.xinitrc"
-    echo "Finished moving folders pls install dependencies. To use dwm as WM, build dwm, st, and dmenu."
+    
+    echo "Finished stowing base configurations."
     ;;
 zsh)
-    read -p "Proceed with the installation? (y/n) " confirm
-    if [ "$confirm" != "y" ]; then
-        echo "Installation canceled."
-        exit 1
-    fi
-    echo "Starting installation script..."
-    sudo pacman -S zsh antidote
-    echo "Installing plugins list for antidote..."
-    create_symlink "$INS/.zsh_plugins.txt" "$HOME/.zsh_plugins.txt"
-    echo "Backing up .zshrc to .zshrc_old"
-    mv "$HOME/.zshrc" "$HOME/.zshrc_old"
-    create_symlink "$INS/.zshrc" "$HOME/.zshrc"
-    echo "Zsh setup complete cahnge shell and restart"
+    echo "Setting up Zsh..."
+    stow -R shell
+    install_pkg antidote
+    echo "Zsh setup complete. Restart your shell."
     ;;
 doom)
-    read -p "Proceed with the doom installation? (y/n) " confirm
-    if [ "$confirm" != "y" ]; then
-        echo "Installation canceled."
-        exit 1
-    fi
-    echo "Starting installation script..."
-    read -p "Install emacs and clone doom? (y/n) " install_deps
-    if [ "$install_deps" = "y" ]; then
-        sudo pacman -S emacs
-        echo "Installing Doom Emacs..."
+    echo "Setting up Doom Emacs..."
+    install_pkg emacs
+    if [ ! -d "$HOME/.config/emacs" ]; then
         git clone --depth 1 https://github.com/doomemacs/doomemacs "$HOME/.config/emacs"
         "$HOME/.config/emacs/bin/doom" install
     fi
-    rm -rf "$CONF/doom"
-    create_symlink "$INS/doom/" "$CONF"
+    stow -R doom
     ;;
 nvchad)
-    read -p "Proceed with the nvchad installation? (y/n) " confirm
-    if [ "$confirm" != "y" ]; then
-        echo "Installation canceled."
-        exit 1
+    echo "Setting up Neovim (NvChad)..."
+    install_pkg nvim
+    if [ ! -d "$HOME/.config/nvim" ]; then
+        git clone https://github.com/NvChad/starter "$HOME/.config/nvim"
     fi
-    echo "Starting installation script..."
-    read -p "Install nvim and clone nvchad? (y/n) " install_deps
-    if [ "$install_deps" = "y" ]; then
-        sudo pacman -S nvim
-        echo "Installing NvChad..."
-        git clone https://github.com/NvChad/starter "$HOME/.config/nvim" && nvim
-    fi
-    rm -rf "$CONF/nvim"
-    create_symlink "$INS/nvim/" "$CONF"
+    stow -R nvim
     ;;
 *)
     echo "Usage: install.sh {base|zsh|doom|nvchad}"

@@ -71,6 +71,14 @@ else
     (feh --no-fehbg --bg-fill "$wall_path" &) >/dev/null 2>&1 &
 fi
 
-# Echo full wallpaper path BEFORE applying wallpaper
+# Echo full wallpaper path
 echo "$wall_path" >~/.cache/wallpaper
+
+# Generate wallpaper.rasi for Rofi to avoid needing sed hacks
+cat > "$HOME/.config/rofi/wallpaper.rasi" <<EOF
+* {
+    wallpaper-path: url("$wall_path", width);
+}
+EOF
+
 exit 0

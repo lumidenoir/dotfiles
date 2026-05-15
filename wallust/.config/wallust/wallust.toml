@@ -1,0 +1,77 @@
+# wallust v3.4
+#
+# You can copy this file to ~/.config/wallust/wallust.toml (keep in mind is a sample config)
+
+# SIMPLE TUTORIAL, or `man wallust.5`:
+# https://explosion-mental.codeberg.page/wallust/
+#
+# If comming from v2: https://explosion-mental.codeberg.page/wallust/v3.html#wallusttoml
+
+# Global section - values below can be overwritten by command line flags
+
+# How the image is parse, in order to get the colors:
+# full - resized - wal - thumb -  fastresize - kmeans
+backend = "full"
+
+# What color space to use to produce and select the most prominent colors:
+# lab - labmixed - lch - lchmixed
+color_space = "labmixed"
+
+# Use the most prominent colors in a way that makes sense, a scheme color palette:
+# dark - dark16 - darkcomp - darkcomp16
+# light - light16 - lightcomp - lightcomp16
+# harddark - harddark16 - harddarkcomp - harddarkcomp16
+# softdark - softdark16 - softdarkcomp - softdarkcomp16
+# softlight - softlight16 - softlightcomp - softlightcomp16
+palette = "dark16"
+
+threshold = 11
+
+# Ensures a "readable contrast" (OPTIONAL, disabled by default)
+# Should only be enabled when you notice an unreadable contrast frequently happening
+# with your images. The reference color for the contrast is the background color.
+check_contrast = true
+
+# Color saturation, between [1% and 100%] (OPTIONAL, disabled by default)
+# usually something higher than 50 increases the saturation and below
+# decreases it (on a scheme with strong and vivid colors)
+# saturation = 35
+
+# Alpha value for templating, by default 100 (no other use whatsoever)
+#alpha = 100
+
+[templates]
+# Common Color Files
+ colors_css     = { src = 'colors.css', target = '~/.config/wallust/colors.css' }
+ colors_rasi    = { src = 'colors.rasi', target = '~/.config/rofi/colors.rasi' }
+ colors_ini     = { src = 'colors.ini', target = '~/.config/polybar/colors.ini' }
+
+# App specific reloads (using on_change)
+ dunst         = { src = 'dunstrc', target = '~/.config/dunst/dunstrc', on_change = 'pkill -x dunst; dunst &' }
+ kitty         = { src = 'kitty.conf', target = '~/.config/kitty/kitty.conf' }
+ waybar        = { src = 'colors.css', target = '~/.config/waybar/colors.css', on_change = 'pkill -USR2 waybar' }
+ border        = { src = 'hyprcolors', target = '~/.config/hypr/colors.conf' }
+ zathura       = { src = 'zathura', target = '~/.config/zathura/zathurarc' }
+ 
+# WM Specific color files (only the colors/variables parts)
+ helix         = { src = 'helix.toml', target = '~/.config/helix/themes/wallust.toml' }
+ qtilecolor    = { src = 'qtile.json', target = '~/dotfiles/qtile/utils/colorscheme/wallust.json', on_change = 'pkill -SIGUSR1 qtile' }
+ awesome       = { src = 'awesome.lua', target = '~/dotfiles/awesome/colors.lua', on_change = 'awesome-client "awesome.restart()"' }
+
+# Rofi Templates (These will now import colors.rasi and wallpaper.rasi)
+ rofi-bspwm    = { src = 'bspwm.rasi', target = '~/.config/rofi/bspwm.rasi' }
+ rofi-qt       = { src = 'qtile.rasi', target = '~/.config/rofi/qtile.rasi' }
+ rofi-hypr     = { src = 'hypr.rasi', target = '~/.config/rofi/hypr.rasi' }
+ rofi-spotlight= { src = 'spotlight.rasi', target = '~/.config/rofi/spotlight.rasi' }
+ rofi-netman   = { src = 'netman.rasi', target = '~/.config/rofi/NetManagerDM.rasi' }
+ rofi-hotkeys  = { src = 'hotkeys.rasi', target = '~/.config/rofi/hotkeys.rasi' }
+ rofi-notif    = { src = 'notification.rasi', target = '~/.config/rofi/notification.rasi' }
+ rofi-wall     = { src = 'WallSelect.rasi', target = '~/.config/rofi/WallSelect.rasi' }
+
+# GTK (Consolidated)
+ gtk3          = { src = 'colors.css', target = '~/.config/gtk-3.0/gtk.css' }
+ gtk4          = { src = 'colors.css', target = '~/.config/gtk-4.0/gtk.css' }
+
+# Polybar (Using common INI)
+ polybar       = { src = 'colors.ini', target = '~/.config/polybar/colors.ini', on_change = 'polybar-msg cmd restart' }
+

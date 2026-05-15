@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  :root {
+    --bg: #080c10;
+    --surface: #0d1117;
+    --surface2: #161b22;
+    --surface3: #1c2330;
+    --border: #21262d;
+    --accent: #00ff9d;
+    --accent2: #00c8ff;
+    --accent3: #ff6b6b;
+    --accent4: #ffd93d;
+    --text: #e6edf3;
+    --text-muted: #7d8590;
+    --text-dim: #3d444d;
+    --glow: rgba(0,255,157,0.12);
+    --glow2: rgba(0,200,255,0.12);
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-display: 'Space Grotesk', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+    padding: 0 0 60px;
+  }
+
+  /* Grid noise overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,157,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,157,0.015) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Ambient glow blobs */
+  .ambient {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(100px);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.25;
+  }
+  .ambient-1 { width: 500px; height: 500px; background: #00ff9d22; top: -100px; left: -100px; }
+  .ambient-2 { width: 400px; height: 400px; background: #00c8ff22; bottom: 100px; right: -100px; }
+
+  /* Header */
+  header {
+    position: relative;
+    z-index: 10;
+    padding: 28px 40px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  .logo span { color: var(--accent); }
+
+  .header-time {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-align: right;
+  }
+  .header-time .clock {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text);
+    display: block;
+    line-height: 1;
+  }
+
+  /* Main grid */
+.grid {
+    position: relative;
+    z-index: 10;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    grid-auto-rows: max-content;
+    gap: 16px;
+    padding: 24px 40px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  /* Card base */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .card:hover { border-color: #30363d; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
+  .card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-card, var(--accent)), transparent);
+    opacity: 0.4;
+  }
+
+  .card-accent-blue { --accent-card: var(--accent2); }
+  .card-accent-red { --accent-card: var(--accent3); }
+  .card-accent-yellow { --accent-card: var(--accent4); }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .card-title {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+  }
+  .card-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent-card, var(--accent));
+    flex-shrink: 0;
+    box-shadow: 0 0 6px var(--accent-card, var(--accent));
+  }
+
+  /* Loading / error states */
+  .loading-text {
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
+  .error-text { color: var(--accent3); font-size: 0.75rem; }
+
+  /* ===== WEATHER CARD ===== */
+
+  .weather-main {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+  .weather-temp {
+    font-family: var(--font-display);
+    font-size: 3.5rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--text);
+  }
+  .weather-temp sup { font-size: 1.2rem; color: var(--text-muted); }
+  .weather-icon {
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  /* Scaling the lucide icon up */
+  .weather-icon svg { width: 56px; height: 56px; stroke-width: 1.5; }
+
+  .weather-desc { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; text-transform: capitalize; }
+  .weather-location { font-size: 0.7rem; color: var(--accent); margin-top: 2px; }
+  .weather-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .weather-stat {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 0.68rem;
+  }
+  .weather-stat label { color: var(--text-muted); display: block; font-size: 0.62rem; margin-bottom: 2px; }
+  .weather-stat span { color: var(--text); font-weight: 500; }
+
+  .city-input-row { display: flex; gap: 6px; margin-top: 12px; }
+  .city-input-row input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    padding: 6px 10px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .city-input-row input:focus { border-color: var(--accent); }
+  .btn-sm {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    padding: 6px 10px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .btn-sm:hover { background: var(--surface3); border-color: var(--accent); }
+
+  /* ===== CF CARD ===== */
+
+  .cf-layout { display: grid; grid-template-columns: 200px 1fr; gap: 20px; }
+  .cf-profile { display: flex; flex-direction: column; gap: 10px; }
+  .cf-handle {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text);
+    word-break: break-all;
+  }
+  .cf-rank { font-size: 0.72rem; text-transform: capitalize; margin-top: -4px; }
+  .cf-rating-big {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--accent);
+    font-family: var(--font-display);
+  }
+  .cf-rating-big small { font-size: 0.7rem; color: var(--text-muted); display: block; font-family: var(--font-mono); }
+  .cf-stats { display: flex; flex-direction: column; gap: 6px; }
+  .cf-stat { font-size: 0.72rem; color: var(--text-muted); }
+  .cf-stat span { color: var(--text); }
+
+  .cf-right { display: flex; flex-direction: column; gap: 14px; }
+  .cf-section-title {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+  .cf-contest-list { display: flex; flex-direction: column; gap: 6px; }
+  .cf-contest {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.72rem;
+    border: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+  .cf-contest-name { color: var(--text); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cf-contest-time { color: var(--accent2); white-space: nowrap; font-size: 0.65rem; }
+
+  .cf-solved-list { display: flex; flex-direction: column; gap: 5px; }
+  .cf-problem {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .cf-problem-id { color: var(--accent); font-weight: 500; min-width: 50px; }
+  .cf-problem-name { color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cf-problem-rating { color: var(--accent4); font-size: 0.65rem; margin-left: auto; }
+
+  .cf-username-row { display: flex; gap: 6px; margin-bottom: 14px; }
+  .cf-username-row input {
+    flex: 1; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text); font-family: var(--font-mono);
+    font-size: 0.72rem; padding: 6px 10px; outline: none; transition: border-color 0.2s;
+  }
+  .cf-username-row input:focus { border-color: var(--accent); }
+
+  /* ===== NEWS CARD ===== */
+  .news-tabs {
+    display: flex; gap: 4px; margin-bottom: 14px; background: var(--surface2);
+    padding: 4px; border-radius: 8px; width: fit-content;
+  }
+  .news-tab {
+    font-family: var(--font-mono); font-size: 0.7rem; padding: 5px 12px;
+    border-radius: 5px; cursor: pointer; border: none; background: transparent;
+    color: var(--text-muted); transition: all 0.2s;
+  }
+  .news-tab.active { background: var(--surface3); color: var(--text); }
+  .news-tab:hover:not(.active) { color: var(--text); }
+
+  .news-list { display: flex; flex-direction: column; gap: 10px; }
+  .news-item {
+    display: flex; gap: 12px; align-items: flex-start; padding: 10px;
+    background: var(--surface2); border-radius: 8px; border: 1px solid var(--border);
+    text-decoration: none; transition: border-color 0.2s, background 0.2s;
+  }
+  .news-item:hover { border-color: var(--accent2); background: var(--surface3); }
+  .news-num { font-size: 0.65rem; color: var(--text-dim); min-width: 18px; padding-top: 2px; }
+  .news-content { flex: 1; }
+  .news-headline { font-size: 0.78rem; color: var(--text); line-height: 1.4; display: block; margin-bottom: 4px; }
+  .news-meta { font-size: 0.65rem; color: var(--text-muted); }
+  .news-source { color: var(--accent2); }
+
+  /* ===== ANIME QUOTE ===== */
+  .quote-text {
+    font-size: 0.85rem; line-height: 1.65; color: var(--text); font-style: italic;
+    position: relative; padding-left: 14px; margin-bottom: 14px;
+  }
+  .quote-text::before {
+    content: '"'; position: absolute; left: 0; top: -4px; font-size: 2rem;
+    color: var(--accent); font-style: normal; line-height: 1; font-family: var(--font-display);
+  }
+  .quote-anime { font-size: 0.7rem; color: var(--accent); margin-top: 4px; }
+  .quote-char { font-size: 0.68rem; color: var(--text-muted); }
+  .quote-refresh {
+    margin-top: 14px; background: transparent; border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text-muted); font-family: var(--font-mono);
+    font-size: 0.68rem; padding: 5px 10px; cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .quote-refresh:hover { border-color: var(--accent); color: var(--accent); }
+  .spin { display: inline-block; }
+  .spin.spinning { animation: spin 0.6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ===== RANK COLORS ===== */
+  .rank-newbie { color: #808080; }
+  .rank-pupil { color: #008000; }
+  .rank-specialist { color: #03a89e; }
+  .rank-expert { color: #0000ff; }
+  .rank-candidate-master { color: #aa00aa; }
+  .rank-master { color: #ff8c00; }
+  .rank-international-master { color: #ff8c00; }
+  .rank-grandmaster { color: #ff0000; }
+  .rank-international-grandmaster { color: #ff0000; }
+  .rank-legendary-grandmaster { color: #ff0000; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #30363d; }
+
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  .blink { animation: blink 1s step-end infinite; }
+
+@media (min-width: 1100px) {
+    .card-cf { grid-column: span 2; }
+    .card-news { grid-column: span 2; }
+  }
+
+  /* Adjust padding for tiny windows */
+  @media (max-width: 600px) {
+    .grid { padding: 16px; }
+    header { padding: 20px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="ambient ambient-1"></div>
+<div class="ambient ambient-2"></div>
+
+<header>
+  <div class="logo">// <span>dashboard</span></div>
+  <!-- <div id="now-playing" style="display: flex; align-items: center; gap: 8px; background: var(--surface2); padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border); font-size: 0.7rem; opacity: 0; transition: opacity 0.3s;">
+       <i data-lucide="music" style="width: 14px; height: 14px; color: var(--accent2);"></i>
+       <span id="np-text" style="color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;"></span>
+       </div> -->
+  <div class="header-time">
+    <span class="clock" id="clock">--:--:--</span>
+    <span id="date-str" style="font-size:0.68rem;color:var(--text-muted)"></span>
+  </div>
+</header>
+
+<div class="grid">
+
+  <div class="card card-weather">
+    <div class="card-header">
+      <div class="card-dot"></div>
+      <span class="card-title">Weather</span>
+    </div>
+    <div id="weather-body"><span class="loading-text">fetching weather...</span></div>
+    <div class="city-input-row">
+      <input type="text" id="city-input" placeholder="Enter city..." value="Kanpur">
+      <button class="btn-sm" onclick="fetchWeather()">→</button>
+    </div>
+  </div>
+
+<div class="card card-cf card-accent-blue">
+    <div class="card-header">
+      <div class="card-dot"></div>
+      <span class="card-title">Codeforces</span>
+    </div>
+    <div id="cf-body"><span class="loading-text">loading codeforces data...</span></div>
+  </div>
+
+  <div class="card card-news card-accent-blue">
+    <div class="card-header">
+      <div class="card-dot"></div>
+      <span class="card-title">News</span>
+    </div>
+    <div class="news-tabs">
+      <button class="news-tab active" onclick="switchNews('arch', this)">Arch Linux</button>
+      <button class="news-tab" onclick="switchNews('world', this)">World News</button>
+    </div>
+    <div id="news-body"><span class="loading-text">loading news...</span></div>
+  </div>
+
+  <div class="card card-anime card-accent-yellow">
+    <div class="card-header">
+      <div class="card-dot"></div>
+      <span class="card-title">Anime Quote</span>
+    </div>
+    <div id="quote-body"><span class="loading-text">summoning wisdom...</span></div>
+    <button class="quote-refresh" onclick="fetchQuote()">
+      <span class="spin" id="quote-spin">↻</span> new quote
+    </button>
+  </div>
+
+</div>
+
+<script>
+// ==================== CLOCK ====================
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2,'0');
+  const m = String(now.getMinutes()).padStart(2,'0');
+  const s = String(now.getSeconds()).padStart(2,'0');
+  document.getElementById('clock').innerHTML = `${h}<span class="blink">:</span>${m}<span class="blink">:</span>${s}`;
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('date-str').textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// ==================== WEATHER (Lucide Icons Mapping) ====================
+// Mapping WMO codes to Lucide icon names
+const lucideIcons = {
+  0:'sun', 1:'sun-dim', 2:'cloud-sun', 3:'cloud',
+  45:'cloud-fog', 48:'cloud-fog', 51:'cloud-drizzle', 53:'cloud-drizzle',
+  55:'cloud-drizzle', 61:'cloud-rain', 63:'cloud-rain', 65:'cloud-rain-wind',
+  71:'snowflake', 73:'snowflake', 75:'snowflake', 77:'snowflake',
+  80:'cloud-hail', 81:'cloud-hail', 82:'cloud-hail', 85:'cloud-snow',
+  86:'cloud-snow', 95:'cloud-lightning', 96:'cloud-lightning', 99:'cloud-lightning'
+};
+
+const weatherDescs = {
+  0:'Clear sky', 1:'Mainly clear', 2:'Partly cloudy', 3:'Overcast',
+  45:'Foggy', 48:'Icy fog', 51:'Light drizzle', 53:'Drizzle', 55:'Heavy drizzle',
+  61:'Light rain', 63:'Rain', 65:'Heavy rain', 71:'Light snow', 73:'Snow',
+  75:'Heavy snow', 77:'Snow grains', 80:'Rain showers', 81:'Rain showers',
+  82:'Heavy showers', 85:'Snow showers', 86:'Heavy snow showers',
+  95:'Thunderstorm', 96:'Thunderstorm+hail', 99:'Thunderstorm+hail'
+};
+
+async function fetchWeather() {
+  const city = document.getElementById('city-input').value.trim() || 'Kanpur';
+  document.getElementById('weather-body').innerHTML = '<span class="loading-text">fetching weather...</span>';
+  try {
+    const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`);
+    const geoData = await geoRes.json();
+    if (!geoData.results?.length) throw new Error('City not found');
+    const { latitude, longitude, name, country } = geoData.results[0];
+
+    const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weathercode,apparent_temperature&wind_speed_unit=kmh&timezone=auto`);
+    const wData = await wRes.json();
+    const c = wData.current;
+    const code = c.weathercode;
+    const iconName = lucideIcons[code] || 'thermometer';
+
+    document.getElementById('weather-body').innerHTML = `
+      <div class="weather-main">
+        <div>
+          <div class="weather-temp">${Math.round(c.temperature_2m)}<sup>°C</sup></div>
+          <div class="weather-desc">${weatherDescs[code] || 'Unknown'}</div>
+          <div class="weather-location">📍 ${name}, ${country}</div>
+        </div>
+        <div class="weather-icon"><i data-lucide="${iconName}"></i></div>
+      </div>
+      <div class="weather-details">
+        <div class="weather-stat"><label>Feels like</label><span>${Math.round(c.apparent_temperature)}°C</span></div>
+        <div class="weather-stat"><label>Humidity</label><span>${c.relative_humidity_2m}%</span></div>
+        <div class="weather-stat"><label>Wind</label><span>${c.wind_speed_10m} km/h</span></div>
+        <div class="weather-stat"><label>Updated</label><span>${new Date(c.time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span></div>
+      </div>`;
+
+    // Initialize the lucide icons we just injected into the DOM
+    lucide.createIcons();
+  } catch(e) {
+    document.getElementById('weather-body').innerHTML = `<span class="error-text">⚠ ${e.message}</span>`;
+  }
+}
+fetchWeather();
+document.getElementById('city-input').addEventListener('keydown', e => { if (e.key === 'Enter') fetchWeather(); });
+
+// ==================== CODEFORCES ====================
+function rankColor(rank) {
+  if (!rank) return '';
+  return `rank-${rank.toLowerCase().replace(/ /g,'-')}`;
+}
+
+async function loadCF() {
+const handle = "lumidenoir";
+  document.getElementById('cf-body').innerHTML = '<span class="loading-text">loading codeforces data...</span>';
+  try {
+    const [userRes, contestsRes, subRes] = await Promise.all([
+      fetch(`https://codeforces.com/api/user.info?handles=${handle}`),
+      fetch(`https://codeforces.com/api/contest.list?gym=false`),
+      fetch(`https://codeforces.com/api/user.status?handle=${handle}&from=1&count=20`)
+    ]);
+    const userData = await userRes.json();
+    const contestsData = await contestsRes.json();
+    const subData = await subRes.json();
+
+    if (userData.status !== 'OK') throw new Error(userData.comment || 'User not found');
+    const user = userData.result[0];
+    const now = Date.now() / 1000;
+    const upcoming = (contestsData.result || []).filter(c => c.phase === 'BEFORE' && c.startTimeSeconds > now).sort((a,b) => a.startTimeSeconds - b.startTimeSeconds).slice(0,3);
+
+    const seen = new Set();
+    const solved = [];
+    for (const sub of (subData.result || [])) {
+      if (sub.verdict === 'OK' && sub.problem) {
+        const key = `${sub.problem.contestId}${sub.problem.index}`;
+        if (!seen.has(key)) { seen.add(key); solved.push(sub.problem); if (solved.length >= 5) break; }
+      }
+    }
+
+    const contestsHtml = upcoming.length ? upcoming.map(c => {
+      const diff = c.startTimeSeconds - now;
+      const days = Math.floor(diff / 86400);
+      const hrs = Math.floor((diff % 86400) / 3600);
+      return `<div class="cf-contest"><span class="cf-contest-name">${c.name}</span><span class="cf-contest-time">${days > 0 ? `in ${days}d ${hrs}h` : `in ${hrs}h`}</span></div>`;
+    }).join('') : '<span style="font-size:0.72rem;color:var(--text-muted)">No upcoming contests</span>';
+
+    const solvedHtml = solved.length ? solved.map(p => `
+      <div class="cf-problem">
+        <span class="cf-problem-id">${p.contestId}${p.index}</span>
+        <span class="cf-problem-name">${p.name}</span>
+        ${p.rating ? `<span class="cf-problem-rating">${p.rating}</span>` : ''}
+      </div>`).join('') : '<span style="font-size:0.72rem;color:var(--text-muted)">No submissions</span>';
+
+    const maxRating = user.maxRating || user.rating || 0;
+    document.getElementById('cf-body').innerHTML = `
+      <div class="cf-layout">
+        <div class="cf-profile">
+          <div class="cf-handle">${user.handle}</div>
+          <div class="cf-rank ${rankColor(user.rank)}">${user.rank || 'Unranked'}</div>
+          <div class="cf-rating-big">${user.rating || '—'}<small>current rating</small></div>
+          <div class="cf-stats">
+            <div class="cf-stat">Max: <span class="${rankColor(user.maxRank)}">${maxRating}</span></div>
+            <div class="cf-stat">Contribution: <span>${user.contribution >= 0 ? '+' : ''}${user.contribution || 0}</span></div>
+          </div>
+        </div>
+        <div class="cf-right">
+          <div><div class="cf-section-title">upcoming contests</div><div class="cf-contest-list">${contestsHtml}</div></div>
+          <div><div class="cf-section-title">recently solved</div><div class="cf-solved-list">${solvedHtml}</div></div>
+        </div>
+      </div>`;
+  } catch(e) { document.getElementById('cf-body').innerHTML = `<span class="error-text">⚠ ${e.message}</span>`; }
+}
+
+loadCF();
+// ==================== NEWS (Arch Linux & World) ====================
+const newsFeeds = {
+  arch: 'https://archlinux.org/feeds/news/',
+  world: 'http://feeds.bbci.co.uk/news/world/rss.xml'
+};
+
+async function fetchNews(type) {
+  document.getElementById('news-body').innerHTML = '<span class="loading-text">fetching news...</span>';
+  try {
+    const res = await fetch(`http://127.0.0.1:8000/api/news/${type}`);
+    const data = await res.json();
+
+    if (!data.items?.length) throw new Error('No items');
+
+    document.getElementById('news-body').innerHTML = `<div class="news-list">` +
+      data.items.map((item, i) => `
+        <a class="news-item" href="${item.link}" target="_blank" rel="noopener">
+          <span class="news-num">0${i+1}</span>
+          <div class="news-content">
+            <span class="news-headline">${item.title}</span>
+            <span class="news-meta">
+              <span class="news-source">${item.source}</span>
+              · ${new Date(item.pubDate).toLocaleDateString('en',{day:'numeric',month:'short'})}
+            </span>
+          </div>
+        </a>`).join('') + `</div>`;
+  } catch(e) {
+    document.getElementById('news-body').innerHTML = `<span class="error-text">⚠ Backend offline. Start server.py</span>`;
+  }
+ }
+
+function switchNews(type, btn) {
+  document.querySelectorAll('.news-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  fetchNews(type);
+}
+fetchNews('arch');
+ // async function fetchNowPlaying() {
+ //   try {
+ //     const res = await fetch('http://127.0.0.1:8000/api/now-playing');
+ //     const data = await res.json();
+ //     const npContainer = document.getElementById('now-playing');
+ //     const npText = document.getElementById('np-text');
+ //
+ //     if (data.is_playing) {
+ //       npContainer.style.opacity = '1';
+ //       // Format: Artist - Title (Status)
+ //       const statusIcon = data.status === 'Paused' ? '⏸' : '▶';
+ //       npText.textContent = `${statusIcon} ${data.artist} — ${data.title}`;
+ //     } else {
+ //       npContainer.style.opacity = '0';
+ //     }
+ //   } catch (e) {
+ //     document.getElementById('now-playing').style.opacity = '0';
+ //   }
+ // }
+ //
+// Check what's playing every 3 seconds
+ // fetchNowPlaying();
+ // setInterval(fetchNowPlaying, 3000);
+// ==================== ANIME QUOTE ====================
+async function fetchQuote() {
+  const spin = document.getElementById('quote-spin');
+  spin.classList.add('spinning');
+  document.getElementById('quote-body').innerHTML = '<span class="loading-text">summoning wisdom...</span>';
+  try {
+    const res = await fetch('https://api.animechan.io/v1/quotes/random');
+    if (!res.ok) throw new Error('API down');
+    const quote = await res.json();
+    document.getElementById('quote-body').innerHTML = `
+      <div class="quote-text">${quote.data.content}</div>
+      <div class="quote-char">${quote.data.character.name}</div>
+      <div class="quote-anime">— ${quote.data.anime.name}</div>`;
+  } catch {
+    const fallbacks = [
+      { content: "I am the bone of my sword. Steel is my body and fire is my blood.", character: "Archer", anime: "Fate/stay night" },
+      { content: "Someday, my memories will fade... And her voice, her actions, I might forget them as well. But even then, I will always remember that I loved Saber.", character: "Shirou Emiya", anime: "Fate/stay night" },
+      { content: "A person grows up when they're able to overcome hardship. Protection is important, but there are some things that a person must learn on their own.", character: "Jiraiya", anime: "Naruto" },
+      { content: "The world isn't perfect. But it's there for us, doing the best it can. That's what makes it so damn beautiful.", character: "Roy Mustang", anime: "Fullmetal Alchemist" },
+      { content: "Whatever you lose, you'll find it again. But what you throw away you'll never get back.", character: "Kenshin Himura", anime: "Rurouni Kenshin" }
+    ];
+    const q = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+    document.getElementById('quote-body').innerHTML = `
+      <div class="quote-text">${q.content}</div>
+      <div class="quote-char">${q.character}</div>
+      <div class="quote-anime">— ${q.anime}</div>`;
+  } finally {
+    spin.classList.remove('spinning');
+  }
+}
+fetchQuote();
+</script>
+</body>
+</html>

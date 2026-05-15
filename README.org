@@ -1,24 +1,58 @@
-#+title:My dotfiles for Arch linux
-This repository contains my custom dotfiles for configuring various aspects of my Linux environment adapted from many other's configs. Everything is configured for my personal use. *Use at your own discretion*.
+#+title: My dotfiles for Arch Linux
+#+author: lumidenoir
+#+description: Modern, declarative, and beautiful dotfiles for Arch Linux.
 
-* Collection
-- bspwm, dwm (patched), qtile, awesome, hyprland
-- kitty (main), wezterm, st (dwm)
-- picom
-- neovim (Nvchad), doom emacs, helix
-- polybar, waybar
-- rofi, dmenu
-- dunst
-- mpd, mpDris2, ncmpcpp, rmpc, cava
-- zathura
-- theme switcher with ~theme.sh~
-- session manager using ~sess~
+* Overview
+These are my personal dotfiles, built for a fast, aesthetic, and productive Linux environment. The system is designed to be highly portable and easily themed.
 
-* Installation:
-Due to the diverse nature of these configurations and potential system variations, there's no one-size-fits-all installation process. However you can carefully examine the files and adapt it to your specific requirements. The below script is only for Arch users.
+** Key Features
+- **Architecture**: Managed with [[https://www.gnu.org/software/stow/][GNU Stow]] for clean symlinking and modularity.
+- **Theming**: Declarative theming using [[https://github.com/explosion-mental/wallust][Wallust]]. One wallpaper change updates everything (WMS, Rofi, Polybar, Dunst, Terminals).
+- **Environment**: Centralized environment variables and PATH management in ~.zshenv~.
+- **Bootstrapping**: Robust, automated installation script for fresh Arch installs.
+
+* Desktop Environments & WMs
+I switch between these depending on my workflow:
+- **Tiling**: [[https://github.com/baskerville/bspwm][bspwm]], [[https://hyprland.org/][Hyprland]], [[http://qtile.org/][Qtile]]
+- **Suckless**: [[https://dwm.suckless.org/][dwm]] (custom patched), [[https://tools.suckless.org/dmenu/][dmenu]]
+- **Dynamic**: [[https://awesomewm.org/][AwesomeWM]]
+
+* Core Software
+- **Terminals**: WezTerm (primary), Kitty, st
+- **Editors**: Doom Emacs, NvChad (Neovim), Helix
+- **Shell**: Zsh (with Antidote for plugins)
+- **Music**: mpd + ncmpcpp + cava
+- **Launcher**: Rofi (with custom modern layouts)
+
+* Installation
+The installation script is designed for Arch-based systems. It handles dependencies, backups, and symlinking automatically.
 
 #+begin_src shell
 git clone https://github.com/lumidenoir/dotfiles
-cd ./dotfiles
-./install.sh
+cd ~/dotfiles
+
+# Options:
+./install.sh base     # Setup all WMs and system configs
+./install.sh zsh      # Setup Zsh and shell environment
+./install.sh doom     # Bootstrap Doom Emacs
+./install.sh nvchad   # Bootstrap NvChad (Neovim)
 #+end_src
+
+* Usage
+** Changing Themes
+I use ~wallust~ for everything. To change the system-wide theme and wallpaper:
+#+begin_src shell
+wallust run /path/to/wallpaper.png
+#+end_src
+
+All applications (Polybar, Waybar, Hyprland, etc.) will automatically reload with the new colors thanks to declarative hooks.
+
+** Structure
+The repository is organized into Stow packages:
+- ~bspwm/~, ~hypr/~, ~qtile/~: Window manager configs
+- ~shell/~: Zsh, aliases, and functions
+- ~wallust/~: Central theme engine and templates
+- ~scripts/~: Custom helper scripts (Path-integrated)
+
+* Disclaimer
+These configurations are tailored for my personal hardware and preferences. *Use at your own discretion*. Always review scripts before running them on a fresh system.
