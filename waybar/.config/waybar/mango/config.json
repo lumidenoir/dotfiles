@@ -2,19 +2,10 @@
     "reload_style_on_change": true,
     "layer": "top",
     "position": "top",
-    "spacing": 2,
-    "margin": "6px 6px 0 6px",
-    "modules-left": [
-        "custom/arch",
-        "hyprland/workspaces",
-        "cpu",
-        "memory",
-        "group/group-extras",
-        "tray"
-    ],
-    "modules-center": [
-        "mpris"
-    ],
+    "spacing": 0,
+    "margin": "8px 8px 0 8px",
+    "modules-left": ["custom/arch", "ext/workspaces","cpu","memory", "group/group-extras", "tray"],
+    "modules-center": ["mpris"],
     "modules-right": [
         "privacy",
         "network",
@@ -34,11 +25,7 @@
             "children-class": "extras",
             "transition-left-to-right": true
         },
-        "modules": [
-            "custom/menu",
-            "custom/updates",
-            "power-profiles-daemon"
-        ]
+        "modules": ["custom/menu", "custom/updates", "power-profiles-daemon"]
     },
     "group/brightness": {
         "orientation": "inherit",
@@ -47,10 +34,7 @@
             "children-class": "brightness",
             "transition-left-to-right": false
         },
-        "modules": [
-            "backlight",
-            "backlight/slider"
-        ]
+        "modules": ["backlight", "backlight/slider"]
     },
     "group/audio": {
         "orientation": "inherit",
@@ -59,10 +43,7 @@
             "children-class": "audio",
             "transition-left-to-right": false
         },
-        "modules": [
-            "pulseaudio",
-            "pulseaudio/slider"
-        ]
+        "modules": ["pulseaudio", "pulseaudio/slider"]
     },
     "custom/arch": {
         "format": "󰣇",
@@ -70,7 +51,7 @@
         "on-click": "kitty",
         "on-click-right": ""
     },
-    "hyprland/workspaces": {
+    "ext/workspaces": {
         "format": "{icon}",
         "format-icons": {
             "1": "一",
@@ -96,9 +77,7 @@
             "*": 5
         },
         "on-click": "activate",
-        "ignore-workspaces": [
-            "scratch"
-        ]
+        "ignore-workspaces": ["scratch"]
     },
     "clock": {
         // "interval": 1,
@@ -129,10 +108,7 @@
         "on-click-middle": "playerctl previous",
         "tooltip": true,
         "tooltip-format": "{title} - {artist}",
-        "dynamic-order": [
-            "position",
-            "length"
-        ],
+        "dynamic-order": ["position", "length"],
         "ellipsis": "…",
         "title-len": 30,
         "artist-len": 25
@@ -189,6 +165,7 @@
             "power-saver": "<span size='14pt' font='Material Symbols Outlined'>eco</span>"
         }
     },
+
     "custom/updates": {
         "format": "<span size='14pt' font='Material Symbols Outlined'>package</span>",
         "escape": true,
@@ -261,9 +238,7 @@
         "reverse-scrolling": true,
         "tooltip": true,
         "tooltip-format": "Volume: {volume}%\n{desc}",
-        "ignored-sinks": [
-            "Easy Effects Sink"
-        ]
+        "ignored-sinks": ["Easy Effects Sink"]
     },
     "pulseaudio#microphone": {
         "format": "{format_source}",

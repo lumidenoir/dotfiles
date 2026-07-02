@@ -1,43 +1,10 @@
 #!/usr/bin/env bash
 pkill rofi
-playerctl pause
-mpc pause-if-playing
+# playerctl pause
+# mpc pause-if-playing
 
 if [ "$WAYLAND_DISPLAY" ]; then
-        swaylock --clock --indicator-idle-visible \
-                -i ~/Pictures/wallpaper/other/lockscreen.jpg \
-                --font="JetBrainsMono Nerd Font" \
-                --indicator-radius 120 \
-                --indicator-thickness 15 \
-                --indicator-x-position 1620 \
-                --indicator-y-position 500 \
-                --ignore-empty-password \
-                --inside-color 00000000 \
-                --ring-color d9e0ee \
-                --inside-ver-color DDB6F2 \
-                --ring-ver-color DDB6F2 \
-                --ring-clear-color f28fad \
-                --inside-wrong-color f28fad \
-                --ring-wrong-color f28fad \
-                --line-uses-inside \
-                --key-hl-color 1E1E2E \
-                --separator-color DDB6F2 \
-                --bs-hl-color 1E1E2E \
-                --text-color abb2bf \
-                --text-ver-color 1e1e2e \
-                --text-wrong-color 1e1e2e \
-                --text-clear-color 1e1e2e \
-                --text-caps-lock-color d19a66 \
-                --line-uses-inside \
-                --inside-color 00000000 \
-                --inside-wrong-color f28fad \
-                --inside-clear-color abe9b3 \
-                --layout-bg-color 00000000 \
-                --layout-border-color d9e0ee \
-                --layout-text-color d9e0ee \
-                --timestr "%H:%M" \
-                --datestr "%a, %d %b" \
-                --separator-color 00000000
+        hyprlock
 else
         fg="#D9E0EE"
         unlocker="#00000000"

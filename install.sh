@@ -25,7 +25,7 @@ base)
     echo "Starting installation with GNU Stow..."
     
     # List of packages to stow
-    PACKAGES="awesome bspwm hypr picom polybar mpd mpDris2 ncmpcpp cava wallust wezterm waybar sxhkd qtile x11"
+    PACKAGES="hypr picom mpd mpDris2 ncmpcpp cava wezterm waybar x11 quickshell"
     
     for pkg in $PACKAGES; do
         if [ -d "$pkg" ]; then

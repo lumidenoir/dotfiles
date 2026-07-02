@@ -7,15 +7,14 @@ These are my personal dotfiles, built for a fast, aesthetic, and productive Linu
 
 ** Key Features
 - **Architecture**: Managed with [[https://www.gnu.org/software/stow/][GNU Stow]] for clean symlinking and modularity.
-- **Theming**: Declarative theming using [[https://github.com/explosion-mental/wallust][Wallust]]. One wallpaper change updates everything (WMS, Rofi, Polybar, Dunst, Terminals).
+- **Theming**: Custom, centralized theme scripts for DWM and Hyprland.
 - **Environment**: Centralized environment variables and PATH management in ~.zshenv~.
 - **Bootstrapping**: Robust, automated installation script for fresh Arch installs.
 
 * Desktop Environments & WMs
 I switch between these depending on my workflow:
-- **Tiling**: [[https://github.com/baskerville/bspwm][bspwm]], [[https://hyprland.org/][Hyprland]], [[http://qtile.org/][Qtile]]
+- **Tiling**: [[https://hyprland.org/][Hyprland]] (with quickshell bar/widgets)
 - **Suckless**: [[https://dwm.suckless.org/][dwm]] (custom patched), [[https://tools.suckless.org/dmenu/][dmenu]]
-- **Dynamic**: [[https://awesomewm.org/][AwesomeWM]]
 
 * Core Software
 - **Terminals**: WezTerm (primary), Kitty, st
@@ -40,18 +39,13 @@ cd ~/dotfiles
 
 * Usage
 ** Changing Themes
-I use ~wallust~ for everything. To change the system-wide theme and wallpaper:
-#+begin_src shell
-wallust run /path/to/wallpaper.png
-#+end_src
-
-All applications (Polybar, Waybar, Hyprland, etc.) will automatically reload with the new colors thanks to declarative hooks.
+I use a custom theme script to coordinate look-and-feel changes between the WMs.
 
 ** Structure
 The repository is organized into Stow packages:
-- ~bspwm/~, ~hypr/~, ~qtile/~: Window manager configs
+- ~hypr/~: Hyprland configuration
+- ~quickshell/~: Quickshell configurations, widgets, and status bar
 - ~shell/~: Zsh, aliases, and functions
-- ~wallust/~: Central theme engine and templates
 - ~scripts/~: Custom helper scripts (Path-integrated)
 
 * Disclaimer

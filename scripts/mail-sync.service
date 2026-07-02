@@ -1,0 +1,10 @@
+[Unit]
+Description=Synchronize and index emails
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/home/lumi/dotfiles/scripts/mail_sync.sh
+
+[Install]
+WantedBy=default.target

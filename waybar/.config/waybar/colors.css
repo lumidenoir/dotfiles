@@ -1,27 +1,27 @@
 /* Wallust Common Colors - CSS */
-@define-color background #282C34;
-@define-color foreground #ABB2BF;
-@define-color cursor     #ABB2BF;
+@define-color background #282828;
+@define-color foreground #D4BE98;
+@define-color cursor     #D4BE98;
 
-@define-color color0  #282C34;
-@define-color color1  #E06C75;
-@define-color color2  #98C379;
-@define-color color3  #E5C07B;
-@define-color color4  #61AFEF;
-@define-color color5  #C678DD;
-@define-color color6  #56B6C2;
-@define-color color7  #ABB2BF;
-@define-color color8  #545862;
-@define-color color9  #E06C75;
-@define-color color10 #98C379;
-@define-color color11 #E5C07B;
-@define-color color12 #61AFEF;
-@define-color color13 #C678DD;
-@define-color color14 #56B6C2;
-@define-color color15 #C8CCD4;
+@define-color color0  #3C3836;
+@define-color color1  #EA6962;
+@define-color color2  #A9B665;
+@define-color color3  #D8A657;
+@define-color color4  #7DAEA3;
+@define-color color5  #D3869B;
+@define-color color6  #89B482;
+@define-color color7  #D4BE98;
+@define-color color8  #3C3836;
+@define-color color9  #EA6962;
+@define-color color10 #A9B665;
+@define-color color11 #D8A657;
+@define-color color12 #7DAEA3;
+@define-color color13 #D3869B;
+@define-color color14 #89B482;
+@define-color color15 #D4BE98;
 
 /* Status-like variables */
-@define-color primary   #61AFEF;
-@define-color secondary #98C379;
-@define-color accent    #C678DD;
-@define-color alert     #E06C75;
+@define-color primary   #7DAEA3;
+@define-color secondary #A9B665;
+@define-color accent    #D3869B;
+@define-color alert     #EA6962;
