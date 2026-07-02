@@ -1,4 +1,5 @@
 @import "../colors.css";
+
 /* ======================= */
 /* Global Styles           */
 /* ======================= */
@@ -323,12 +324,14 @@ tooltip class {
     background: transparent;
     box-shadow: none;
 }
+
 #pulseaudio-slider trough {
     min-height: 8px;
     min-width: 100px;
     border-radius: 4px;
     background-color: rgba(255, 255, 255, 0.1);
 }
+
 #pulseaudio-slider highlight {
     min-width: 8px;
     min-height: 8px;
@@ -363,12 +366,14 @@ tooltip class {
     background: transparent;
     box-shadow: none;
 }
+
 #backlight-slider trough {
     min-height: 8px;
     min-width: 100px;
     border-radius: 4px;
     background-color: rgba(255, 255, 255, 0.1);
 }
+
 #backlight-slider highlight {
     min-width: 8px;
     min-height: 8px;

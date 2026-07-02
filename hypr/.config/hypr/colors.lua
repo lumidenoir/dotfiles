@@ -1,0 +1,31 @@
+local colors = {
+    wallpaper = "Gruvbox-Material-Dark",
+    background = "#282828",
+    foreground = "#D4BE98",
+    cursor = "#D4BE98",
+    color0 = "#3C3836",
+    color1 = "#EA6962",
+    color2 = "#A9B665",
+    color3 = "#D8A657",
+    color4 = "#7DAEA3",
+    color5 = "#D3869B",
+    color6 = "#89B482",
+    color7 = "#D4BE98",
+    color8 = "#3C3836",
+    color9 = "#EA6962",
+    color10 = "#A9B665",
+    color11 = "#D8A657",
+    color12 = "#7DAEA3",
+    color13 = "#D3869B",
+    color14 = "#89B482",
+    color15 = "#D4BE98",
+    
+    -- Specific Hyprland formatting
+    active_border = {
+        colors = { "rgb(D8A657)", "rgb(7DAEA3)", "rgb(D3869B)", "rgb(89B482)", "rgb(A9B665)" },
+        angle = 45
+    },
+    inactive_border = "rgba(282828ee)"
+}
+
+return colors

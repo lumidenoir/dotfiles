@@ -42,22 +42,45 @@ get_volume_icon() {
     fi
 }
 
+call_quickshell_ipc() {
+    if pgrep -x "quickshell" > /dev/null; then
+        if quickshell -p "$HOME/dotfiles/quickshell" ipc call qsIpc "$@" >/dev/null 2>&1; then
+            return 0
+        elif quickshell ipc call qsIpc "$@" >/dev/null 2>&1; then
+            return 0
+        fi
+    fi
+    return 1
+}
+
+
 show_volume_notification() {
     local -r volume=$(get_volume)
     local -r mute_status=$(get_mute_status)
-    local -r volume_icon=$(get_volume_icon "$volume" "$mute_status")
-
-    local body_text progress_value
+    local progress_value
     if [[ "$mute_status" == "yes" || "$volume" -eq 0 ]]; then
-        body_text="Muted"
         progress_value=0
     else
-        body_text="$volume%"
         progress_value=$volume
     fi
 
-    notify-send -i $volume_icon -h int:value:"$progress_value" -t "$NOTIFICATION_TIMEOUT" \
-        "Settings Control" "Volume: $body_text"
+    if call_quickshell_ipc showOsd V "$progress_value"; then
+        :
+    else
+        if [ -p "$XDG_RUNTIME_DIR/wob.fifo" ]; then
+            echo "$progress_value" > "$XDG_RUNTIME_DIR/wob.fifo"
+        else
+            local -r volume_icon=$(get_volume_icon "$volume" "$mute_status")
+            local body_text
+            if [[ "$mute_status" == "yes" || "$volume" -eq 0 ]]; then
+                body_text="Muted"
+            else
+                body_text="$volume%"
+            fi
+            notify-send -i $volume_icon -h int:value:"$progress_value" -t "$NOTIFICATION_TIMEOUT" \
+                "Settings Control" "Volume: $body_text"
+        fi
+    fi
 }
 
 get_mic_mute_status() {
@@ -107,10 +130,18 @@ get_brightness_icon() {
 
 show_brightness_notification() {
     local -r brightness=$(get_brightness)
-    local -r brightness_icon=$(get_brightness_icon "$brightness")
 
-    notify-send -i $brightness_icon -h int:value:"$brightness" -t "$NOTIFICATION_TIMEOUT" \
-        "Settings Control" "Brightness: $brightness%"
+    if call_quickshell_ipc showOsd B "$brightness"; then
+        :
+    else
+        if [ -p "$XDG_RUNTIME_DIR/wob.fifo" ]; then
+            echo "$brightness" > "$XDG_RUNTIME_DIR/wob.fifo"
+        else
+            local -r brightness_icon=$(get_brightness_icon "$brightness")
+            notify-send -i $brightness_icon -h int:value:"$brightness" -t "$NOTIFICATION_TIMEOUT" \
+                "Settings Control" "Brightness: $brightness%"
+        fi
+    fi
 }
 
 # --- Music Functions ---

@@ -5,7 +5,7 @@ NETWORK_2="iitk-sec(Highspeed-5GHz)"
 SWITCH_COOLDOWN=10
 CHECK_INTERVAL=10
 REASSOCIATE_INTERVAL=$((30 * 60))
-FAILURE_THRESHOLD=1        # consecutive failures before switching
+FAILURE_THRESHOLD=3        # consecutive failures before switching
 PING_COUNT=3               # pings per check
 PING_TIMEOUT=3             # seconds per ping attempt
 

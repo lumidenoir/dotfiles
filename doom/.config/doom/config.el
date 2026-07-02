@@ -160,7 +160,7 @@
   (setq org-format-latex-options
         (plist-put org-format-latex-options :scale 0.85)))
 (setq org-cite-csl-styles-dir "/home/lumi/Zotero/styles") ;; Path to CSL styles for citations
-(setq reftex-default-bibliography "/home/lumi/org/zotero.bib"
+(setq reftex-default-bibliography "/home/lumi/org/zotero/zotero.bib"
       org-agenda-files '("/home/lumi/org/todo.org" "/home/lumi/org/todoist.org")
       org-fold-catch-invisible-edits 'smart)
 (setq org-export-headline-levels 5) ; I like nesting
@@ -463,26 +463,46 @@
         org-roam-ui-update-on-save t
         org-roam-ui-open-on-start t))
 
-;; Set Deft to use the first non-empty line as the title, and specify the directory
-(setq deft-use-filename-as-title nil
-      deft-directory "~/org/")
+(use-package! citar
+  :after oc
+  :custom
+  (org-cite-insert-processor 'citar)
+  (org-cite-follow-processor 'citar)
+  (org-cite-activate-processor 'citar)
+  (citar-bibliography '("~/org/zotero/zotero.bib"))
+  (citar-org-roam-note-title-template "${author} - ${title}\n"))
 
-;; Customize Deft's summary parsing to ignore org labels and properties
-(setq deft-strip-summary-regexp
-      (concat "\\("
-              "[\n\t]" ;; blank
-              "\\|^#\\+[[:alpha:]_]+:.*$" ;; org-mode metadata
-              "\\|^:PROPERTIES:\n\\(.+\n\\)+:END:\n" ;; roam metadata
-              "\\)"))
+(setq! citar-bibliography '("/home/lumi/org/zotero/zotero.bib"))
+(setq! citar-library-paths '("~/org/books/")
+       citar-notes-paths '("~/org/"))
 
-;; Function to parse the title in Deft, looking for #+TITLE: in the contents
-(defun cm/deft-parse-title (file contents)
-  (let ((begin (string-match "^#\\+[tT][iI][tT][lL][eE]: .*$" contents)))
-    (if begin
-        (string-trim (substring contents begin (match-end 0)) "#\\+[tT][iI][tT][lL][eE]: *" "[\n\t ]+")
-      (deft-base-filename file))))
+(use-package! citar-org-roam
+  :after (citar org-roam)
+  :config (citar-org-roam-mode))
 
-(advice-add 'deft-parse-title :override #'cm/deft-parse-title)
+(after! citar
+  (defun hp/citar-capf-add-kind-property (orig-fun &rest args)
+    "Advice around `org-roam-complete-link-at-point' to add :company-kind property."
+    (let ((result (apply orig-fun args)))
+      (append result '(:company-kind (lambda (_) 'reference)))))
+  (advice-add 'citar-capf :around #'hp/citar-capf-add-kind-property))
+
+(after! (org-roam kind-icon)
+  (add-to-list
+   'kind-icon-mapping
+   `(org-roam ,(nerd-icons-codicon "nf-cod-symbol_interface") :face font-lock-type-face)))
+
+(after! org-noter
+  ;; 1. Prevent completely new OS frames from spawning
+  (setq org-noter-always-create-frame nil
+        org-noter-kill-frame-at-session-end nil)
+
+  ;; 2. Control how and where it splits inside your current window frame
+  ;; Options for location: 'horizontal-split, 'vertical-split, or 'other-frame
+  (setq org-noter-notes-window-location 'horizontal-split)
+
+  ;; 3. (Optional) Control the layout split size ratio
+  (setq org-noter-doc-split-fraction '(0.6 . 0.4)))
 
 ;; Add mu4e to the load path
 (add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e/")

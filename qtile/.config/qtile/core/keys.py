@@ -247,46 +247,10 @@ keys = [
         lazy.widget["widgetbox"].toggle(),
         desc="Toggle widgetbox",
     ),
+    Key(
+        [mod],
+        "a",
+        lazy.spawn(os.path.expanduser("~/dotfiles/scripts/keybindings.py")),
+        desc="Print keyboard bindings",
+    ),
 ]
-
-
-def show_keys():
-    key_help = ""
-    for i in range(0, len(keys)):
-        k = keys[i]
-        if not isinstance(k, Key):
-            continue
-        mods = ""
-
-        for m in k.modifiers:
-            if m == "mod4":
-                mods += "Super + "
-            else:
-                mods += m.capitalize() + " + "
-
-        if len(k.key) > 1:
-            mods += k.key.capitalize()
-        else:
-            mods += k.key
-
-        key_help += "{:<25} {}".format(
-            mods, k.desc + ("\n" if i != len(keys) - 1 else "")
-        )
-
-    return key_help
-
-
-keys.extend(
-    [
-        Key(
-            [mod],
-            "a",
-            lazy.spawn(
-                "sh -c 'echo \""
-                + show_keys()
-                + '" | rofi -dmenu -theme ~/.config/rofi/hotkeys.rasi -i -p ""\''
-            ),
-            desc="Print keyboard bindings",
-        ),
-    ]
-)

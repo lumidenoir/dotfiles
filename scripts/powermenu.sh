@@ -1,5 +1,15 @@
 #!/bin/bash
 
+if pgrep -x "quickshell" > /dev/null; then
+    # Performance Mode: Use Quickshell IPC
+    if quickshell -p "$HOME/dotfiles/quickshell" ipc call qsIpc togglePowerMenu 2>/dev/null; then
+        exit 0
+    elif quickshell ipc call qsIpc togglePowerMenu 2>/dev/null; then
+        exit 0
+    fi
+fi
+
+
 # All supported choices
 all=(shutdown reboot suspend hibernate logout lockscreen)
 

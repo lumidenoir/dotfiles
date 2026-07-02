@@ -50,8 +50,9 @@ check_contrast = true
  dunst         = { src = 'dunstrc', target = '~/.config/dunst/dunstrc', on_change = 'pkill -x dunst; dunst &' }
  kitty         = { src = 'kitty.conf', target = '~/.config/kitty/kitty.conf' }
  waybar        = { src = 'colors.css', target = '~/.config/waybar/colors.css', on_change = 'pkill -USR2 waybar' }
- border        = { src = 'hyprcolors', target = '~/.config/hypr/colors.conf' }
+ border        = { src = 'hyprcolors.lua', target = '~/.config/hypr/colors.lua', on_change = 'hyprctl reload' }
  zathura       = { src = 'zathura', target = '~/.config/zathura/zathurarc' }
+ mango         = { src = 'mango.conf', target = '~/.config/mango/colors.conf' }
  
 # WM Specific color files (only the colors/variables parts)
  helix         = { src = 'helix.toml', target = '~/.config/helix/themes/wallust.toml' }

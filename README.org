@@ -13,7 +13,7 @@ These are my personal dotfiles, built for a fast, aesthetic, and productive Linu
 
 * Desktop Environments & WMs
 I switch between these depending on my workflow:
-- **Tiling**: [[https://github.com/baskerville/bspwm][bspwm]], [[https://hyprland.org/][Hyprland]], [[http://qtile.org/][Qtile]]
+- **Tiling**: [[https://github.com/baskerville/bspwm][bspwm]], [[https://hyprland.org/][Hyprland]], [[http://qtile.org/][Qtile]], [[https://github.com/mangowm/mango][MangoWM]]
 - **Suckless**: [[https://dwm.suckless.org/][dwm]] (custom patched), [[https://tools.suckless.org/dmenu/][dmenu]]
 - **Dynamic**: [[https://awesomewm.org/][AwesomeWM]]
 

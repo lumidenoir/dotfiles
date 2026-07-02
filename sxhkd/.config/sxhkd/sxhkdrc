@@ -10,6 +10,10 @@ super + Return
 super + space
     rofi -show drun -no-lazy-grab -theme ~/.config/rofi/bspwm.rasi
 
+# Cheatsheet
+super + a
+    ~/dotfiles/scripts/keybindings.py
+
 
 # make sxhkd reload its configuration files:
 super + Escape

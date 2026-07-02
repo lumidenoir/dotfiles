@@ -38,32 +38,55 @@ while true; do
     STATUS=$(echo "$BAT_INFO" | grep -o "Discharging")
     CAPACITY=$(echo "$BAT_INFO" | grep -P -o '[0-9]+(?=%)')
 
-    if [[ -z "$STATUS" ]] || [[ -z "$CAPACITY" ]]; then
+    if [[ -z "$CAPACITY" ]]; then
         sleep 30
         continue
     fi
 
-    LEVEL=""
-    urgency="normal"
-
-    if (( CAPACITY <= 5 )); then
-        LEVEL=5
-        urgency="critical"
-    elif (( CAPACITY <= 15 )); then
-        LEVEL=10
-        urgency="critical"
-    elif (( CAPACITY <= 25 )); then
-        LEVEL=20
-        urgency="normal"
+    # Switch between Quickshell and Waybar based on battery level (< 25% and discharging vs >= 25% or charging)
+    if [[ "$STATUS" == "Discharging" ]] && (( CAPACITY < 25 )); then
+        target="waybar"
+    else
+        target="quickshell"
     fi
 
-    if [[ -n "$LEVEL" ]]; then
-        theme=${themes[RANDOM % ${#themes[@]}]}
+    if [[ "$target" == "waybar" ]]; then
+        if pgrep -x "quickshell" >/dev/null; then
+            pkill quickshell
+        fi
+        if ! pgrep -x "waybar" >/dev/null; then
+            waybar -c ~/.config/waybar/hypr/config.json -s ~/.config/waybar/hypr/style.css &
+        fi
+    else
+        if pgrep -x "waybar" >/dev/null; then
+            pkill waybar
+        fi
+        if ! pgrep -x "quickshell" >/dev/null; then
+            quickshell -p "$HOME/dotfiles/quickshell" &
+        fi
+    fi
 
-        var_name="${theme}[$LEVEL]"
-        msg="${!var_name}"
+    if [[ "$STATUS" == "Discharging" ]]; then
+        LEVEL=""
+        urgency="normal"
 
-        notify-send -u "$urgency" "BATTERY CRITICAL: ${CAPACITY}%" "$msg"
+        if (( CAPACITY <= 5 )); then
+            LEVEL=5
+            urgency="critical"
+        elif (( CAPACITY <= 15 )); then
+            LEVEL=10
+            urgency="critical"
+        elif (( CAPACITY <= 25 )); then
+            LEVEL=20
+            urgency="normal"
+        fi
+
+        if [[ -n "$LEVEL" ]]; then
+            theme=${themes[RANDOM % ${#themes[@]}]}
+            var_name="${theme}[$LEVEL]"
+            msg="${!var_name}"
+            notify-send -u "$urgency" "BATTERY CRITICAL: ${CAPACITY}%" "$msg"
+        fi
     fi
 
     sleep 30

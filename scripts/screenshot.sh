@@ -41,6 +41,47 @@ need rofi
 make_timestamp() { date +%Y_%m_%d_%H%M%S; }
 make_img_name()  { echo "$dir_img/$(make_timestamp).png"; }
 
+safe_slurp() {
+    echo "safe_slurp started. Args: $@" >> /tmp/safe_slurp.log
+    local paused=false
+    if command -v dunstctl &>/dev/null; then
+        dunstctl set-paused true || true
+        paused=true
+    fi
+
+    # --- Apply Screen Shader if in Hyprland ---
+    local shader_applied=false
+    local shader_path="$HOME/dotfiles/misc/screenshot_shader.glsl"
+    if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]] && [[ -f "$shader_path" ]]; then
+        hyprctl eval "hl.config({ decoration = { screen_shader = '$shader_path' } })" &>/dev/null || true
+        shader_applied=true
+    fi
+
+    local geom
+    set +e
+    echo "running slurp" >> /tmp/safe_slurp.log
+    geom=$(slurp -d -b 00000050 -c ffffffdd -s 00000000 -w 2 -F "Geist" "$@")
+    local status=$?
+    echo "slurp finished with status $status, geom='$geom'" >> /tmp/safe_slurp.log
+    set -e
+
+    # --- Restore Screen Shader ---
+    if [[ "$shader_applied" == "true" ]]; then
+        hyprctl eval "hl.config({ decoration = { screen_shader = '' } })" &>/dev/null || true
+    fi
+
+    if [[ "$paused" == "true" ]]; then
+        dunstctl set-paused false || true
+    fi
+
+    if [[ $status -ne 0 || -z "$geom" ]]; then
+        return 1
+    fi
+
+    echo "$geom"
+    return 0
+}
+
 play_sound() {
     command -v canberra-gtk-play >/dev/null \
         && canberra-gtk-play -i "$1" &>/dev/null &
@@ -48,7 +89,7 @@ play_sound() {
 
 copy_to_clipboard() {
     local file="$1"
-    if [[ -n "${WAYLAND_DISPLAY:-}" ]]; then
+    if [[ -n "${WAYLAND_DISPLAY:-}" || -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" || "$XDG_SESSION_TYPE" == "wayland" ]]; then
         command -v wl-copy >/dev/null && wl-copy < "$file"
     else
         command -v xclip >/dev/null \
@@ -71,7 +112,7 @@ countdown() {
     local secs="${1:-$default_countdown}"
     for sec in $(seq "$secs" -1 1); do
         play_sound "bell"
-        notify-send -t 500 --replace-id="$notify_replace_id" "Starting in: $sec"
+        #notify-send -t 300 --replace-id="$notify_replace_id" "Starting in: $sec"
         sleep 1
     done
 }
@@ -135,7 +176,7 @@ take_screenshot() {
     local img
     img="$(make_img_name)"
 
-    if [[ -n "${WAYLAND_DISPLAY:-}" ]]; then
+    if [[ -n "${WAYLAND_DISPLAY:-}" || -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" || "$XDG_SESSION_TYPE" == "wayland" ]]; then
         need grim
         grim "$@" "$img"
     else
@@ -148,12 +189,53 @@ take_screenshot() {
     show_notification "$img"
 }
 
+take_screenshot_edit() {
+    local raw_img="/tmp/raw_screenshot_$(date +%s).png"
+    local final_img
+    final_img="$(make_img_name)"
+
+    mkdir -p "$(dirname "$raw_img")" "$(dirname "$final_img")"
+
+    if [[ -n "${WAYLAND_DISPLAY:-}" || -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" || "$XDG_SESSION_TYPE" == "wayland" ]]; then
+        need grim
+        grim "$@" "$raw_img"
+    else
+        need maim
+        maim -u "$@" "$raw_img"
+    fi
+
+    if command -v satty &>/dev/null; then
+        satty --filename "$raw_img" --output-filename "$final_img" --early-exit
+        
+        if [[ -f "$final_img" ]]; then
+            copy_to_clipboard "$final_img"
+            play_sound "camera-shutter"
+            show_notification "$final_img"
+        else
+            show_notification ""
+        fi
+    else
+        mv "$raw_img" "$final_img"
+        copy_to_clipboard "$final_img"
+        play_sound "camera-shutter"
+        show_notification "$final_img"
+    fi
+
+    rm -f "$raw_img"
+}
+
+
 take_screenshot_ocr() {
     local tmp_img="/tmp/ocr/ocr_snap.png"
 
-    if [[ -n "${WAYLAND_DISPLAY:-}" ]]; then
+    if [[ -n "${WAYLAND_DISPLAY:-}" || -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" || "$XDG_SESSION_TYPE" == "wayland" ]]; then
         need grim
-        grim -g "$(slurp)" "$tmp_img"   # interactive region select
+        local geom
+        if ! geom=$(safe_slurp); then
+            show_notification ""
+            exit 0
+        fi
+        grim -g "$geom" "$tmp_img"   # interactive region select
     else
         need maim
         maim -u -s "$tmp_img"
@@ -168,7 +250,7 @@ take_screenshot_ocr() {
     fi
 
     # Copy to clipboard
-    if [[ -n "${WAYLAND_DISPLAY:-}" ]]; then
+    if [[ -n "${WAYLAND_DISPLAY:-}" || -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" || "$XDG_SESSION_TYPE" == "wayland" ]]; then
         echo "$text" | wl-copy
     else
         echo "$text" | xclip -selection clipboard
@@ -199,15 +281,20 @@ start_recording() {
     sleep 1.5
     play_sound "service-login"
 
-    if [[ -n "${WAYLAND_DISPLAY:-}" ]]; then
+    if [[ -n "${WAYLAND_DISPLAY:-}" || -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" || "$XDG_SESSION_TYPE" == "wayland" ]]; then
         need wf-recorder
         if [[ "$mode" == "sel" ]]; then
             need slurp
             local sel
-            sel="$(slurp)"
-            wf-recorder -g "$sel" -f "$video" &
+            if ! sel=$(safe_slurp); then
+                notify-send --replace-id="$notify_replace_id" -i "image-missing" "Recording" "Cancelled"
+                exit 0
+            fi
+            wf-recorder -g "$sel" -f "$video" </dev/null >/dev/null 2>&1 &
+            disown
         else
-            wf-recorder -f "$video" &
+            wf-recorder -f "$video" </dev/null >/dev/null 2>&1 &
+            disown
         fi
     else
         need xdpyinfo
@@ -221,17 +308,20 @@ start_recording() {
             ffmpeg -y -f x11grab -framerate 25 -i "$DISPLAY" \
                 -vf "crop=${sel},scale=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv420p" \
                 -c:v libx264 -preset ultrafast -crf 18 -movflags +faststart \
-                "$video" &
+                "$video" </dev/null >/dev/null 2>&1 &
+            disown
         else
             ffmpeg -y -video_size "$screen_size" -framerate 25 \
                 -f x11grab -i "$DISPLAY" \
                 -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv420p" \
                 -c:v libx264 -preset veryfast -crf 18 -movflags +faststart \
-                "$video" &
+                "$video" </dev/null >/dev/null 2>&1 &
+            disown
         fi
     fi
 
     echo "$!" > "$record_pid_file"
+    (quickshell -p "$HOME/dotfiles/quickshell" ipc call qsIpc startRecording || quickshell ipc call qsIpc startRecording) &>/dev/null &
 }
 
 stop_recording() {
@@ -274,6 +364,7 @@ stop_recording() {
         "Recording Stopped" "Saved: $(basename "$video_path")"
 
     rm -f "$record_pid_file" "$timestamp_file" 2>/dev/null || true
+    (quickshell -p "$HOME/dotfiles/quickshell" ipc call qsIpc stopRecording || quickshell ipc call qsIpc stopRecording) &>/dev/null &
 
     # Run post-conversion menu in background so the launcher is not blocked
     post_convert "$video_path" &
@@ -311,6 +402,8 @@ Commands:
   --now          Fullscreen screenshot immediately
   --in <secs>    Fullscreen screenshot after countdown
   --sel          Region/window selection screenshot
+  --edit         Region selection with annotation
+  --edit-screen  Fullscreen selection with annotation
   --active       Screenshot of the active window (countdown: ${default_countdown}s)
   --record       Start fullscreen recording
   --record-sel   Start region recording
@@ -330,18 +423,40 @@ case "${1:-}" in
         ;;
 
     --sel)
-        if [[ -n "${WAYLAND_DISPLAY:-}" ]]; then
+        if [[ -n "${WAYLAND_DISPLAY:-}" || -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" || "$XDG_SESSION_TYPE" == "wayland" ]]; then
             need slurp
-            take_screenshot -g "$(slurp)"
+            if ! geom=$(safe_slurp); then
+                show_notification ""
+                exit 0
+            fi
+            take_screenshot -g "$geom"
         else
             need maim
             take_screenshot -s
         fi
         ;;
 
+    --edit)
+        if [[ -n "${WAYLAND_DISPLAY:-}" || -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" || "$XDG_SESSION_TYPE" == "wayland" ]]; then
+            need slurp
+            if ! geom=$(safe_slurp); then
+                show_notification ""
+                exit 0
+            fi
+            take_screenshot_edit -g "$geom"
+        else
+            need maim
+            take_screenshot_edit -s
+        fi
+        ;;
+
+    --edit-screen)
+        take_screenshot_edit
+        ;;
+
     --active)
         countdown "$default_countdown"
-        if [[ -n "${WAYLAND_DISPLAY:-}" ]]; then
+        if [[ -n "${WAYLAND_DISPLAY:-}" || -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" || "$XDG_SESSION_TYPE" == "wayland" ]]; then
             rect="$(get_active_window_rect)"
             if [[ -z "$rect" ]]; then
                 echo "No active window rectangle detected. Falling back to fullscreen."

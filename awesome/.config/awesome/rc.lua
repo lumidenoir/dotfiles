@@ -136,8 +136,8 @@ root.buttons(gears.table.join(
 
 -- {{{ Key bindings
 globalkeys = gears.table.join(
-    awful.key({ modkey,           }, "a",      hotkeys_popup.show_help,
-              {description="show help", group="awesome"}),
+    awful.key({ modkey,           }, "a",      function () awful.spawn(HOME .. "dotfiles/scripts/keybindings.py") end,
+              {description="show cheatsheet", group="awesome"}),
     awful.key({ modkey,           }, "Up",   awful.tag.viewprev,
               {description = "view previous", group = "tag"}),
     awful.key({ modkey,           }, "Down",  awful.tag.viewnext,
