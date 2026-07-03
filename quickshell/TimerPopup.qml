@@ -64,16 +64,16 @@ PopupWindow {
                     // Open: let scale/x springs start first, then reveal
                     // Close: exit immediately so springs bounce back behind nothing
                     PauseAnimation {
-                        duration: (shellRoot && shellRoot.batteryMode) ? 0 : (timerPopup.show ? 80 : 0)
+                        duration: (shellRoot && shellRoot.batteryMode) ? 0 : ((shellRoot && !shellRoot.batteryCharging) ? (timerPopup.show ? 48 : 0) : (timerPopup.show ? 80 : 0))
                     }
                     NumberAnimation {
-                        duration: (shellRoot && shellRoot.batteryMode) ? 0 : (timerPopup.show ? 180 : 150)
+                        duration: (shellRoot && shellRoot.batteryMode) ? 100 : ((shellRoot && !shellRoot.batteryCharging) ? (timerPopup.show ? 108 : 90) : (timerPopup.show ? 180 : 150))
                         easing.type: timerPopup.show ? Easing.OutQuad : Easing.InQuad
                     }
                 }
             }
             Behavior on scale {
-                enabled: !(shellRoot && shellRoot.batteryMode)
+                enabled: true
                 // Match damping to x so both settle at the same time
                 SpringAnimation {
                     spring: 3.0
@@ -82,7 +82,7 @@ PopupWindow {
                 }
             }
             Behavior on x {
-                enabled: !(shellRoot && shellRoot.batteryMode)
+                enabled: true
                 SpringAnimation {
                     spring: 2.8
                     damping: 0.75

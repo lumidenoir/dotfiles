@@ -97,16 +97,16 @@ PopupWindow {
             Behavior on opacity {
                 SequentialAnimation {
                     PauseAnimation {
-                        duration: (shellRoot && shellRoot.batteryMode) ? 0 : (emailsPopup.show ? 80 : 0)
+                        duration: (shellRoot && shellRoot.batteryMode) ? 0 : ((shellRoot && !shellRoot.batteryCharging) ? (emailsPopup.show ? 48 : 0) : (emailsPopup.show ? 80 : 0))
                     }
                     NumberAnimation {
-                        duration: (shellRoot && shellRoot.batteryMode) ? 0 : (emailsPopup.show ? 180 : 150)
+                        duration: (shellRoot && shellRoot.batteryMode) ? 100 : ((shellRoot && !shellRoot.batteryCharging) ? (emailsPopup.show ? 108 : 90) : (emailsPopup.show ? 180 : 150))
                         easing.type: emailsPopup.show ? Easing.OutQuad : Easing.InQuad
                     }
                 }
             }
             Behavior on scale {
-                enabled: !(shellRoot && shellRoot.batteryMode)
+                enabled: true
                 SpringAnimation {
                     spring: 3.0
                     damping: 0.75
@@ -114,7 +114,7 @@ PopupWindow {
                 }
             }
             Behavior on x {
-                enabled: !(shellRoot && shellRoot.batteryMode)
+                enabled: true
                 SpringAnimation {
                     spring: 2.8
                     damping: 0.75

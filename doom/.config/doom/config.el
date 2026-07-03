@@ -87,6 +87,54 @@
               :serif-font "IBM Plex Mono" :serif-size 15 :serif-weight light
               :theme doom-one
               :org-heading-font "Overpass Nerd Font" :org-heading-weight bold))
+    ("Neo-Cyberpunk" . (:font "0xProto Nerd Font Mono" :size 15 :weight regular :slant normal
+              :big-font "0xProto Nerd Font Mono" :big-size 25
+              :vp-font "Satoshi" :vp-size 15
+              :emoji-font "Noto Color Emoji"
+              :symbol-font "Iosevka"
+              :serif-font "IBM Plex Serif" :serif-size 15 :serif-weight light
+              :theme doom-one
+              :org-heading-font "Satoshi" :org-heading-weight bold))
+    ("Vercel Minimalist" . (:font "GeistMono Nerd Font Mono" :size 15 :weight regular :slant normal
+              :big-font "GeistMono Nerd Font Mono" :big-size 25
+              :vp-font "Geist" :vp-size 15
+              :emoji-font "Noto Color Emoji"
+              :symbol-font "Iosevka"
+              :serif-font "GeistMono Nerd Font" :serif-size 15 :serif-weight light
+              :theme doom-one
+              :org-heading-font "Geist" :org-heading-weight bold))
+    ("Cursive Elegance" . (:font "VictorMono Nerd Font Mono" :size 15 :weight regular :slant normal
+              :big-font "VictorMono Nerd Font Mono" :big-size 25
+              :vp-font "Inter" :vp-size 15
+              :emoji-font "Noto Color Emoji"
+              :symbol-font "Iosevka"
+              :serif-font "IBM Plex Serif" :serif-size 15 :serif-weight light
+              :theme doom-one
+              :org-heading-font "Inter" :org-heading-weight bold))
+    ("Cozy Cascadia" . (:font "CaskaydiaCove Nerd Font Mono" :size 15 :weight regular :slant normal
+              :big-font "CaskaydiaCove Nerd Font Mono" :big-size 25
+              :vp-font "Bricolage Grotesque" :vp-size 15
+              :emoji-font "Noto Color Emoji"
+              :symbol-font "Iosevka"
+              :serif-font "IBM Plex Serif" :serif-size 15 :serif-weight light
+              :theme doom-one
+              :org-heading-font "Bricolage Grotesque" :org-heading-weight bold))
+    ("Playful Geometry" . (:font "FantasqueSansM Nerd Font Mono" :size 15 :weight regular :slant normal
+              :big-font "FantasqueSansM Nerd Font Mono" :big-size 25
+              :vp-font "Satoshi" :vp-size 15
+              :emoji-font "Noto Color Emoji"
+              :symbol-font "Iosevka"
+              :serif-font "IBM Plex Serif" :serif-size 15 :serif-weight light
+              :theme doom-one
+              :org-heading-font "Satoshi" :org-heading-weight bold))
+    ("Comic Hacking" . (:font "ComicShannsMono Nerd Font Mono" :size 16 :weight regular :slant normal
+              :big-font "ComicShannsMono Nerd Font Mono" :big-size 25
+              :vp-font "Bricolage Grotesque" :vp-size 15
+              :emoji-font "Noto Color Emoji"
+              :symbol-font "Iosevka"
+              :serif-font "IBM Plex Serif" :serif-size 15 :serif-weight light
+              :theme doom-one
+              :org-heading-font "Bricolage Grotesque" :org-heading-weight bold))
     )
   "Alist of UI preset properties.")
 
@@ -127,10 +175,19 @@
     (message "Applied UI Preset: %s" preset-name)))
 
 (defun lumi/load-ui-preset ()
-  "Interactively pick and load a UI preset."
+  "Interactively pick and load a UI preset, displaying active fonts in brackets."
   (interactive)
-  (let ((preset (completing-read "Select UI Preset: " (mapcar #'car lumi-ui-presets))))
-    (lumi/apply-ui-preset preset)))
+  (let* ((choices (mapcar (lambda (preset)
+                            (let* ((name (car preset))
+                                   (props (cdr preset))
+                                   (font (plist-get props :font))
+                                   (vp-font (plist-get props :vp-font)))
+                              (cons (format "%s [%s | %s]" name font vp-font) name)))
+                          lumi-ui-presets))
+         (selection (completing-read "Select UI Preset: " (mapcar #'car choices)))
+         (preset-name (cdr (assoc selection choices))))
+    (when preset-name
+      (lumi/apply-ui-preset preset-name))))
 
 ;; Set default on startup
 (lumi/apply-ui-preset "JBM")

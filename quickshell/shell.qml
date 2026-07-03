@@ -26,7 +26,7 @@ ShellRoot {
     readonly property real scaleFactor: Screen.width > 2560 ? 1.25 : (Screen.width > 1920 ? 1.125 : 1.0)
     property string fontFamily: "Geist"
     property string iconFontFamily: "GeistMono Nerd Font"
-    property int fontSize: Math.round(10 * scaleFactor)
+    property int fontSize: Math.round(11 * scaleFactor)
     property bool isDestroying: false
 
     property var currentNotif: null
@@ -1332,7 +1332,7 @@ ShellRoot {
             // when the spring reverses direction during close animation.
             property real flareSize: radius
             Behavior on flareSize {
-                enabled: !root.batteryMode
+                enabled: true
                 SmoothedAnimation {
                     velocity: 140
                     easing.type: Easing.InOutQuad
@@ -1382,7 +1382,7 @@ ShellRoot {
 
             // FLUID: custom slow, springy fluidic damped SpringAnimations when switching or changing
             Behavior on width {
-                enabled: !root.batteryMode
+                enabled: true
                 SpringAnimation {
                     spring: 5.2
                     damping: 0.55
@@ -1390,7 +1390,7 @@ ShellRoot {
                 }
             }
             Behavior on height {
-                enabled: !root.batteryMode
+                enabled: true
                 SpringAnimation {
                     spring: 5.2
                     damping: 0.55
@@ -1398,7 +1398,7 @@ ShellRoot {
                 }
             }
             Behavior on radius {
-                enabled: !root.batteryMode
+                enabled: true
                 SpringAnimation {
                     spring: 5.2
                     damping: 0.55
@@ -1407,7 +1407,7 @@ ShellRoot {
             }
             Behavior on anchors.topMargin {
                 NumberAnimation {
-                    duration: root.batteryMode ? 0 : 400
+                    duration: root.batteryMode ? 100 : (!root.batteryCharging ? 240 : 400)
                     easing.type: Easing.OutExpo
                 }
             }
@@ -1439,12 +1439,12 @@ ShellRoot {
                 scale: opacity > 0 ? 1.0 : 0.9
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: root.batteryMode ? 0 : 250
+                        duration: root.batteryMode ? 100 : (!root.batteryCharging ? 150 : 250)
                         easing.type: Easing.OutQuad
                     }
                 }
                 Behavior on scale {
-                    enabled: !root.batteryMode
+                    enabled: true
                     SpringAnimation {
                         spring: 4.8
                         damping: 0.8
@@ -1479,7 +1479,7 @@ ShellRoot {
                             // On exit:  dot fades back in immediately so there's no gap.
                             opacity: containsMouse ? 0.0 : (isActive ? 1.0 : 0.4)
                             Behavior on width {
-                                enabled: !root.batteryMode
+                                enabled: true
                                 SpringAnimation {
                                     spring: 3.0
                                     damping: 0.6
@@ -1488,7 +1488,7 @@ ShellRoot {
                             }
                             Behavior on color {
                                 ColorAnimation {
-                                    duration: root.batteryMode ? 0 : 200
+                                    duration: root.batteryMode ? 100 : (!root.batteryCharging ? 120 : 200)
                                 }
                             }
                             // Crossfade: when hiding (going to 0) delay 60 ms so the number
@@ -1504,7 +1504,7 @@ ShellRoot {
                                         duration: (!root.batteryMode && containsMouse) ? 60 : 0
                                     }
                                     NumberAnimation {
-                                        duration: root.batteryMode ? 0 : 130
+                                        duration: root.batteryMode ? 100 : (!root.batteryCharging ? 78 : 130)
                                         easing.type: Easing.OutQuad
                                     }
                                 }
@@ -1531,7 +1531,7 @@ ShellRoot {
                                 }
                             }
                             Behavior on scale {
-                                enabled: !root.batteryMode
+                                enabled: true
                                 SpringAnimation {
                                     spring: 3.0
                                     damping: 0.6
@@ -1585,7 +1585,7 @@ ShellRoot {
                             }
                             Behavior on color {
                                 ColorAnimation {
-                                    duration: root.batteryMode ? 0 : 200
+                                    duration: root.batteryMode ? 100 : (!root.batteryCharging ? 120 : 200)
                                 }
                             }
                         }
@@ -1881,12 +1881,12 @@ ShellRoot {
                 scale: opacity > 0 ? 1.0 : 0.9
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: root.batteryMode ? 0 : 250
+                        duration: root.batteryMode ? 100 : (!root.batteryCharging ? 150 : 250)
                         easing.type: Easing.OutQuad
                     }
                 }
                 Behavior on scale {
-                    enabled: !root.batteryMode
+                    enabled: true
                     SpringAnimation {
                         spring: 4.8
                         damping: 0.8
@@ -2229,12 +2229,12 @@ ShellRoot {
                 scale: opacity > 0 ? 1.0 : 0.9
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: root.batteryMode ? 0 : 250
+                        duration: root.batteryMode ? 100 : (!root.batteryCharging ? 150 : 250)
                         easing.type: Easing.OutQuad
                     }
                 }
                 Behavior on scale {
-                    enabled: !root.batteryMode
+                    enabled: true
                     SpringAnimation {
                         spring: 4.8
                         damping: 0.8
@@ -2360,12 +2360,12 @@ ShellRoot {
                 scale: opacity > 0 ? 1.0 : 0.9
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: root.batteryMode ? 0 : 250
+                        duration: root.batteryMode ? 100 : (!root.batteryCharging ? 150 : 250)
                         easing.type: Easing.OutQuad
                     }
                 }
                 Behavior on scale {
-                    enabled: !root.batteryMode
+                    enabled: true
                     SpringAnimation {
                         spring: 4.8
                         damping: 0.8
@@ -2456,12 +2456,12 @@ ShellRoot {
                 scale: opacity > 0 ? 1.0 : 0.9
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: root.batteryMode ? 0 : 250
+                        duration: root.batteryMode ? 100 : (!root.batteryCharging ? 150 : 250)
                         easing.type: Easing.OutQuad
                     }
                 }
                 Behavior on scale {
-                    enabled: !root.batteryMode
+                    enabled: true
                     SpringAnimation {
                         spring: 4.8
                         damping: 0.8
@@ -2687,12 +2687,12 @@ ShellRoot {
                 scale: opacity > 0 ? 1.0 : 0.9
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: root.batteryMode ? 0 : 250
+                        duration: root.batteryMode ? 100 : (!root.batteryCharging ? 150 : 250)
                         easing.type: Easing.OutQuad
                     }
                 }
                 Behavior on scale {
-                    enabled: !root.batteryMode
+                    enabled: true
                     SpringAnimation {
                         spring: 4.8
                         damping: 0.8
@@ -2742,12 +2742,12 @@ ShellRoot {
                 scale: opacity > 0 ? 1.0 : 0.9
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: root.batteryMode ? 0 : 250
+                        duration: root.batteryMode ? 100 : (!root.batteryCharging ? 150 : 250)
                         easing.type: Easing.OutQuad
                     }
                 }
                 Behavior on scale {
-                    enabled: !root.batteryMode
+                    enabled: true
                     SpringAnimation {
                         spring: 4.8
                         damping: 0.8
@@ -2791,12 +2791,12 @@ ShellRoot {
                 scale: opacity > 0 ? 1.0 : 0.9
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: root.batteryMode ? 0 : 250
+                        duration: root.batteryMode ? 100 : (!root.batteryCharging ? 150 : 250)
                         easing.type: Easing.OutQuad
                     }
                 }
                 Behavior on scale {
-                    enabled: !root.batteryMode
+                    enabled: true
                     SpringAnimation {
                         spring: 4.8
                         damping: 0.8
@@ -2840,12 +2840,12 @@ ShellRoot {
                 scale: opacity > 0 ? 1.0 : 0.9
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: root.batteryMode ? 0 : 250
+                        duration: root.batteryMode ? 100 : (!root.batteryCharging ? 150 : 250)
                         easing.type: Easing.OutQuad
                     }
                 }
                 Behavior on scale {
-                    enabled: !root.batteryMode
+                    enabled: true
                     SpringAnimation {
                         spring: 4.8
                         damping: 0.8
@@ -2950,12 +2950,12 @@ ShellRoot {
                 scale: opacity > 0 ? 1.0 : 0.9
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: root.batteryMode ? 0 : 250
+                        duration: root.batteryMode ? 100 : (!root.batteryCharging ? 150 : 250)
                         easing.type: Easing.OutQuad
                     }
                 }
                 Behavior on scale {
-                    enabled: !root.batteryMode
+                    enabled: true
                     SpringAnimation {
                         spring: 4.8
                         damping: 0.8
@@ -3120,12 +3120,12 @@ ShellRoot {
                 scale: opacity > 0 ? 1.0 : 0.9
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: root.batteryMode ? 0 : 250
+                        duration: root.batteryMode ? 100 : (!root.batteryCharging ? 150 : 250)
                         easing.type: Easing.OutQuad
                     }
                 }
                 Behavior on scale {
-                    enabled: !root.batteryMode
+                    enabled: true
                     SpringAnimation {
                         spring: 4.8
                         damping: 0.8
@@ -3194,12 +3194,12 @@ ShellRoot {
                 scale: opacity > 0 ? 1.0 : 0.9
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: root.batteryMode ? 0 : 250
+                        duration: root.batteryMode ? 100 : (!root.batteryCharging ? 150 : 250)
                         easing.type: Easing.OutQuad
                     }
                 }
                 Behavior on scale {
-                    enabled: !root.batteryMode
+                    enabled: true
                     SpringAnimation {
                         spring: 4.8
                         damping: 0.8
@@ -3341,12 +3341,12 @@ ShellRoot {
                 scale: opacity > 0 ? 1.0 : 0.9
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: root.batteryMode ? 0 : 250
+                        duration: root.batteryMode ? 100 : (!root.batteryCharging ? 150 : 250)
                         easing.type: Easing.OutQuad
                     }
                 }
                 Behavior on scale {
-                    enabled: !root.batteryMode
+                    enabled: true
                     SpringAnimation {
                         spring: 4.8
                         damping: 0.8
@@ -3416,12 +3416,12 @@ ShellRoot {
             scale: opacity > 0 ? 1.0 : 0.9
             Behavior on opacity {
                 NumberAnimation {
-                    duration: root.batteryMode ? 0 : 250
+                    duration: root.batteryMode ? 100 : (!root.batteryCharging ? 150 : 250)
                     easing.type: Easing.OutQuad
                 }
             }
             Behavior on scale {
-                enabled: !root.batteryMode
+                enabled: true
                 SpringAnimation {
                     spring: 4.8
                     damping: 0.8
@@ -3476,12 +3476,12 @@ ShellRoot {
             scale: opacity > 0 ? 1.0 : 0.9
             Behavior on opacity {
                 NumberAnimation {
-                    duration: root.batteryMode ? 0 : 250
+                    duration: root.batteryMode ? 100 : (!root.batteryCharging ? 150 : 250)
                     easing.type: Easing.OutQuad
                 }
             }
             Behavior on scale {
-                enabled: !root.batteryMode
+                enabled: true
                 SpringAnimation {
                     spring: 4.8
                     damping: 0.8
@@ -3536,12 +3536,12 @@ ShellRoot {
             scale: opacity > 0 ? 1.0 : 0.9
             Behavior on opacity {
                 NumberAnimation {
-                    duration: root.batteryMode ? 0 : 250
+                    duration: root.batteryMode ? 100 : (!root.batteryCharging ? 150 : 250)
                     easing.type: Easing.OutQuad
                 }
             }
             Behavior on scale {
-                enabled: !root.batteryMode
+                enabled: true
                 SpringAnimation {
                     spring: 4.8
                     damping: 0.8
@@ -3615,7 +3615,7 @@ ShellRoot {
             opacity: (root.islandState === 1 || root.islandState === 4 || root.islandState === 5 || root.islandState === 6) && !root.isAnyPopupOpen ? 1.0 : 0.0
             Behavior on opacity {
                 NumberAnimation {
-                    duration: root.batteryMode ? 0 : 200
+                    duration: root.batteryMode ? 100 : (!root.batteryCharging ? 120 : 200)
                     easing.type: Easing.OutQuad
                 }
             }
@@ -3649,7 +3649,7 @@ ShellRoot {
                         }
                     }
                     Behavior on scale {
-                        enabled: !root.batteryMode
+                        enabled: true
                         SpringAnimation {
                             spring: 3.5
                             damping: 0.60
@@ -3657,7 +3657,7 @@ ShellRoot {
                         }
                     }
                     Behavior on width {
-                        enabled: !root.batteryMode
+                        enabled: true
                         SpringAnimation {
                             spring: 3.5
                             damping: 0.70
@@ -3737,7 +3737,7 @@ ShellRoot {
 
                     scale: sysTrayMouse.containsMouse ? 1.15 : 1.0
                     Behavior on scale {
-                        enabled: !root.batteryMode
+                        enabled: true
                         SpringAnimation {
                             spring: 4.5
                             damping: 0.65

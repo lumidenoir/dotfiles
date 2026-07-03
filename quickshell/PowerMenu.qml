@@ -137,9 +137,9 @@ PanelWindow {
                 opacity: show ? 1.0 : 0.0
                 Behavior on opacity {
                     SequentialAnimation {
-                        PauseAnimation { duration: (shellRoot && shellRoot.batteryMode) ? 0 : (show ? 120 : 0) }
+                        PauseAnimation { duration: (shellRoot && shellRoot.batteryMode) ? 0 : ((shellRoot && !shellRoot.batteryCharging) ? (show ? 72 : 0) : (show ? 120 : 0)) }
                         NumberAnimation {
-                            duration: (shellRoot && shellRoot.batteryMode) ? 0 : (show ? 300 : 80)
+                            duration: (shellRoot && shellRoot.batteryMode) ? 100 : ((shellRoot && !shellRoot.batteryCharging) ? (show ? 180 : 48) : (show ? 300 : 80))
                             easing.type: show ? Easing.OutQuad : Easing.InQuad
                         }
                     }
@@ -147,7 +147,7 @@ PanelWindow {
 
                 scale: show ? 1.0 : 0.95
                 Behavior on scale {
-                    enabled: !(shellRoot && shellRoot.batteryMode)
+                    enabled: true
                     SpringAnimation { spring: 3.5; damping: 0.8; mass: 0.8 }
                 }
 
@@ -165,7 +165,7 @@ PanelWindow {
                             color: (sdMouse.containsMouse || selectedIndex === 0) ? Qt.rgba(1, 0.2, 0.2, 0.8) : Qt.rgba(1, 1, 1, 0.08)
                             scale: (sdMouse.containsMouse || selectedIndex === 0) ? 1.12 : 1.0
                             Behavior on scale {
-                                enabled: !(shellRoot && shellRoot.batteryMode)
+                                enabled: true
                                 SpringAnimation { spring: 4.5; damping: 0.65; mass: 0.6 }
                             }
                             Text { anchors.centerIn: parent; text: "󰐥"; color: shellRoot ? shellRoot.colFg : "white"; font.family: shellRoot ? shellRoot.iconFontFamily : "sans-serif"; font.pixelSize: 20 }
@@ -189,7 +189,7 @@ PanelWindow {
                             color: (rbMouse.containsMouse || selectedIndex === 1) ? Qt.rgba(0.2, 0.8, 0.2, 0.8) : Qt.rgba(1, 1, 1, 0.08)
                             scale: (rbMouse.containsMouse || selectedIndex === 1) ? 1.12 : 1.0
                             Behavior on scale {
-                                enabled: !(shellRoot && shellRoot.batteryMode)
+                                enabled: true
                                 SpringAnimation { spring: 4.5; damping: 0.65; mass: 0.6 }
                             }
                             Text { anchors.centerIn: parent; text: "󰑓"; color: shellRoot ? shellRoot.colFg : "white"; font.family: shellRoot ? shellRoot.iconFontFamily : "sans-serif"; font.pixelSize: 20 }
@@ -213,7 +213,7 @@ PanelWindow {
                             color: (spMouse.containsMouse || selectedIndex === 2) ? Qt.rgba(0.2, 0.2, 1.0, 0.8) : Qt.rgba(1, 1, 1, 0.08)
                             scale: (spMouse.containsMouse || selectedIndex === 2) ? 1.12 : 1.0
                             Behavior on scale {
-                                enabled: !(shellRoot && shellRoot.batteryMode)
+                                enabled: true
                                 SpringAnimation { spring: 4.5; damping: 0.65; mass: 0.6 }
                             }
                             Text { anchors.centerIn: parent; text: "󰤄"; color: shellRoot ? shellRoot.colFg : "white"; font.family: shellRoot ? shellRoot.iconFontFamily : "sans-serif"; font.pixelSize: 20 }
@@ -237,7 +237,7 @@ PanelWindow {
                             color: (hbMouse.containsMouse || selectedIndex === 3) ? Qt.rgba(0.2, 0.8, 0.8, 0.8) : Qt.rgba(1, 1, 1, 0.08)
                             scale: (hbMouse.containsMouse || selectedIndex === 3) ? 1.12 : 1.0
                             Behavior on scale {
-                                enabled: !(shellRoot && shellRoot.batteryMode)
+                                enabled: true
                                 SpringAnimation { spring: 4.5; damping: 0.65; mass: 0.6 }
                             }
                             Text { anchors.centerIn: parent; text: "󰒲"; color: shellRoot ? shellRoot.colFg : "white"; font.family: shellRoot ? shellRoot.iconFontFamily : "sans-serif"; font.pixelSize: 20 }
@@ -261,7 +261,7 @@ PanelWindow {
                             color: (lkMouse.containsMouse || selectedIndex === 4) ? Qt.rgba(0.8, 0.2, 0.8, 0.8) : Qt.rgba(1, 1, 1, 0.08)
                             scale: (lkMouse.containsMouse || selectedIndex === 4) ? 1.12 : 1.0
                             Behavior on scale {
-                                enabled: !(shellRoot && shellRoot.batteryMode)
+                                enabled: true
                                 SpringAnimation { spring: 4.5; damping: 0.65; mass: 0.6 }
                             }
                             Text { anchors.centerIn: parent; text: "󰌾"; color: shellRoot ? shellRoot.colFg : "white"; font.family: shellRoot ? shellRoot.iconFontFamily : "sans-serif"; font.pixelSize: 20 }
@@ -285,7 +285,7 @@ PanelWindow {
                             color: (loMouse.containsMouse || selectedIndex === 5) ? Qt.rgba(0.8, 0.8, 0.2, 0.8) : Qt.rgba(1, 1, 1, 0.08)
                             scale: (loMouse.containsMouse || selectedIndex === 5) ? 1.12 : 1.0
                             Behavior on scale {
-                                enabled: !(shellRoot && shellRoot.batteryMode)
+                                enabled: true
                                 SpringAnimation { spring: 4.5; damping: 0.65; mass: 0.6 }
                             }
                             Text { anchors.centerIn: parent; text: "󰍃"; color: shellRoot ? shellRoot.colFg : "white"; font.family: shellRoot ? shellRoot.iconFontFamily : "sans-serif"; font.pixelSize: 20 }

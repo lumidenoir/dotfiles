@@ -39,6 +39,6 @@ Slider {
         radius: 7
         color: mSlider.pressed ? Qt.rgba(0.8, 0.8, 0.8, 1) : "#ffffff"
         scale: mSlider.pressed || mSlider.hovered ? 1.2 : 1.0
-        Behavior on scale { NumberAnimation { duration: mSlider.batteryMode ? 0 : 100 } }
+        Behavior on scale { NumberAnimation { duration: mSlider.batteryMode ? 100 : ((shellRoot && !shellRoot.batteryCharging) ? 60 : 100) } }
     }
 }

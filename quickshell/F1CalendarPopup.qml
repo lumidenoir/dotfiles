@@ -99,16 +99,16 @@ PopupWindow {
             Behavior on opacity {
                 SequentialAnimation {
                     PauseAnimation {
-                        duration: (shellRoot && shellRoot.batteryMode) ? 0 : (f1CalendarPopup.show ? 80 : 0)
+                        duration: (shellRoot && shellRoot.batteryMode) ? 0 : ((shellRoot && !shellRoot.batteryCharging) ? (f1CalendarPopup.show ? 48 : 0) : (f1CalendarPopup.show ? 80 : 0))
                     }
                     NumberAnimation {
-                        duration: (shellRoot && shellRoot.batteryMode) ? 0 : (f1CalendarPopup.show ? 180 : 150)
+                        duration: (shellRoot && shellRoot.batteryMode) ? 100 : ((shellRoot && !shellRoot.batteryCharging) ? (f1CalendarPopup.show ? 108 : 90) : (f1CalendarPopup.show ? 180 : 150))
                         easing.type: f1CalendarPopup.show ? Easing.OutQuad : Easing.InQuad
                     }
                 }
             }
             Behavior on scale {
-                enabled: !(shellRoot && shellRoot.batteryMode)
+                enabled: true
                 SpringAnimation {
                     spring: 3.0
                     damping: 0.75
@@ -116,7 +116,7 @@ PopupWindow {
                 }
             }
             Behavior on x {
-                enabled: !(shellRoot && shellRoot.batteryMode)
+                enabled: true
                 SpringAnimation {
                     spring: 2.8
                     damping: 0.75

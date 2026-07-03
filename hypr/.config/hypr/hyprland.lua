@@ -59,18 +59,18 @@ decoration = {
 
     shadow = {
         enabled = true,
-        range = 20,           -- wider, softer spread vs tight 10
-        render_power = 2,     -- lower = softer falloff (more macOS-like)
-        color = "0x55000000", -- slightly more visible active shadow
+        range = 10,
+        render_power = 2,
+        color = "0x55000000",
         color_inactive = "0x18000000"
     },
 
     blur = {
         enabled = true,
         size = 6,
-        passes = 3,
+        passes = 2,
         new_optimizations = true,
-        noise = 0.015,
+        xray = false,
         contrast = 1.12,
         brightness = 1.05,
         vibrancy = 0.25,
@@ -92,6 +92,13 @@ decoration = {
     },
     scrolling = {
         fullscreen_on_one_column = true,
+    },
+    misc = {
+        vrr = 1, -- Adaptive Sync/VRR if supported
+        disable_hyprland_logo = true,
+        disable_splash_rendering = true,
+        animate_manual_resizes = false, -- Disable manual resize animations to reduce redraw load
+        animate_mouse_windowdragging = false
     },
     debug = {
         vfr = true

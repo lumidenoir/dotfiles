@@ -1,0 +1,68 @@
+# --- Core behavior ---
+set selection-clipboard clipboard
+set database sqlite
+set synctex true
+set synctex-editor-command "emacsclient +%{line} %{input}"
+
+# --- Recolor (inverted reading mode) ---
+set recolor true
+set recolor-keephue true
+set recolor-lightcolor "#1c1c1e"   # slightly warmer than pure black, less OLED glare
+set recolor-darkcolor  "#e5e5ea"   # soft off-white, not clinical #fff
+
+# --- Layout / feel ---
+set font "GeistMono Nerd Font 11"
+set window-title-basename true
+set guioptions ""
+set page-padding 2
+set statusbar-h-padding 8
+set statusbar-v-padding 3
+set scroll-step 50
+set scroll-hstep 50
+set smooth-scroll true
+
+# --- Palette (Apple Dark Mode Calibration) ---
+# base canvas (Low halation, long-session reading)
+set default-bg                  "#1C1C1E"
+set default-fg                  "#E5E5EA"
+
+# --- Recolor (inverted reading mode) ---
+set recolor                     true
+set recolor-keephue             true
+set recolor-lightcolor          "#1C1C1E"   # Apple Dark Surface
+set recolor-darkcolor           "#E5E5EA"   # Apple System Gray (Soft Text)
+
+# chrome (one step up in elevation hierarchy)
+set statusbar-bg                "#2C2C2E"   # Apple Secondary Dark Surface
+set statusbar-fg                "#E5E5EA"
+set inputbar-bg                 "#3A3A3C"   # Apple Tertiary Dark Surface
+set inputbar-fg                 "#E5E5EA"
+set completion-bg               "#2C2C2E"
+set completion-fg               "#D1D1D6"
+set completion-highlight-bg     "#0A84FF"   # Apple Dark Mode Accent Blue
+set completion-highlight-fg     "#FFFFFF"
+
+# accent / active indexing
+set index-bg                    "#1C1C1E"
+set index-fg                    "#D1D1D6"
+set index-active-bg             "#0A84FF"
+set index-active-fg             "#FFFFFF"
+
+set highlight-color             "rgba(10, 132, 255, 0.3)"
+set highlight-active-color      "rgba(10, 132, 255, 0.55)"
+
+# notifications (System-coded alerts)
+set notification-bg             "#2C2C2E"
+set notification-fg             "#E5E5EA"
+set notification-error-bg       "#FF453A"   # Apple System Red (Dark)
+set notification-error-fg       "#FFFFFF"
+set notification-warning-bg     "#FF9F0A"   # Apple System Orange (Dark)
+set notification-warning-fg     "#1C1C1E"
+
+set render-loading-bg           "#1C1C1E"
+set render-loading-fg           "#E5E5EA"
+
+# --- Keybindings ---
+map i recolor
+map p print
+map b toggle_statusbar

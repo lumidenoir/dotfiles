@@ -296,10 +296,10 @@ PanelWindow {
                     Behavior on opacity {
                         SequentialAnimation {
                             PauseAnimation {
-                                duration: (shellRoot && shellRoot.batteryMode) ? 0 : (rootWindow.show ? 120 : 0)
+                                duration: (shellRoot && shellRoot.batteryMode) ? 0 : ((shellRoot && !shellRoot.batteryCharging) ? (rootWindow.show ? 72 : 0) : (rootWindow.show ? 120 : 0))
                             }
                             NumberAnimation {
-                                duration: (shellRoot && shellRoot.batteryMode) ? 0 : (rootWindow.show ? 280 : 80)
+                                duration: (shellRoot && shellRoot.batteryMode) ? 100 : ((shellRoot && !shellRoot.batteryCharging) ? (rootWindow.show ? 168 : 48) : (rootWindow.show ? 280 : 80))
                                 easing.type: rootWindow.show ? Easing.OutQuad : Easing.InQuad
                             }
                         }
@@ -308,7 +308,7 @@ PanelWindow {
 
                     scale: rootWindow.show ? 1.0 : 0.9
                     Behavior on scale {
-                        enabled: !(shellRoot && shellRoot.batteryMode)
+                        enabled: true
                         SpringAnimation {
                             spring: 3.0
                             damping: 0.8

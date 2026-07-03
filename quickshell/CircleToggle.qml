@@ -44,7 +44,7 @@ MouseArea {
             border.color: root.active ? "transparent" : Qt.rgba(1, 1, 1, 0.05)
             border.width: 1
 
-            Behavior on color { ColorAnimation { duration: root.batteryMode ? 0 : 150 } }
+            Behavior on color { ColorAnimation { duration: root.batteryMode ? 100 : ((shellRoot && !shellRoot.batteryCharging) ? 90 : 150) } }
             
             Rectangle {
                 anchors.centerIn: parent
@@ -112,10 +112,10 @@ MouseArea {
             }
             elide: Text.ElideRight
             
-            Behavior on color { ColorAnimation { duration: root.batteryMode ? 0 : 150 } }
+            Behavior on color { ColorAnimation { duration: root.batteryMode ? 100 : ((shellRoot && !shellRoot.batteryCharging) ? 90 : 150) } }
         }
     }
     
     scale: containsPress ? 0.92 : 1.0
-    Behavior on scale { NumberAnimation { duration: root.batteryMode ? 0 : 120; easing.type: Easing.OutCubic } }
+    Behavior on scale { NumberAnimation { duration: root.batteryMode ? 100 : ((shellRoot && !shellRoot.batteryCharging) ? 72 : 120); easing.type: Easing.OutCubic } }
 }
