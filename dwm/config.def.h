@@ -59,7 +59,7 @@ static const char *fonts[] = {
     "JetBrainsMono Nerd Font Mono:style:medium:size=19"};
 
 // theme
-#include "themes/onedark.h"
+#include "themes/active.h"
 
 static const char *colors[][3] = {
     /*                     fg       bg      border */
@@ -166,14 +166,14 @@ static const Key keys[] = {
     /* modifier                         key         function        argument */
 
     // brightness and audio
-    {0, XF86XK_AudioLowerVolume, spawn, {.v = downvol}},
-    {0, XF86XK_AudioMute, spawn, {.v = mutevol}},
-    {0, XF86XK_AudioRaiseVolume, spawn, {.v = upvol}},
-    {0, XF86XK_MonBrightnessUp, spawn, {.v = light_up}},
-    {0, XF86XK_MonBrightnessDown, spawn, {.v = light_down}},
-    {0, XF86XK_AudioPlay, spawn, {.v = play_pause}},
-    {0, XF86XK_AudioPrev, spawn, {.v = play_prev}},
-    {0, XF86XK_AudioNext, spawn, {.v = play_next}},
+    {0, XF86XK_AudioLowerVolume, spawn, SHCMD("settings_control.sh volume_down")},
+    {0, XF86XK_AudioMute, spawn, SHCMD("settings_control.sh volume_mute")},
+    {0, XF86XK_AudioRaiseVolume, spawn, SHCMD("settings_control.sh volume_up")},
+    {0, XF86XK_MonBrightnessUp, spawn, SHCMD("settings_control.sh brightness_up")},
+    {0, XF86XK_MonBrightnessDown, spawn, SHCMD("settings_control.sh brightness_down")},
+    {0, XF86XK_AudioPlay, spawn, SHCMD("settings_control.sh play_pause")},
+    {0, XF86XK_AudioPrev, spawn, SHCMD("settings_control.sh play_prev")},
+    {0, XF86XK_AudioNext, spawn, SHCMD("settings_control.sh play_next")},
 
     // screenshot fullscreen and cropped
     {MODKEY | ControlMask, XK_Print, spawn, SHCMD("screenshot.sh --stop")},
@@ -181,7 +181,7 @@ static const Key keys[] = {
     {0, XK_Print, spawn, SHCMD("screenshot.sh")},
 
     {MODKEY, XK_space, spawn,
-     SHCMD("rofi -show drun -theme ~/dotfiles/dwm/rofi_themes/config.rasi")},
+     SHCMD("rofi -show drun -theme ~/dotfiles/rofi/dwm.rasi")},
     {MODKEY, XK_r, spawn, {.v = dmenucmd}},
     {MODKEY, XK_Return, spawn, SHCMD("st")},
 
@@ -279,6 +279,7 @@ static const Key keys[] = {
     {Mod1Mask, XK_l, spawn, SHCMD("screenlock.sh")},
 
     {MODKEY, XK_s, spawn, SHCMD("spotlight.sh")},
+    {MODKEY, XK_a, spawn, SHCMD("~/dotfiles/scripts/keybindings.py")},
 
     {MODKEY, XK_x, spawn, SHCMD("~/.config/emacs/bin/org-capture")},
 

@@ -1,0 +1,17 @@
+* {
+    bg-col:  #1E1D2D;
+    bg-col-light: #282737;
+    border-col: #282737;
+    selected-col: #282737;
+    blue: #96CDFB;
+    fg-col: #f8f8f2;
+    fg-col2: #F28FAD;
+    grey: #585767;
+    width: 600;
+
+    // for WallSelect
+    main-bg:     #1E1D2DE6;
+    main-fg:     #f8f8f2;
+    select-bg:   #96CDFB;
+    select-fg:   #1E1D2D;
+}

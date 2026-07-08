@@ -1,0 +1,27 @@
+/* ==========================================================
+   mac-colors.rasi  –  matches Quickshell notch aesthetic
+   Background: #0d0d0dc0  |  Fg: #ffffff  |  Accent: #007AFF
+   Font: Geist (same as shell.qml)
+   ========================================================== */
+* {
+    /* Core palette – mirrors shell.qml */
+    bg:         #0d0d0dc0;        /* Deep dark premium translucent background for blur */
+    bg-card:    #101010;        /* card surface (rgba 1,1,1,0.04 ≈ #0a0a0a) */
+    bg-entry:   #1a1a1a;        /* input field */
+    border:     rgba(255,255,255,0.08);  /* shell border */
+    border-hl:  rgba(255,255,255,0.15); /* hover border */
+    fg:         #ffffff;        /* colFg */
+    fg-muted:   rgba(255,255,255,0.40); /* colMuted */
+    accent:     #007AFF;        /* Apple / shell blue */
+    accent-fg:  #ffffff;
+
+    /* Rofi compatibility aliases */
+    background-color: @bg;
+    text-color:       @fg;
+    main-bg:   @bg;
+    main-fg:   @fg;
+    main-br:   @border;
+    main-ex:   @accent;
+    select-bg: @accent;
+    select-fg: @accent-fg;
+}

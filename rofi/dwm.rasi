@@ -1,3 +1,5 @@
+@import "themes/active.rasi"
+
 configuration{
     modi: "run,drun,window";
     lines: 5;
@@ -11,8 +13,6 @@ configuration{
     hide-scrollbar: true;
     display-drun: "   Apps ";
 }
-
-@theme "onedark"
 
 element-text, element-icon , mode-switcher {
     background-color: inherit;

@@ -80,7 +80,7 @@ def main():
                 # Format to local time
                 local_dt = e['start'].astimezone(None)
                 local_str = local_dt.strftime("%a %b %d at %H:%M")
-                print(f"{e['summary']}|{local_str}|{e['location']}")
+                print(f"{e['summary']}|{local_str}|{e['location']}|{e['start'].isoformat()}")
                 return
         print("No upcoming events")
 

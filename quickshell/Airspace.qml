@@ -224,6 +224,24 @@ PanelWindow {
                 }
             }
         }
+        // Auto-restart on unexpected disconnect while Airspace is still open
+        onExited: {
+            if (airspaceWin.show) {
+                pHyprEvents.running = false;
+                pHyprEventsRestartTimer.restart();
+            }
+        }
+    }
+
+    Timer {
+        id: pHyprEventsRestartTimer
+        interval: 500
+        repeat: false
+        onTriggered: {
+            if (airspaceWin.show) {
+                pHyprEvents.running = true;
+            }
+        }
     }
 
     // ─── OVERLAY ────────────────────────────────────────────────────────

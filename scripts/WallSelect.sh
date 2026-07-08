@@ -2,11 +2,11 @@
 
 # Check for required packages
 if ! command -v xdpyinfo >/dev/null 2>&1; then
-    dunstify "Missing package" "Please install the xorg-xdpyinfo package to continue" -u critical
-    exit 1
+	dunstify "Missing package" "Please install the xorg-xdpyinfo package to continue" -u critical
+	exit 1
 elif ! command -v convert >/dev/null 2>&1; then
-    dunstify "Missing package" "Please install the imagemagick package to continue" -u critical
-    exit 1
+	dunstify "Missing package" "Please install the imagemagick package to continue" -u critical
+	exit 1
 fi
 # Define the wallpaper directory
 wallpaper_dir="${HOME}/Pictures/wallpaper"
@@ -17,25 +17,25 @@ theme_dirs=($(find "$wallpaper_dir" -maxdepth 1 -mindepth 1 -type d -not -path '
 # Extract just the folder names from the paths
 theme_names=()
 for dir in "${theme_dirs[@]}"; do
-    theme_names+=("$(basename "$dir")")
+	theme_names+=("$(basename "$dir")")
 done
 
 # Combine predefined options and dynamic theme directories
 all_themes=("${theme_options[@]}" "${theme_names[@]}")
 
 # Get user input for wallpaper theme
-theme=$(printf '%s\n' "${all_themes[@]}" | rofi -dmenu -p "Select wallpaper theme: " -lines 10 -no-custom -theme ~/.config/rofi/spotlight.rasi)
+theme=$(printf '%s\n' "${all_themes[@]}" | rofi -dmenu -p "Select wallpaper theme: " -lines 10 -no-custom -theme ~/dotfiles/rofi/dwm.rasi)
 
 # Exit if no theme is provided
 if [ -z "$theme" ]; then
-    dunstify "Missing theme" "No theme was selected" -u critical -t 2000
-    exit 0
+	dunstify "Missing theme" "No theme was selected" -u critical -t 2000
+	exit 0
 fi
 
 # Set some variables
 wall_dir="${HOME}/Pictures/wallpaper/${theme}"
 cacheDir="${HOME}/.cache/$(whoami)/wallpaper/${theme}"
-rofi_command="rofi -dmenu -theme ${HOME}/.config/rofi/WallSelect.rasi -theme-str ${rofi_override}"
+rofi_command="rofi -dmenu -theme ~/dotfiles/rofi/WallSelect.rasi -theme-str ${rofi_override}"
 
 monitor_res=$(xdpyinfo | awk '/dimensions/{print $2}' | cut -d 'x' -f1)
 monitor_scale=$(xdpyinfo | awk '/resolution/{print $2}' | cut -d 'x' -f1)
@@ -44,17 +44,17 @@ rofi_override="element-icon{size:${monitor_res}px;border-radius:0px;}"
 
 # Create cache dir if not exists
 if [ ! -d "${cacheDir}" ]; then
-    mkdir -p "${cacheDir}"
+	mkdir -p "${cacheDir}"
 fi
 
 # Convert images in directory and save to cache dir
 for imagen in "$wall_dir"/*.{jpg,jpeg,png,webp}; do
-    if [ -f "$imagen" ]; then
-        nombre_archivo=$(basename "$imagen")
-        if [ ! -f "${cacheDir}/${nombre_archivo}" ]; then
-            convert -strip "$imagen" -thumbnail 500x500^ -gravity center -extent 500x500 "${cacheDir}/${nombre_archivo}"
-        fi
-    fi
+	if [ -f "$imagen" ]; then
+		nombre_archivo=$(basename "$imagen")
+		if [ ! -f "${cacheDir}/${nombre_archivo}" ]; then
+			convert -strip "$imagen" -thumbnail 500x500^ -gravity center -extent 500x500 "${cacheDir}/${nombre_archivo}"
+		fi
+	fi
 done
 
 # Launch rofi
@@ -66,16 +66,16 @@ wall_path="${wall_dir}/${wall_selection}"
 
 # Apply wallpaper in background so parent script continues
 if [ "$XDG_SESSION_TYPE" = "wayland" ]; then
-    (awww img --transition-bezier .43,1.19,1,.4 --transition-fps 30 --transition-type grow --transition-pos 0.925,0.977 --transition-duration 2 "$wall_path") >/dev/null 2>&1 &
+	(awww img --transition-bezier .43,1.19,1,.4 --transition-fps 30 --transition-type grow --transition-pos 0.925,0.977 --transition-duration 2 "$wall_path") >/dev/null 2>&1 &
 else
-    (feh --no-fehbg --bg-fill "$wall_path" &) >/dev/null 2>&1 &
+	(feh --no-fehbg --bg-fill "$wall_path" &) >/dev/null 2>&1 &
 fi
 
 # Echo full wallpaper path
 echo "$wall_path" >~/.cache/wallpaper
 
 # Generate wallpaper.rasi for Rofi to avoid needing sed hacks
-cat > "$HOME/.config/rofi/wallpaper.rasi" <<EOF
+cat >"$HOME/.config/rofi/wallpaper.rasi" <<EOF
 * {
     wallpaper-path: url("$wall_path", width);
 }

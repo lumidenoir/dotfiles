@@ -121,7 +121,7 @@ def show_keys():
             "rofi", "-dmenu", 
             "-i", 
             "-p", f" {wm.upper()} Keys",
-            "-theme", os.path.expanduser("~/.config/rofi/hotkeys.rasi")
+            "-theme", os.path.expanduser("~/dotfiles/rofi/hotkeys.rasi")
         ], input=rofi_input, text=True)
     except Exception as e:
         print(f"Error running rofi: {e}")

@@ -71,11 +71,14 @@ PanelWindow {
     Process {
         id: pSetWallpaper
         property string path: ""
-        command: ["sh", "-c", path !== "" ? ("awww img --transition-bezier .43,1.19,1,.4 --transition-fps 30 --transition-type grow --transition-pos 0.925,0.977 --transition-duration 2 \"" + path + "\"") : "echo"]
+        command: ["sh", "-c", path !== "" ? ("awww img --transition-bezier .43,1.19,1,.4 --transition-fps 30 --transition-type grow --transition-pos 0.925,0.977 --transition-duration 2 \"" + path + "\" && wal -n -i -s -t \"" + path + "\"") : "echo"]
         onExited: (exitCode) => {
             if (exitCode === 0 && path !== "") {
                 pSaveWallpaperCache.path = path;
                 pSaveWallpaperCache.running = true;
+                if (shellRoot) {
+                    shellRoot.reloadWalColors();
+                }
             }
         }
     }

@@ -1,0 +1,1 @@
+/home/lumi/dotfiles/dwm/themes/onedark.h

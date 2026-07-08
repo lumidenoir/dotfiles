@@ -10,7 +10,7 @@ BROWSER="${BROWSER:-qutebrowser}"
 if [[ "$XDG_CURRENT_DESKTOP" == "Hyprland" ]]; then
 	ROFI_CMD=(rofi -dmenu -i -theme ~/.config/rofi/mac-spotlight.rasi)
 else
-	ROFI_CMD=(rofi -dmenu -i -theme ~/.config/rofi/spotlight.rasi)
+	ROFI_CMD=(rofi -dmenu -i -theme ~/dotfiles/rofi/dwm.rasi)
 fi
 
 touch "$BOOKMARK_FILE"
@@ -160,7 +160,7 @@ mode_clipboard() {
 	else
 		rofi -modi "clipboard:greenclip print" -show clipboard \
 			-theme-str "window{width:45em;}" \
-			-theme ~/.config/rofi/spotlight.rasi
+			-theme ~/dotfiles/rofi/dwm.rasi
 	fi
 }
 

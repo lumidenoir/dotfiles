@@ -195,7 +195,7 @@ PanelWindow {
 
             onWidthChanged: checkCloseFinished()
 
-            height: groundControl.suppressOpenAnimation ? 36 * groundControl.scaleFactor : groundControl.show ? (mainLayout.implicitHeight > 100 ? (mainLayout.implicitHeight + 32) : groundControl.cachedHeight) : (groundControl.isClosing ? 36 * groundControl.scaleFactor : 40 * groundControl.scaleFactor)
+            height: groundControl.suppressOpenAnimation ? 36 * groundControl.scaleFactor : groundControl.show ? (mainLayout.implicitHeight > 100 ? (mainLayout.implicitHeight + 28) : groundControl.cachedHeight) : (groundControl.isClosing ? 36 * groundControl.scaleFactor : 40 * groundControl.scaleFactor)
 
             onHeightChanged: checkCloseFinished()
 
@@ -264,12 +264,12 @@ PanelWindow {
                     id: mainLayout
                     onImplicitHeightChanged: {
                         if (implicitHeight > 100) {
-                            groundControl.cachedHeight = implicitHeight + 32;
+                            groundControl.cachedHeight = implicitHeight + 28;
                         }
                     }
                     anchors.top: parent.top
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    width: groundControl.targetWidth - 48 * groundControl.scaleFactor
+                    anchors.left: parent.left
+                    anchors.right: parent.right
                     spacing: 8
 
                     RowLayout {
@@ -289,7 +289,7 @@ PanelWindow {
                                 shellRoot: groundControl.shellRoot
                                 groundControlShow: groundControl.show
                                 cardDelay: 0
-                                Layout.preferredHeight: 110
+                                Layout.preferredHeight: 120
                                 ColumnLayout {
                                     anchors.fill: parent
                                     anchors.margins: 12
@@ -474,7 +474,7 @@ PanelWindow {
 
                                     ModernVerticalSlider {
                                         shellRoot: groundControl.shellRoot
-                                        customAccent: "#007AFF"
+                                        customAccent: shellRoot ? shellRoot.colAccent : "#007AFF"
                                         isMuted: shellRoot ? shellRoot.volumeMuted : false
                                         showAirPlayButton: true
                                         onAirPlayClicked: {
@@ -522,7 +522,7 @@ PanelWindow {
 
                                     ModernVerticalSlider {
                                         shellRoot: groundControl.shellRoot
-                                        customAccent: "#FF9500"
+                                        customAccent: shellRoot ? shellRoot.colAccentSecondary : "#FF9500"
                                         isMuted: shellRoot ? shellRoot.micMuted : false
                                         iconText: shellRoot && shellRoot.micMuted ? "󰍭" : "󰍬"
                                         labelText: "Mic"
@@ -544,7 +544,7 @@ PanelWindow {
 
                                     ModernVerticalSlider {
                                         shellRoot: groundControl.shellRoot
-                                        customAccent: "#FFCC00"
+                                        customAccent: shellRoot ? shellRoot.colAccent : "#FFCC00"
                                         iconText: "󰃠"
                                         labelText: "Brightness"
                                         value: shellRoot ? (parseInt(shellRoot.brightnessLevel) / 100.0) : 0
@@ -791,7 +791,7 @@ PanelWindow {
                                 shellRoot: groundControl.shellRoot
                                 groundControlShow: groundControl.show
                                 cardDelay: 120
-                                Layout.preferredHeight: 130
+                                Layout.preferredHeight: 146
                                 clip: true
 
                                 border.color: shellRoot && shellRoot.islandState === shellRoot.stateF1Alert ? "#E10600" : Qt.rgba(1, 1, 1, 0.08)
@@ -968,7 +968,7 @@ PanelWindow {
                                             label: "DND"
                                             iconText: shellRoot && shellRoot.dndActive ? "󰂛" : "󰂚"
                                             active: shellRoot && shellRoot.dndActive
-                                            accent: "#E02424"
+                                            accent: shellRoot ? shellRoot.colAccent : "#3B82F6"
                                             onClicked: {
                                                 if (shellRoot)
                                                     shellRoot.dndActive = !shellRoot.dndActive;
@@ -981,7 +981,7 @@ PanelWindow {
                                             label: "Night"
                                             iconText: "󰖔"
                                             active: shellRoot && shellRoot.redshiftActive
-                                            accent: "#FF8C00"
+                                            accent: shellRoot ? shellRoot.colAccentSecondary : "#10B981"
                                             onClicked: {
                                                 if (shellRoot && !shellRoot.pRedshiftToggle.running)
                                                     shellRoot.pRedshiftToggle.running = true;
@@ -994,7 +994,7 @@ PanelWindow {
                                             label: "Caffeine"
                                             iconText: "󰅶"
                                             active: shellRoot && shellRoot.caffeineActive
-                                            accent: "#FFD700"
+                                            accent: shellRoot ? shellRoot.colAccent : "#3B82F6"
                                             onClicked: {
                                                 if (shellRoot)
                                                     shellRoot.pCaffeineToggle.running = true;
@@ -1007,7 +1007,7 @@ PanelWindow {
                                             label: "Health"
                                             iconText: "󰏖"
                                             active: shellRoot && shellRoot.healthRemindersActive
-                                            accent: "#10B981"
+                                            accent: shellRoot ? shellRoot.colAccentSecondary : "#10B981"
                                             onClicked: {
                                                 if (shellRoot)
                                                     shellRoot.healthRemindersActive = !shellRoot.healthRemindersActive;
@@ -1028,11 +1028,7 @@ PanelWindow {
                                                 return shellRoot.powerProfile === "performance" ? "" : (shellRoot.powerProfile === "power-saver" ? "" : "󰾆");
                                             }
                                             active: shellRoot && shellRoot.powerProfile !== "balanced"
-                                            accent: {
-                                                if (!shellRoot)
-                                                    return "#3B82F6";
-                                                return shellRoot.powerProfile === "performance" ? "#10B981" : (shellRoot.powerProfile === "power-saver" ? "#FFCC00" : "#3B82F6");
-                                            }
+                                            accent: shellRoot ? shellRoot.colAccent : "#3B82F6"
                                             onClicked: {
                                                 if (shellRoot)
                                                     shellRoot.pCyclePowerProfile.running = true;
@@ -1053,7 +1049,7 @@ PanelWindow {
                                             }
                                             iconText: "󰄉"
                                             active: shellRoot && shellRoot.pomodoroState > 0
-                                            accent: shellRoot ? (shellRoot.pomodoroState === 1 ? "#FF4500" : "#00FA9A") : "#FF4500"
+                                            accent: shellRoot ? (shellRoot.pomodoroState === 1 ? shellRoot.colAccent : shellRoot.colAccentSecondary) : "#3B82F6"
                                             onClicked: {
                                                 if (shellRoot) {
                                                     if (shellRoot.pomodoroState === 0) {
@@ -1079,7 +1075,7 @@ PanelWindow {
                                             label: shellRoot ? shellRoot.stopwatchText : "00:00"
                                             iconText: "󰔚"
                                             active: shellRoot && (shellRoot.stopwatchRunning || shellRoot.stopwatchSeconds > 0)
-                                            accent: "#FFA500"
+                                            accent: shellRoot ? shellRoot.colAccentSecondary : "#10B981"
                                             onClicked: {
                                                 if (shellRoot)
                                                     shellRoot.stopwatchRunning = !shellRoot.stopwatchRunning;
@@ -1099,7 +1095,7 @@ PanelWindow {
                                             label: shellRoot ? shellRoot.timerText : "05:00"
                                             iconText: "󰔛"
                                             active: shellRoot && (shellRoot.timerRunning || (shellRoot.timerSeconds > 0 && shellRoot.timerSeconds < shellRoot.timerTotal))
-                                            accent: "#FFA500"
+                                            accent: shellRoot ? shellRoot.colAccent : "#3B82F6"
                                             acceptedButtons: Qt.LeftButton | Qt.RightButton
                                             onClicked: {
                                                 if (mouse.button === Qt.RightButton) {
@@ -1164,7 +1160,7 @@ PanelWindow {
                                             id: btnScreen
                                             label: "Screen"
                                             iconText: "󰄀"
-                                            accent: "#3B82F6"
+                                            accent: shellRoot ? shellRoot.colAccent : "#3B82F6"
                                             acceptedButtons: Qt.LeftButton | Qt.RightButton
                                             onClicked: {
                                                 groundControl.hideImmediately = true;
@@ -1185,7 +1181,7 @@ PanelWindow {
                                             label: shellRoot && shellRoot.isRecording ? "Stop" : "Record"
                                             iconText: shellRoot && shellRoot.isRecording ? "󰓛" : "󰑊"
                                             active: shellRoot && shellRoot.isRecording
-                                            accent: "#EF4444"
+                                            accent: shellRoot ? shellRoot.colAccentSecondary : "#EF4444"
                                             acceptedButtons: Qt.LeftButton | Qt.RightButton
                                             onClicked: {
                                                 if (shellRoot) {
@@ -1209,7 +1205,7 @@ PanelWindow {
                                             id: btnTheme
                                             label: "Theme"
                                             iconText: "󰸉"
-                                            accent: "#EC4899"
+                                            accent: shellRoot ? shellRoot.colAccent : "#3B82F6"
                                             onClicked: {
                                                 groundControl.hideImmediately = true;
                                                 groundControl.show = false;
@@ -1223,7 +1219,7 @@ PanelWindow {
                                             id: btnColor
                                             label: "Color"
                                             iconText: "󰏘"
-                                            accent: "#10B981"
+                                            accent: shellRoot ? shellRoot.colAccentSecondary : "#10B981"
                                             onClicked: {
                                                 groundControl.hideImmediately = true;
                                                 groundControl.show = false;
@@ -1247,32 +1243,59 @@ PanelWindow {
                                 showCard: hasSpotify
                                 visible: opacity > 0.01 || Layout.preferredHeight > 10
                                 cardDelay: 120
-                                Layout.preferredHeight: hasSpotify ? 88 : 0
+                                Layout.preferredHeight: hasSpotify ? 114 : 0
                                 Behavior on Layout.preferredHeight { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
                                 Layout.topMargin: hasSpotify ? 0 : -8
                                 Behavior on Layout.topMargin { NumberAnimation { duration: 250 } }
                                 clip: true
 
-                                Image {
-                                    id: spotifyArtBg
+                                // Dedicated rounded container for background art to force perfect rounded corner clipping
+                                Rectangle {
                                     anchors.fill: parent
-                                    anchors.margins: -16
-                                    source: (shellRoot && shellRoot.spotifyArtUrl && shellRoot.spotifyArtUrl.length > 8) ? shellRoot.spotifyArtUrl : ""
-                                    fillMode: Image.PreserveAspectCrop
-                                    opacity: status === Image.Ready ? 0.35 : 0.0
-                                    Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutQuad } }
-                                    visible: (shellRoot && shellRoot.spotifyArtUrl && shellRoot.spotifyArtUrl.length > 8)
-                                    onStatusChanged: console.log("spotifyArtBg status changed:", status, "source:", source)
-                                }
+                                    color: "transparent"
 
-                                MultiEffect {
-                                    id: spotifyArtBlur
-                                    source: spotifyArtBg
-                                    anchors.fill: parent
-                                    blurEnabled: true
-                                    blur: 0.25
-                                    opacity: 0.45
-                                    visible: spotifyArtBg.visible
+                                    Rectangle {
+                                        id: spotifyArtMask
+                                        anchors.fill: parent
+                                        radius: 16
+                                        visible: false
+                                        layer.enabled: true
+                                    }
+
+                                    layer.enabled: true
+                                    layer.effect: MultiEffect {
+                                        maskEnabled: true
+                                        maskSource: spotifyArtMask
+                                    }
+
+                                    Image {
+                                        id: spotifyArtBg
+                                        anchors.fill: parent
+                                        anchors.margins: -16 // Bleed out to avoid edge artifacts
+                                        source: (shellRoot && shellRoot.spotifyArtUrl && shellRoot.spotifyArtUrl.length > 8) ? shellRoot.spotifyArtUrl : ""
+                                        fillMode: Image.PreserveAspectCrop
+                                        opacity: status === Image.Ready ? 0.20 : 0.0
+                                        Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutQuad } }
+                                        visible: (shellRoot && shellRoot.spotifyArtUrl && shellRoot.spotifyArtUrl.length > 8)
+                                        onStatusChanged: console.log("spotifyArtBg status changed:", status, "source:", source)
+                                    }
+
+                                    MultiEffect {
+                                         id: spotifyArtBlur
+                                         source: spotifyArtBg
+                                         anchors.fill: parent
+                                         blurEnabled: true
+                                         blur: 0.25
+                                         opacity: 0.30
+                                         visible: spotifyArtBg.visible
+                                    }
+
+                                    Rectangle {
+                                        anchors.fill: parent
+                                        color: "#000000"
+                                        opacity: 0.60
+                                        visible: spotifyArtBg.visible
+                                    }
                                 }
 
                                 ColumnLayout {
@@ -1296,6 +1319,41 @@ PanelWindow {
                                             font.bold: true
                                             Layout.fillWidth: true
                                             elide: Text.ElideRight
+                                        }
+                                    }
+
+                                    // Progress Seek Bar
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 6
+                                        Text {
+                                            text: shellRoot ? shellRoot.spotifyPositionStr : "0:00"
+                                            color: Qt.rgba(1, 1, 1, 0.65)
+                                            font.family: shellRoot ? shellRoot.fontFamily : "sans-serif"
+                                            font.pixelSize: 9
+                                            Layout.alignment: Qt.AlignVCenter
+                                        }
+                                        ModernSlider {
+                                            id: progressSlider
+                                            shellRoot: groundControl.shellRoot
+                                            sliderAccent: "#1DB954"
+                                            from: 0
+                                            to: shellRoot ? Math.max(1.0, shellRoot.spotifyLength) : 100
+                                            value: shellRoot ? shellRoot.spotifyPosition : 0
+                                            Layout.fillWidth: true
+                                            Layout.alignment: Qt.AlignVCenter
+                                            onMoved: {
+                                                if (shellRoot) {
+                                                    shellRoot.seekTrack(value);
+                                                }
+                                            }
+                                        }
+                                        Text {
+                                            text: shellRoot ? shellRoot.spotifyLengthStr : "0:00"
+                                            color: Qt.rgba(1, 1, 1, 0.65)
+                                            font.family: shellRoot ? shellRoot.fontFamily : "sans-serif"
+                                            font.pixelSize: 9
+                                            Layout.alignment: Qt.AlignVCenter
                                         }
                                     }
 

@@ -1,0 +1,203 @@
+configuration {
+    modi:               "drun,run,window";
+    show-icons:         false;
+    drun-display-format: "{name}";
+    window-format:      "{t}";
+    font:               "Geist, GeistMono Nerd Font 12";
+    steal-focus:        true;
+}
+
+@import "mac-colors.rasi"
+
+/* ── Reset ── */
+* {
+    border-color:     transparent;
+    separatorcolor:   transparent;
+    background-color: transparent;
+    text-color:       @fg;
+}
+
+/* ── Window – centered Spotlight pill ── */
+window {
+    width:            640px;
+    transparency:     "real";
+    background-color: @bg;
+    border:           1px;
+    border-color:     @border;
+    border-radius:    16px;
+    padding:          0px;
+    location:         center;
+    anchor:           center;
+    x-offset:         0;
+    y-offset:         -120;    /* slightly above center, like macOS */
+}
+
+/* ── Main box ── */
+mainbox {
+    background-color: transparent;
+    spacing:          0px;
+    padding:          0px;
+    children:         ["inputbar", "listview", "status-bar"];
+}
+
+/* ── Spotlight search bar ── */
+inputbar {
+    background-color: transparent;
+    padding:          18px 20px;
+    spacing:          0px;
+    children:         ["search-icon", "prompt", "entry"];
+    border:           0px 0px 1px 0px;
+    border-color:     @border;
+}
+
+/* Glowing Search icon */
+search-icon {
+    background-color: transparent;
+    text-color:       @accent;     /* Glows with Apple Blue */
+    font:             "GeistMono Nerd Font 14";
+    str:              "";          /* magnifier nerd-font glyph */
+    padding:          0px 12px 0px 2px;
+    vertical-align:   0.5;
+    expand:           false;
+}
+
+/* macOS-style capsule mode tag */
+prompt {
+    enabled:           false;
+    background-color:  rgba(10, 132, 255, 0.12); /* light blue glass capsule */
+    text-color:        @accent;
+    font:              "Geist SemiBold, GeistMono Nerd Font SemiBold 10";
+    padding:           4px 10px;
+    border-radius:     8px;
+    margin:            0px 12px 0px 0px;
+    vertical-align:    0.5;
+    expand:            false;
+}
+
+entry {
+    background-color: transparent;
+    text-color:       @fg;
+    placeholder:      "Spotlight Search…";
+    placeholder-color: @fg-muted;
+    font:             "Geist, GeistMono Nerd Font 14";
+    vertical-align:   0.5;
+    horizontal-align: 0.0;
+    cursor:           text;
+    expand:           true;
+}
+
+/* ── Results ── */
+listview {
+    background-color: transparent;
+    padding:          10px 14px;
+    spacing:          6px;
+    lines:            7;
+    columns:          1;
+    scrollbar:        false;
+    dynamic:          true;
+    cycle:            true;
+    layout:           vertical;
+    fixed-height:     false;
+}
+
+/* ── Row ── */
+element {
+    background-color: transparent;
+    text-color:       @fg;
+    padding:          12px 18px;
+    spacing:          10px;
+    border-radius:    12px;
+    cursor:           pointer;
+    orientation:      horizontal;
+}
+
+element normal.normal  { background-color: transparent; }
+element normal.active  { background-color: transparent; text-color: @accent; }
+element normal.urgent  { background-color: transparent; text-color: #ff453a; }
+
+element selected.normal {
+    background-color: rgba(0, 122, 255, 0.15); /* premium translucent blue selection */
+    text-color:       #ffffff;
+    border:           1px;
+    border-color:     rgba(0, 122, 255, 0.35); /* subtle glowing outline */
+    border-radius:    12px;
+}
+element selected.active {
+    background-color: rgba(0, 122, 255, 0.15);
+    text-color:       #ffffff;
+    border:           1px;
+    border-color:     rgba(0, 122, 255, 0.35);
+    border-radius:    12px;
+}
+element selected.urgent {
+    background-color: rgba(255, 69, 58, 0.15);
+    text-color:       #ff453a;
+    border:           1px;
+    border-color:     rgba(255, 69, 58, 0.35);
+    border-radius:    12px;
+}
+
+element alternate.normal  { background-color: transparent; }
+element alternate.active  { background-color: transparent; }
+element alternate.urgent  { background-color: transparent; }
+
+/* ── Icon (hidden for spotlight) ── */
+element-icon {
+    background-color: transparent;
+    text-color:       inherit;
+    size:             0px;
+}
+
+/* ── Label ── */
+element-text {
+    background-color: transparent;
+    text-color:       inherit;
+    font:             "Geist, GeistMono Nerd Font 13";
+    vertical-align:   0.5;
+    horizontal-align: 0.0;
+    cursor:           inherit;
+    expand:           true;
+    padding:          0px;
+}
+
+/* ── Contextual Apple-style Bottom Status Bar ── */
+status-bar {
+    expand:            false;
+    orientation:       horizontal;
+    padding:           10px 16px;
+    background-color:  rgba(255, 255, 255, 0.01); /* tiny glass highlight */
+    border:            1px 0px 0px 0px;
+    border-color:      @border;
+    children:          [ "status-text", "status-sys" ];
+}
+
+status-text {
+    expand:            true;
+    str:               "󰘳  Enter to open  |  󰘶  Tab to cycle modes";
+    text-color:        @fg-muted;
+    font:              "Geist, GeistMono Nerd Font 9";
+    vertical-align:    0.5;
+}
+
+status-sys {
+    expand:            false;
+    str:               "🍎 Spotlight";
+    text-color:        @fg-muted;
+    font:              "Geist SemiBold, GeistMono Nerd Font SemiBold 9";
+    vertical-align:    0.5;
+}
+
+/* ── Error overlay ── */
+error-message {
+    background-color: @bg;
+    text-color:       @fg;
+    children:         ["textbox"];
+}
+
+textbox {
+    background-color: transparent;
+    text-color:       inherit;
+    vertical-align:   0.5;
+    horizontal-align: 0.5;
+    font:             "Geist, GeistMono Nerd Font 11";
+}

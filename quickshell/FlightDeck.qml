@@ -15,7 +15,7 @@ PanelWindow {
     anchors.right: true
 
     // Dynamic height: expands when open, and stays tall during the sliding animation to prevent clipping glitches
-    implicitHeight: (panelOpen || popupPanel.y < Math.round(150 * scaleFactor)) ? Math.round(160 * scaleFactor) : Math.round(8 * scaleFactor)
+    implicitHeight: (panelOpen || popupPanel.y < Math.round(190 * scaleFactor)) ? Math.round(200 * scaleFactor) : Math.round(8 * scaleFactor)
     color: "transparent"
 
     // Overlay layer: floats above all windows without affecting their layout
@@ -43,23 +43,45 @@ PanelWindow {
 
     Timer {
         id: closeTimer
-        interval: 250 // Smoother, slightly quicker close response
+        interval: 350 // Deliberate debounce prevents accidental re-open on quick mouse leave+re-enter
         repeat: false
         onTriggered: {
             flightDeckWindow.panelOpen = false;
         }
     }
 
-    // ── Poll minimized windows ────────────────────────────────────────────────
-    Timer {
-        id: refreshTimer
-        interval: flightDeckWindow.panelOpen ? 400 : 1200
+    // ── Live window event listener (replaces polling) ──────────────────────────
+    // Listens to socket2 for movewindow/minimized events and refreshes only when needed.
+    // Falls back to a one-shot timer if the socket exits unexpectedly.
+    Process {
+        id: pDeckEvents
+        command: ["sh", "-c",
+            "socat - UNIX-CONNECT:/tmp/hypr/${HYPRLAND_INSTANCE_SIGNATURE}/.socket2.sock 2>/dev/null"]
         running: true
-        repeat: true
-        triggeredOnStart: true
-        onTriggered: pGetClients.running = true
+        stdout: SplitParser {
+            onRead: function(data) {
+                var ev = data.trim().split(">>")[0];
+                if (ev === "openwindow" || ev === "closewindow" ||
+                    ev === "movewindow" || ev === "createworkspace" ||
+                    ev === "closeworkspace" || ev === "minimizewindow") {
+                    pGetClients.running = true;
+                }
+            }
+        }
+        // Auto-restart on socket disconnect
+        onExited: {
+            pDeckRestartTimer.restart();
+        }
+    }
+    Timer {
+        id: pDeckRestartTimer
+        interval: 750
+        repeat: false
+        onTriggered: { pDeckEvents.running = true; pGetClients.running = true; }
     }
 
+    // Initial load and workspace-switch refresh
+    Component.onCompleted: pGetClients.running = true
     Connections {
         target: Hyprland
         function onFocusedWorkspaceChanged() { pGetClients.running = true }
@@ -138,8 +160,8 @@ PanelWindow {
             id: popupPanel
 
             y: flightDeckWindow.panelOpen
-               ? Math.round(40 * scaleFactor)
-               : Math.round(160 * scaleFactor) + Math.round(10 * scaleFactor)
+               ? Math.round(80 * scaleFactor)
+               : Math.round(200 * scaleFactor) + Math.round(10 * scaleFactor)
 
             anchors.horizontalCenter: parent.horizontalCenter
             height: Math.round(112 * scaleFactor)
@@ -180,9 +202,9 @@ PanelWindow {
 
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "󰖰"
+                    text: "~"
                     color: Qt.rgba(1, 1, 1, 0.20)
-                    font.pixelSize: Math.round(20 * scaleFactor)
+                    font.pixelSize: Math.round(25 * scaleFactor)
                     font.family: shellRoot ? shellRoot.iconFontFamily : "monospace"
                 }
                 Text {
@@ -299,7 +321,7 @@ PanelWindow {
                                 onClicked: {
                                     var ws = Hyprland.focusedWorkspace ? Hyprland.focusedWorkspace.id : 1;
                                     Hyprland.dispatch("hl.dsp.window.move({ workspace = \"" + ws + "\", window = \"address:" + modelData.address + "\" })");
-                                    refreshTimer.restart();
+                                    pGetClients.running = true;
                                 }
                             }
                         }

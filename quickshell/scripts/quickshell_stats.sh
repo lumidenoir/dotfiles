@@ -8,6 +8,13 @@ prev_idle=0
 cache_file="$HOME/.cache/$(whoami)/redshift_state"
 emails_json='{"today_count":0,"latest":[]}'
 loop_count=0
+bt_status="off"
+bt_device=""
+wifi_enabled=false
+wifi_ssid=""
+wifi_strength="0"
+wifi_ip=""
+power_profile="balanced"
 
 # Trap signals to clean up background processes on exit
 cleanup() {
@@ -19,9 +26,12 @@ cleanup() {
 trap cleanup SIGINT SIGTERM EXIT
 
 # Trap USR1 signal to instantly trigger stats updates
-trap ":" USR1
+triggered_by_signal=false
+trap "triggered_by_signal=true" USR1
 
 while true; do
+    is_triggered="$triggered_by_signal"
+    triggered_by_signal=false
     # --- CPU and RAM ---
     if read -r _ u n s id io ir so st _ < /proc/stat 2>/dev/null; then
         total=$((u+n+s+id+io+ir+so+st))
@@ -168,38 +178,44 @@ while true; do
         temperature=0
     fi
 
-    # --- Bluetooth ---
-    bt_info=$(bluetoothctl show 2>/dev/null)
-    if echo "$bt_info" | grep -q 'Powered: yes'; then
-        bt_status="on"
-        bt_device=$(bluetoothctl devices Connected 2>/dev/null | head -n1 | cut -d' ' -f3-)
-    else
-        bt_status="off"
-        bt_device=""
-    fi
-
-    # --- Wifi ---
-    wifi_radio=$(nmcli radio wifi 2>/dev/null)
-    if [ "$wifi_radio" = "enabled" ]; then
-        wifi_enabled=true
-        wifi_conn=$(LC_ALL=C nmcli -t -f active,ssid,signal dev wifi 2>/dev/null | grep '^yes' | head -n1)
-        if [ -n "$wifi_conn" ]; then
-            sig_str="${wifi_conn##*:}"
-            ssid_part="${wifi_conn#yes:}"
-            wifi_ssid="${ssid_part%:$sig_str}"
-            wifi_strength="$sig_str"
-            wifi_ip=$(ip route get 1.1.1.1 2>/dev/null | grep -oP 'src \K\S+')
-            [ -z "$wifi_ip" ] && wifi_ip=$(ip -o -4 addr show | grep -v '127.0.0.1' | awk '{print $4}' | cut -d/ -f1 | head -n1)
+    # --- Bluetooth, Wifi & Power Profile (heavy checks, run every 15s or on trigger) ---
+    if [ "$loop_count" -eq 0 ] || [ $((loop_count % 3)) -eq 0 ] || [ "$is_triggered" = "true" ]; then
+        # --- Bluetooth ---
+        bt_info=$(bluetoothctl show 2>/dev/null)
+        if echo "$bt_info" | grep -q 'Powered: yes'; then
+            bt_status="on"
+            bt_device=$(bluetoothctl devices Connected 2>/dev/null | head -n1 | cut -d' ' -f3-)
         else
+            bt_status="off"
+            bt_device=""
+        fi
+
+        # --- Wifi ---
+        wifi_radio=$(nmcli radio wifi 2>/dev/null)
+        if [ "$wifi_radio" = "enabled" ]; then
+            wifi_enabled=true
+            wifi_conn=$(LC_ALL=C nmcli -t -f active,ssid,signal dev wifi 2>/dev/null | grep '^yes' | head -n1)
+            if [ -n "$wifi_conn" ]; then
+                sig_str="${wifi_conn##*:}"
+                ssid_part="${wifi_conn#yes:}"
+                wifi_ssid="${ssid_part%:$sig_str}"
+                wifi_strength="$sig_str"
+                wifi_ip=$(ip route get 1.1.1.1 2>/dev/null | grep -oP 'src \K\S+')
+                [ -z "$wifi_ip" ] && wifi_ip=$(ip -o -4 addr show | grep -v '127.0.0.1' | awk '{print $4}' | cut -d/ -f1 | head -n1)
+            else
+                wifi_ssid=""
+                wifi_strength="0"
+                wifi_ip=""
+            fi
+        else
+            wifi_enabled=false
             wifi_ssid=""
             wifi_strength="0"
             wifi_ip=""
         fi
-    else
-        wifi_enabled=false
-        wifi_ssid=""
-        wifi_strength="0"
-        wifi_ip=""
+
+        # --- Power Profile ---
+        power_profile=$(powerprofilesctl get 2>/dev/null || echo "balanced")
     fi
 
     # --- Redshift ---
@@ -220,9 +236,6 @@ while true; do
     else
         caffeine_active=true
     fi
-
-    # --- Power Profile ---
-    power_profile=$(powerprofilesctl get 2>/dev/null || echo "balanced")
 
     # --- Escape string variables for JSON ---
     wifi_ssid=${wifi_ssid//\\/\\\\}

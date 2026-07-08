@@ -21,13 +21,13 @@ hl.on("hyprland.start", function()
 -- hl.exec_cmd("kitty --class kitty-scratchpad", { workspace = "special:scratchpad silent" })
     hl.exec_cmd("gsettings set org.gnome.desktop.interface gtk-theme 'WhiteSur-Dark'")
     hl.exec_cmd("gsettings set org.gnome.desktop.interface icon-theme 'WhiteSur-dark'")
-    hl.exec_cmd("gsettings set org.gnome.desktop.interface cursor-theme 'macOS'")
+    hl.exec_cmd("gsettings set org.gnome.desktop.interface cursor-theme 'WhiteSur'")
     hl.exec_cmd("hyprctl setcursor macOS 24")
 end)
 
 -- 3. ENVIRONMENT VARIABLES
 hl.env("XCURSOR_SIZE", "24")
-hl.env("XCURSOR_THEME", "macOS")
+hl.env("XCURSOR_THEME", "WhiteSur")
 hl.env("GTK_THEME", "WhiteSur-Dark")
 
 -- 4. CONFIGURATION
@@ -165,13 +165,6 @@ hl.window_rule({
     stay_focused = true
 })
 hl.workspace_rule({ workspace = "special:scratchpad", on_created_empty = "kitty -c ~/.config/kitty/mac-kitty.conf --class kitty-scratchpad" })
--- Quickshell layer rules (Frosted glass blur & macOS-style slide-down spawning)
-hl.layer_rule({
-    match = { namespace = "quickshell" },
-    blur = true,
-    ignore_alpha = 0.2,
-    animation = "false"
-})
 
 -- Rofi layer rules (macOS-style blur & premium pop-in zoom transition)
 hl.layer_rule({
@@ -338,6 +331,13 @@ hl.layer_rule({
     name  = "flight-deck-blur",
     match = { namespace = "flight_deck" },
     blur  = true,
-    ignore_alpha = 0.05
+    ignore_alpha = 0.05,
+    no_anim = true
 })
 
+hl.layer_rule({
+    match = { namespace = "quickshell_bar" },
+    blur = false,
+    ignore_alpha = 0.2,
+    animation = "fade"
+})

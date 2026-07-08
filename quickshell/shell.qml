@@ -1,6 +1,7 @@
 //@ pragma UseQApplication
 import Quickshell
 import QtQuick
+import QtCore
 import QtQuick.Shapes
 import Quickshell.Wayland
 import Quickshell.Hyprland
@@ -13,7 +14,12 @@ import Quickshell.Widgets
 
 ShellRoot {
     id: root
-
+    property bool _initApp: {
+        Qt.application.organization = "Quickshell";
+        Qt.application.domain = "quickshell.org";
+        Qt.application.name = "Quickshell";
+        return true;
+    }
     property color colBg: "#000000"
     property color colFg: "#ffffff"
     property color colAccent: "#ffffff"
@@ -57,8 +63,13 @@ ShellRoot {
     }
     Component.onCompleted: {
         _cachedNotchWidth = notchLayout.implicitWidth + 40 * scaleFactor;
+        root.reloadWalColors();
     }
-    readonly property real closedNotchWidth: _notchWidths[islandState] ?? _cachedNotchWidth
+    // Cap at 45% of bar width so the pill never overlaps the side widgets
+    readonly property real closedNotchWidth: Math.min(
+        _notchWidths[islandState] ?? _cachedNotchWidth,
+        barWindow.width * 0.45
+    )
     signal notificationReceived
 
     // Dynamic paths
@@ -94,6 +105,24 @@ ShellRoot {
     property bool flightDeckActive: false
 
     property bool topHuggingStyle: false
+    property real notchSpringStiffness: 3.5
+    property real notchSpringDamping: 0.62
+    property real notchSpringMass: 0.75
+    property int localSendDismissDelay: 2000
+    property int localSendRevealDelay: 140
+    property int notifDismissDelay: 4500
+
+    Settings {
+        id: configSettings
+        category: "Quickshell"
+        property alias topHuggingStyle: root.topHuggingStyle
+        property alias notchSpringStiffness: root.notchSpringStiffness
+        property alias notchSpringDamping: root.notchSpringDamping
+        property alias notchSpringMass: root.notchSpringMass
+        property alias localSendDismissDelay: root.localSendDismissDelay
+        property alias localSendRevealDelay: root.localSendRevealDelay
+        property alias notifDismissDelay: root.notifDismissDelay
+    }
 
     property int islandState: stateCompact
     property int prevIslandState: stateCompact // for restoring after OSD
@@ -107,6 +136,7 @@ ShellRoot {
     property string f1NextEventName: ""
     property string f1NextEventTime: ""
     property string f1NextEventLocation: ""
+    property string f1NextEventIso: ""
     property string f1ListText: ""
     property string f1MainRaceText: ""
     property string f1AlertName: ""
@@ -145,6 +175,7 @@ ShellRoot {
     property alias f1CalendarPopup: f1CalendarPopup
     property alias emailsPopup: emailsPopup
     property alias wallpaperMenuPopup: wallpaperMenuPopup
+    property alias settingsWindow: settingsWindow
     property alias sinkModel: sinkModel
     property alias pListSinks: pListSinks
     property alias pSetSink: pSetSink
@@ -320,6 +351,11 @@ ShellRoot {
     property string spotifyStatus: "offline"
     property string spotifyText: ""
     property string spotifyArtUrl: ""
+    property double spotifyPosition: 0
+    property double spotifyLength: 0
+    property string spotifyPositionStr: "0:00"
+    property string spotifyLengthStr: "0:00"
+    property color colAccentSecondary: "#10b981"
     property string wifiIcon: "󰤯"
     property string wifiText: "Disconnected"
     property string wifiIp: ""
@@ -371,7 +407,7 @@ ShellRoot {
 
     function formatTime(s) {
         var m = Math.floor(s / 60);
-        var sec = s % 60;
+        var sec = Math.floor(s % 60);
         return (m < 10 ? "0" + m : m) + ":" + (sec < 10 ? "0" + sec : sec);
     }
 
@@ -603,6 +639,7 @@ ShellRoot {
         onExited: code => {
             if (code !== 0)
                 pWifi.running = true;
+            pTriggerStatsUpdate.running = true;
         }
     }
     Process {
@@ -611,23 +648,28 @@ ShellRoot {
         onExited: code => {
             if (code !== 0)
                 pBluetooth.running = true;
+            pTriggerStatsUpdate.running = true;
         }
     }
     Process {
         id: pWifiOn
         command: ["nmcli", "radio", "wifi", "on"]
+        onExited: code => pTriggerStatsUpdate.running = true
     }
     Process {
         id: pWifiOff
         command: ["nmcli", "radio", "wifi", "off"]
+        onExited: code => pTriggerStatsUpdate.running = true
     }
     Process {
         id: pBtOn
         command: ["rfkill", "unblock", "bluetooth"]
+        onExited: code => pTriggerStatsUpdate.running = true
     }
     Process {
         id: pBtOff
         command: ["rfkill", "block", "bluetooth"]
+        onExited: code => pTriggerStatsUpdate.running = true
     }
 
     // Optimized Single-shot battery checker via helper script
@@ -831,7 +873,7 @@ ShellRoot {
 
     Timer {
         id: localSendTimer
-        interval: 2000
+        interval: root.localSendDismissDelay
         repeat: false
         onTriggered: {
             root.islandState = root.stateCompact;
@@ -855,11 +897,13 @@ ShellRoot {
                         root.f1NextEventName = parts[0];
                         root.f1NextEventTime = parts[1];
                         root.f1NextEventLocation = parts[2];
+                        root.f1NextEventIso = parts.length >= 4 ? parts[3] : "";
                     }
                 } else {
                     root.f1NextEventName = "";
                     root.f1NextEventTime = "";
                     root.f1NextEventLocation = "";
+                    root.f1NextEventIso = "";
                 }
             }
         }
@@ -1197,13 +1241,13 @@ ShellRoot {
     Process {
         id: pSpotify
         running: false
-        command: ["playerctl", "-F", "-p", "spotify,Brave,brave,Chromium,chromium,Firefox,firefox,mpd", "metadata", "--format", "{{status}}//{{title}} - {{artist}}//{{mpris:artUrl}}"]
+        command: ["playerctl", "-F", "-p", "spotify,Brave,brave,Chromium,chromium,Firefox,firefox,mpd", "metadata", "--format", "{{status}}|@|{{title}} - {{artist}}|@|{{mpris:artUrl}}|@|{{mpris:length}}"]
         stdout: SplitParser {
             onRead: data => {
                 var d = data.trim();
                 if (d === "")
                     return;
-                var parts = d.split("//");
+                var parts = d.split("|@|");
                 if (parts.length >= 2) {
                     root.spotifyStatus = parts[0].trim().toLowerCase();
                     root.spotifyText = parts[1].trim();
@@ -1211,6 +1255,19 @@ ShellRoot {
                         root.spotifyArtUrl = parts[2].trim();
                     } else {
                         root.spotifyArtUrl = "";
+                    }
+                    if (parts.length >= 4) {
+                        var lenUsec = parseInt(parts[3].trim());
+                        if (!isNaN(lenUsec)) {
+                            root.spotifyLength = lenUsec / 1000000.0;
+                            root.spotifyLengthStr = root.formatTime(root.spotifyLength);
+                        } else {
+                            root.spotifyLength = 0;
+                            root.spotifyLengthStr = "0:00";
+                        }
+                    } else {
+                        root.spotifyLength = 0;
+                        root.spotifyLengthStr = "0:00";
                     }
                 }
             }
@@ -1220,12 +1277,121 @@ ShellRoot {
                 root.spotifyStatus = "offline";
                 root.spotifyText = "";
                 root.spotifyArtUrl = "";
+                root.spotifyLength = 0;
+                root.spotifyLengthStr = "0:00";
+                root.spotifyPosition = 0;
+                root.spotifyPositionStr = "0:00";
                 if (root.hasPlayerctl && !root.isDestroying) {
                     pSpotifyRestartTimer.restart();
                 }
             }
         }
         Component.onDestruction: pSpotify.running = false
+    }
+
+
+
+    Timer {
+        id: spotifyPositionTimer
+        interval: 1000
+        running: root.spotifyStatus === "playing"
+        repeat: true
+        onTriggered: pGetPosition.running = true
+    }
+
+    Process {
+        id: pGetPosition
+        command: ["playerctl", "-p", "spotify,Brave,brave,Chromium,chromium,Firefox,firefox,mpd", "position"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var p = parseFloat(text.trim());
+                if (!isNaN(p)) {
+                    root.spotifyPosition = p;
+                    root.spotifyPositionStr = root.formatTime(p);
+                }
+            }
+        }
+    }
+
+    Process {
+        id: pSpotSeek
+        property double pos: 0
+        command: ["playerctl", "-p", "spotify,Brave,brave,Chromium,chromium,Firefox,firefox,mpd", "position", pos.toFixed(0)]
+    }
+
+    function seekTrack(seconds) {
+        pSpotSeek.pos = seconds;
+        pSpotSeek.running = true;
+        root.spotifyPosition = seconds;
+        root.spotifyPositionStr = root.formatTime(seconds);
+    }
+
+    function getLuminance(c) {
+        var colorObj = Qt.color(c);
+        var r = colorObj.r;
+        var g = colorObj.g;
+        var b = colorObj.b;
+        
+        var rL = (r <= 0.04045) ? (r / 12.92) : Math.pow((r + 0.055) / 1.055, 2.4);
+        var gL = (g <= 0.04045) ? (g / 12.92) : Math.pow((g + 0.055) / 1.055, 2.4);
+        var bL = (b <= 0.04045) ? (b / 12.92) : Math.pow((b + 0.055) / 1.055, 2.4);
+        
+        return 0.2126 * rL + 0.7152 * gL + 0.0722 * bL;
+    }
+
+    function ensureContrast(accentColor, minRatio) {
+        var c = Qt.color(accentColor);
+        var bgL = 0.008; // Luminance of dark card background
+        
+        var ratio = 0;
+        var maxIter = 10;
+        var iter = 0;
+        
+        var h = c.hslHue;
+        var s = c.hslSaturation;
+        var l = c.hslLightness;
+        
+        if (h === -1) h = 0;
+        
+        var currentL = l;
+        var resultColor = c;
+        
+        while (iter < maxIter) {
+            var accentL = getLuminance(resultColor);
+            ratio = (accentL + 0.05) / (bgL + 0.05);
+            if (ratio >= minRatio) {
+                break;
+            }
+            currentL = currentL + (1.0 - currentL) * 0.25;
+            resultColor = Qt.hsla(h, s, currentL, c.a);
+            iter++;
+        }
+        
+        return resultColor;
+    }
+
+    Process {
+        id: pGetWalColors
+        command: ["cat", "/home/lumi/.cache/wal/colors.json"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    var data = JSON.parse(text.trim());
+                    if (data && data.colors) {
+                        var rawAccent1 = data.colors.color1;
+                        var rawAccent2 = data.colors.color2;
+                        root.colAccent = root.ensureContrast(rawAccent1, 3.2);
+                        root.colAccentSecondary = root.ensureContrast(rawAccent2, 3.2);
+                    }
+                } catch (e) {
+                    console.warn("Failed to parse pywal colors:", e);
+                }
+            }
+        }
+    }
+
+    function reloadWalColors() {
+        pGetWalColors.running = true;
     }
 
     Process {
@@ -1250,8 +1416,13 @@ ShellRoot {
         anchors.top: true
         anchors.left: true
         anchors.right: true
-        implicitHeight: Math.max(Math.round(44 * scaleFactor), Math.round(notchRect.height + 4 * scaleFactor))
+        // Fixed height: never resize the Wayland surface (eliminates compositor jitter).
+        // The notch springs inside this fixed viewport; extra space is transparent.
+        implicitHeight: Math.round(76 * scaleFactor)
         color: "transparent"
+
+        WlrLayershell.namespace: "quickshell_bar"
+        WlrLayershell.exclusiveZone: Math.round(44 * scaleFactor)
 
         DropArea {
             id: localSendDropArea
@@ -1310,9 +1481,10 @@ ShellRoot {
         Rectangle {
             id: notchRect
             opacity: root.isAnyPopupOpen ? 0.0 : 1.0
+            visible: opacity > 0.0
 
             anchors.top: parent.top
-            anchors.topMargin: 4 * scaleFactor
+            anchors.topMargin: root.topHuggingStyle ? 0 : 4 * scaleFactor
             anchors.horizontalCenter: parent.horizontalCenter
 
             // Dark glassmorphic background with gradient
@@ -1320,8 +1492,9 @@ ShellRoot {
 
             // Dynamic heights and widths matching Apple Dynamic Island transitions
             clip: true
+            // LocalSend expands taller for a dramatic dock-style pop
             height: (root.islandState === root.stateDragLocalSend || root.islandState === root.stateLocalSendSuccess)
-                    ? 64 * scaleFactor
+                    ? 70 * scaleFactor
                     : 40 * scaleFactor
             width: root.isAnyPopupOpen ? (36 * scaleFactor) : root.closedNotchWidth
             radius: (root.islandState === root.stateDragLocalSend || root.islandState === root.stateLocalSendSuccess)
@@ -1340,81 +1513,68 @@ ShellRoot {
             }
             onRadiusChanged: flareSize = radius
 
-            // Pill pop: quick scale bounce on every island state change
+            // Pill pop: suppressed for LocalSend — the spring overshoot IS the pop.
             property real popScale: 1.0
             scale: popScale
             transformOrigin: Item.Center
-            onPopScaleChanged: {} // keep binding live
+            onPopScaleChanged: {}
 
-            // Trigger pop on state change
+            // GPU texture cache: prevents clip:true from re-rendering all children every frame.
+            layer.enabled: !root.batteryMode
+
             Connections {
                 target: root
                 function onIslandStateChanged() {
-                    if (root.batteryMode)
-                        return;
+                    if (root.batteryMode) return;
+                    // Skip scale-pop for LocalSend — the springy height expansion handles it
+                    var s = root.islandState;
+                    if (s === root.stateDragLocalSend || s === root.stateLocalSendSuccess) return;
                     popSequence.restart();
                 }
             }
             SequentialAnimation {
                 id: popSequence
-                NumberAnimation {
-                    target: notchRect
-                    property: "popScale"
-                    to: 1.055
-                    duration: 120
-                    easing.type: Easing.OutQuad
-                }
-                NumberAnimation {
-                    target: notchRect
-                    property: "popScale"
-                    to: 0.975
-                    duration: 90
-                    easing.type: Easing.InOutQuad
-                }
-                NumberAnimation {
-                    target: notchRect
-                    property: "popScale"
-                    to: 1.00
-                    duration: 130
-                    easing.type: Easing.OutElastic
-                }
+                NumberAnimation { target: notchRect; property: "popScale"; to: 1.055; duration: 120; easing.type: Easing.OutQuad }
+                NumberAnimation { target: notchRect; property: "popScale"; to: 0.975; duration: 90; easing.type: Easing.InOutQuad }
+                NumberAnimation { target: notchRect; property: "popScale"; to: 1.00; duration: 130; easing.type: Easing.OutElastic }
             }
 
-            // FLUID: custom slow, springy fluidic damped SpringAnimations when switching or changing
+            // DOCK-STYLE: low damping gives visible overshoot so the pill "pops" open
+            // like a macOS dock expanding — no separate scale bounce needed.
             Behavior on width {
                 enabled: true
                 SpringAnimation {
-                    spring: 5.2
-                    damping: 0.55
-                    mass: 0.8
+                    spring: root.notchSpringStiffness
+                    damping: root.notchSpringDamping
+                    mass: root.notchSpringMass
                 }
             }
             Behavior on height {
                 enabled: true
                 SpringAnimation {
-                    spring: 5.2
-                    damping: 0.55
-                    mass: 0.8
+                    spring: root.notchSpringStiffness
+                    damping: root.notchSpringDamping
+                    mass: root.notchSpringMass
                 }
             }
             Behavior on radius {
                 enabled: true
                 SpringAnimation {
-                    spring: 5.2
-                    damping: 0.55
-                    mass: 0.8
+                    spring: root.notchSpringStiffness
+                    damping: root.notchSpringDamping
+                    mass: root.notchSpringMass
                 }
             }
             Behavior on anchors.topMargin {
                 NumberAnimation {
-                    duration: root.batteryMode ? 100 : (!root.batteryCharging ? 240 : 400)
+                    duration: root.batteryMode ? 250 : 400
                     easing.type: Easing.OutExpo
                 }
             }
             Behavior on opacity {
                 NumberAnimation {
                     // For top hugging style, opening and closing should be smooth to match GroundControl
-                    duration: root.batteryMode ? 0 : (root.topHuggingStyle ? 150 : (root.isAnyPopupOpen ? 150 : 50))
+                    duration: root.batteryMode ? 150 : (root.topHuggingStyle ? 150 : (root.isAnyPopupOpen ? 150 : 50))
                     easing.type: Easing.OutQuad
                 }
             }
@@ -1435,11 +1595,12 @@ ShellRoot {
                 // Width check removed: clip:true on notchRect already prevents overflow;
                 // the old threshold caused flicker whenever closedNotchWidth changed slightly.
                 opacity: (root.islandState === root.stateCompact && !root.isAnyPopupOpen) ? 1.0 : 0.0
+                visible: opacity > 0.0
                 enabled: root.islandState === root.stateCompact && !root.isAnyPopupOpen
                 scale: opacity > 0 ? 1.0 : 0.9
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: root.batteryMode ? 100 : (!root.batteryCharging ? 150 : 250)
+                        duration: root.batteryMode ? 150 : 250
                         easing.type: Easing.OutQuad
                     }
                 }
@@ -1451,6 +1612,7 @@ ShellRoot {
                         mass: 0.6
                     }
                 }
+                layer.enabled: (opacity > 0.0 && opacity < 1.0) && !root.batteryMode
                 anchors.centerIn: parent
                 height: 32
                 spacing: Math.round(12 * scaleFactor)
@@ -1473,7 +1635,7 @@ ShellRoot {
                             width: isActive ? 14 : (containsMouse ? 10 : 6)
                             height: 6
                             radius: 3
-                            color: isActive ? root.colAccent : root.colMuted
+                            color: isActive ? "#ffffff" : root.colMuted
                             // Target opacity — the Behavior below smoothly drives toward this.
                             // On hover: dot fades out after a short delay so the number leads.
                             // On exit:  dot fades back in immediately so there's no gap.
@@ -1486,9 +1648,9 @@ ShellRoot {
                                     mass: 0.8
                                 }
                             }
-                            Behavior on color {
+                                           Behavior on color {
                                 ColorAnimation {
-                                    duration: root.batteryMode ? 100 : (!root.batteryCharging ? 120 : 200)
+                                     duration: root.batteryMode ? 150 : 200
                                 }
                             }
                             // Crossfade: when hiding (going to 0) delay 60 ms so the number
@@ -1504,7 +1666,7 @@ ShellRoot {
                                         duration: (!root.batteryMode && containsMouse) ? 60 : 0
                                     }
                                     NumberAnimation {
-                                        duration: root.batteryMode ? 100 : (!root.batteryCharging ? 78 : 130)
+                                        duration: root.batteryMode ? 100 : 130
                                         easing.type: Easing.OutQuad
                                     }
                                 }
@@ -1514,7 +1676,7 @@ ShellRoot {
                         Text {
                             anchors.centerIn: parent
                             text: modelData.toString()
-                            color: isActive ? root.colAccent : root.colFg
+                            color: isActive ? "#ffffff" : root.colFg
                             font {
                                 family: root.fontFamily
                                 pixelSize: 9
@@ -1526,7 +1688,7 @@ ShellRoot {
                             scale: containsMouse ? 1.0 : 0.5
                             Behavior on opacity {
                                 NumberAnimation {
-                                    duration: root.batteryMode ? 0 : (containsMouse ? 100 : 160)
+                                    duration: root.batteryMode ? 100 : (containsMouse ? 100 : 160)
                                     easing.type: Easing.OutQuad
                                 }
                             }
@@ -1585,7 +1747,7 @@ ShellRoot {
                             }
                             Behavior on color {
                                 ColorAnimation {
-                                    duration: root.batteryMode ? 100 : (!root.batteryCharging ? 120 : 200)
+                                    duration: root.batteryMode ? 150 : 200
                                 }
                             }
                         }
@@ -1881,7 +2043,7 @@ ShellRoot {
                 scale: opacity > 0 ? 1.0 : 0.9
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: root.batteryMode ? 100 : (!root.batteryCharging ? 150 : 250)
+                        duration: root.batteryMode ? 150 : 250
                         easing.type: Easing.OutQuad
                     }
                 }
@@ -1893,6 +2055,7 @@ ShellRoot {
                         mass: 0.6
                     }
                 }
+                layer.enabled: (opacity > 0.0 && opacity < 1.0) && !root.batteryMode
                 anchors.fill: parent
                 anchors.leftMargin: 14
                 anchors.rightMargin: 14
@@ -2229,7 +2392,7 @@ ShellRoot {
                 scale: opacity > 0 ? 1.0 : 0.9
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: root.batteryMode ? 100 : (!root.batteryCharging ? 150 : 250)
+                        duration: root.batteryMode ? 150 : 250
                         easing.type: Easing.OutQuad
                     }
                 }
@@ -2360,7 +2523,7 @@ ShellRoot {
                 scale: opacity > 0 ? 1.0 : 0.9
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: root.batteryMode ? 100 : (!root.batteryCharging ? 150 : 250)
+                        duration: root.batteryMode ? 150 : 250
                         easing.type: Easing.OutQuad
                     }
                 }
@@ -2456,7 +2619,7 @@ ShellRoot {
                 scale: opacity > 0 ? 1.0 : 0.9
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: root.batteryMode ? 100 : (!root.batteryCharging ? 150 : 250)
+                        duration: root.batteryMode ? 150 : 250
                         easing.type: Easing.OutQuad
                     }
                 }
@@ -2687,7 +2850,7 @@ ShellRoot {
                 scale: opacity > 0 ? 1.0 : 0.9
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: root.batteryMode ? 100 : (!root.batteryCharging ? 150 : 250)
+                        duration: root.batteryMode ? 150 : 250
                         easing.type: Easing.OutQuad
                     }
                 }
@@ -2742,7 +2905,7 @@ ShellRoot {
                 scale: opacity > 0 ? 1.0 : 0.9
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: root.batteryMode ? 100 : (!root.batteryCharging ? 150 : 250)
+                        duration: root.batteryMode ? 150 : 250
                         easing.type: Easing.OutQuad
                     }
                 }
@@ -2791,7 +2954,7 @@ ShellRoot {
                 scale: opacity > 0 ? 1.0 : 0.9
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: root.batteryMode ? 100 : (!root.batteryCharging ? 150 : 250)
+                        duration: root.batteryMode ? 150 : 250
                         easing.type: Easing.OutQuad
                     }
                 }
@@ -2840,7 +3003,7 @@ ShellRoot {
                 scale: opacity > 0 ? 1.0 : 0.9
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: root.batteryMode ? 100 : (!root.batteryCharging ? 150 : 250)
+                        duration: root.batteryMode ? 150 : 250
                         easing.type: Easing.OutQuad
                     }
                 }
@@ -2950,7 +3113,7 @@ ShellRoot {
                 scale: opacity > 0 ? 1.0 : 0.9
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: root.batteryMode ? 100 : (!root.batteryCharging ? 150 : 250)
+                        duration: root.batteryMode ? 150 : 250
                         easing.type: Easing.OutQuad
                     }
                 }
@@ -3120,7 +3283,7 @@ ShellRoot {
                 scale: opacity > 0 ? 1.0 : 0.9
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: root.batteryMode ? 100 : (!root.batteryCharging ? 150 : 250)
+                        duration: root.batteryMode ? 150 : 250
                         easing.type: Easing.OutQuad
                     }
                 }
@@ -3194,7 +3357,7 @@ ShellRoot {
                 scale: opacity > 0 ? 1.0 : 0.9
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: root.batteryMode ? 100 : (!root.batteryCharging ? 150 : 250)
+                        duration: root.batteryMode ? 150 : 250
                         easing.type: Easing.OutQuad
                     }
                 }
@@ -3341,7 +3504,7 @@ ShellRoot {
                 scale: opacity > 0 ? 1.0 : 0.9
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: root.batteryMode ? 100 : (!root.batteryCharging ? 150 : 250)
+                        duration: root.batteryMode ? 150 : 250
                         easing.type: Easing.OutQuad
                     }
                 }
@@ -3409,120 +3572,148 @@ ShellRoot {
         }
 
         // LocalSend Drag & Drop Layout
-        RowLayout {
+        Item {
             id: localSendDragLayout
-            opacity: (root.islandState === root.stateDragLocalSend && !root.isAnyPopupOpen) ? 1.0 : 0.0
-            visible: opacity > 0
-            scale: opacity > 0 ? 1.0 : 0.9
-            Behavior on opacity {
-                NumberAnimation {
-                    duration: root.batteryMode ? 100 : (!root.batteryCharging ? 150 : 250)
-                    easing.type: Easing.OutQuad
-                }
-            }
-            Behavior on scale {
-                enabled: true
-                SpringAnimation {
-                    spring: 4.8
-                    damping: 0.8
-                    mass: 0.6
-                }
-            }
+            // Stays visible whenever in a LocalSend state — avoids layout destroy/create during transition
+            visible: root.islandState === root.stateDragLocalSend || root.islandState === root.stateLocalSendSuccess
             anchors.centerIn: parent
-            spacing: 12 * scaleFactor
+            implicitWidth: lsDragRow.implicitWidth
+            implicitHeight: lsDragRow.implicitHeight
+            layer.enabled: true
 
-            Text {
-                text: "󱇧" // Share/Send Nerd Font Icon
-                color: root.colAccent
-                font {
-                    family: root.iconFontFamily
-                    pixelSize: 20 * scaleFactor
-                    bold: true
-                }
-                Layout.alignment: Qt.AlignVCenter
+            property real slideY: 10 * scaleFactor
+            property real contentOpacity: 0.0
+
+            transform: Translate { y: localSendDragLayout.slideY }
+            opacity: localSendDragLayout.contentOpacity
+
+            Behavior on slideY {
+                NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+            }
+            Behavior on contentOpacity {
+                NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
             }
 
-            ColumnLayout {
-                spacing: 2 * scaleFactor
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignVCenter
-
-                Text {
-                    text: "Send to LocalSend"
-                    color: root.colFg
-                    font {
-                        family: root.fontFamily
-                        pixelSize: 12 * scaleFactor
-                        bold: true
+            Connections {
+                target: root
+                function onIslandStateChanged() {
+                    if (root.islandState === root.stateDragLocalSend) {
+                        // Reset to below-position, then slide up after the pill opens
+                        localSendDragLayout.slideY = 10 * scaleFactor;
+                        localSendDragLayout.contentOpacity = 0.0;
+                        lsDragShowTimer.restart();
+                    } else {
+                        lsDragShowTimer.stop();
+                        localSendDragLayout.contentOpacity = 0.0;
+                        localSendDragLayout.slideY = 10 * scaleFactor;
                     }
                 }
+            }
+            Timer {
+                id: lsDragShowTimer
+                interval: root.localSendRevealDelay
+                repeat: false
+                onTriggered: {
+                    localSendDragLayout.slideY = 0;
+                    localSendDragLayout.contentOpacity = 1.0;
+                }
+            }
+
+            RowLayout {
+                id: lsDragRow
+                spacing: 12 * scaleFactor
 
                 Text {
-                    text: "Drop files here to share"
-                    color: root.colMuted
-                    font {
-                        family: root.fontFamily
-                        pixelSize: 10 * scaleFactor
+                    text: "󱇧"
+                    color: root.colAccent
+                    font { family: root.iconFontFamily; pixelSize: 20 * scaleFactor; bold: true }
+                    Layout.alignment: Qt.AlignVCenter
+                }
+                ColumnLayout {
+                    spacing: 2 * scaleFactor
+                    Layout.alignment: Qt.AlignVCenter
+                    Text {
+                        text: "Send to LocalSend"
+                        color: root.colFg
+                        font { family: root.fontFamily; pixelSize: 12 * scaleFactor; bold: true }
+                    }
+                    Text {
+                        text: "Drop files here to share"
+                        color: root.colMuted
+                        font { family: root.fontFamily; pixelSize: 10 * scaleFactor }
                     }
                 }
             }
         }
 
         // LocalSend Success Layout
-        RowLayout {
+        Item {
             id: localSendSuccessLayout
-            opacity: (root.islandState === root.stateLocalSendSuccess && !root.isAnyPopupOpen) ? 1.0 : 0.0
-            visible: opacity > 0
-            scale: opacity > 0 ? 1.0 : 0.9
-            Behavior on opacity {
-                NumberAnimation {
-                    duration: root.batteryMode ? 100 : (!root.batteryCharging ? 150 : 250)
-                    easing.type: Easing.OutQuad
-                }
-            }
-            Behavior on scale {
-                enabled: true
-                SpringAnimation {
-                    spring: 4.8
-                    damping: 0.8
-                    mass: 0.6
-                }
-            }
+            visible: root.islandState === root.stateLocalSendSuccess
             anchors.centerIn: parent
-            spacing: 12 * scaleFactor
+            implicitWidth: lsSuccessRow.implicitWidth
+            implicitHeight: lsSuccessRow.implicitHeight
+            layer.enabled: true
 
-            Text {
-                text: "󰗡" // Checkmark/Success Nerd Font Icon
-                color: root.colSuccess
-                font {
-                    family: root.iconFontFamily
-                    pixelSize: 20 * scaleFactor
-                    bold: true
-                }
-                Layout.alignment: Qt.AlignVCenter
+            property real slideY: 10 * scaleFactor
+            property real contentOpacity: 0.0
+
+            transform: Translate { y: localSendSuccessLayout.slideY }
+            opacity: localSendSuccessLayout.contentOpacity
+
+            Behavior on slideY {
+                NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+            }
+            Behavior on contentOpacity {
+                NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
             }
 
-            ColumnLayout {
-                spacing: 2 * scaleFactor
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignVCenter
-
-                Text {
-                    text: "Files Sent!"
-                    color: root.colSuccess
-                    font {
-                        family: root.fontFamily
-                        pixelSize: 12 * scaleFactor
-                        bold: true
+            Connections {
+                target: root
+                function onIslandStateChanged() {
+                    if (root.islandState === root.stateLocalSendSuccess) {
+                        localSendSuccessLayout.slideY = 10 * scaleFactor;
+                        localSendSuccessLayout.contentOpacity = 0.0;
+                        lsSuccessShowTimer.restart();
+                    } else {
+                        lsSuccessShowTimer.stop();
+                        localSendSuccessLayout.contentOpacity = 0.0;
+                        localSendSuccessLayout.slideY = 10 * scaleFactor;
                     }
                 }
+            }
+            Timer {
+                id: lsSuccessShowTimer
+                interval: root.localSendRevealDelay
+                repeat: false
+                onTriggered: {
+                    localSendSuccessLayout.slideY = 0;
+                    localSendSuccessLayout.contentOpacity = 1.0;
+                }
+            }
+
+            RowLayout {
+                id: lsSuccessRow
+                spacing: 12 * scaleFactor
 
                 Text {
-                    text: "Opening LocalSend..."
-                    color: root.colMuted
-                    font {
-                        family: root.fontFamily
-                        pixelSize: 10 * scaleFactor
+                    text: "󰗡"
+                    color: root.colSuccess
+                    font { family: root.iconFontFamily; pixelSize: 20 * scaleFactor; bold: true }
+                    Layout.alignment: Qt.AlignVCenter
+                }
+                ColumnLayout {
+                    spacing: 2 * scaleFactor
+                    Layout.alignment: Qt.AlignVCenter
+                    Text {
+                        text: "Files Sent!"
+                        color: root.colSuccess
+                        font { family: root.fontFamily; pixelSize: 12 * scaleFactor; bold: true }
+                    }
+                    Text {
+                        text: "Opening LocalSend..."
+                        color: root.colMuted
+                        font { family: root.fontFamily; pixelSize: 10 * scaleFactor }
                     }
                 }
             }
@@ -3536,7 +3727,7 @@ ShellRoot {
             scale: opacity > 0 ? 1.0 : 0.9
             Behavior on opacity {
                 NumberAnimation {
-                    duration: root.batteryMode ? 100 : (!root.batteryCharging ? 150 : 250)
+                    duration: root.batteryMode ? 150 : 250
                     easing.type: Easing.OutQuad
                 }
             }
@@ -3575,7 +3766,8 @@ ShellRoot {
             id: privacyDots
             anchors.right: parent.right
             anchors.rightMargin: 12 * scaleFactor
-            anchors.verticalCenter: parent.verticalCenter
+            anchors.verticalCenter: parent.top
+            anchors.verticalCenterOffset: root.topHuggingStyle ? Math.round(20 * scaleFactor) : Math.round(24 * scaleFactor)
             spacing: 4 * scaleFactor
             z: 100
 
@@ -3615,12 +3807,16 @@ ShellRoot {
             opacity: (root.islandState === 1 || root.islandState === 4 || root.islandState === 5 || root.islandState === 6) && !root.isAnyPopupOpen ? 1.0 : 0.0
             Behavior on opacity {
                 NumberAnimation {
-                    duration: root.batteryMode ? 100 : (!root.batteryCharging ? 120 : 200)
+                    duration: root.batteryMode ? 150 : 200
                     easing.type: Easing.OutQuad
                 }
             }
 
-            y: notchRect.y + (notchRect.height - 32) / 2
+            // Fixed vertical center relative to the bar, not notchRect, to avoid
+            // jitter during spring overshoot when the pill height changes.
+            anchors.verticalCenter: parent.top
+            anchors.verticalCenterOffset: root.topHuggingStyle ? Math.round(20 * scaleFactor) : Math.round(24 * scaleFactor)
+            y: 0  // suppressed; verticalCenter handles vertical placement
             x: notchRect.x + notchRect.width + 8
             spacing: 6
 
@@ -3725,7 +3921,8 @@ ShellRoot {
             id: sysTray
             anchors.right: parent.right
             anchors.rightMargin: 16
-            anchors.verticalCenter: parent.verticalCenter
+            anchors.verticalCenter: parent.top
+            anchors.verticalCenterOffset: root.topHuggingStyle ? Math.round(20 * scaleFactor) : Math.round(24 * scaleFactor)
             spacing: 8
 
             Repeater {
@@ -3750,13 +3947,51 @@ ShellRoot {
                         menu: modelData.menu
                         anchor {
                             window: barWindow
-                            rect: Qt.rect(trayItemRoot.mapToItem(null, 0, 0).x, trayItemRoot.mapToItem(null, 0, 0).y, trayItemRoot.width, trayItemRoot.height)
+                            // Use barWindow.contentItem as reference to get stable coords
+                            // that won't drift when the tray reflows.
+                            rect: Qt.rect(
+                                trayItemRoot.mapToItem(barWindow.contentItem, 0, 0).x,
+                                trayItemRoot.mapToItem(barWindow.contentItem, 0, 0).y,
+                                trayItemRoot.width,
+                                trayItemRoot.height
+                            )
                         }
                     }
 
                     IconImage {
                         anchors.fill: parent
                         source: modelData.icon
+                    }
+
+                    // Floating label tooltip above the icon
+                    Rectangle {
+                        id: trayTooltip
+                        visible: sysTrayMouse.containsMouse && (modelData.tooltip.title !== "" || modelData.title !== "")
+                        anchors.bottom: parent.top
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.bottomMargin: 6
+                        width:  ttLabel.implicitWidth + 12
+                        height: ttLabel.implicitHeight + 8
+                        radius: 6
+                        color:  Qt.rgba(0.05, 0.05, 0.10, 0.92)
+                        border.color: Qt.rgba(1, 1, 1, 0.15)
+                        border.width: 1
+                        z: 200
+
+                        opacity: sysTrayMouse.containsMouse ? 1.0 : 0.0
+                        Behavior on opacity { NumberAnimation { duration: 120; easing.type: Easing.OutQuad } }
+
+                        Text {
+                            id: ttLabel
+                            anchors.centerIn: parent
+                            text: modelData.tooltip.title !== "" ? modelData.tooltip.title : modelData.title
+                            color: "#ffffff"
+                            font {
+                                family: root.fontFamily
+                                pixelSize: Math.round(11 * root.scaleFactor)
+                                weight: Font.Medium
+                            }
+                        }
                     }
 
                     MouseArea {
@@ -3781,7 +4016,7 @@ ShellRoot {
 
     Timer {
         id: notifCloseTimer
-        interval: 4500
+        interval: root.notifDismissDelay
         repeat: false
         onTriggered: {
             root.notifActive = false;
@@ -3810,6 +4045,7 @@ ShellRoot {
         }
         function toggleOverview() { toggleAirspace(); }
         function triggerF1Alert() {
+            // DEBUG: hardcoded test values — replace with real F1 calendar data from the script
             root.f1AlertName = "Austrian GP: First Free Practice";
             root.f1AlertMins = "15";
             root.f1AlertTime = "17:00";
@@ -3820,6 +4056,7 @@ ShellRoot {
             playSoundSafely(pPlaySound);
         }
         function triggerCpuAlert() {
+            // DEBUG: hardcoded test values — real values are populated by the cpu monitoring script
             root.topCpuProcess = "chrome (42.5%)";
             root.temperature = "84";
             root.safeSavePrev();
@@ -4040,6 +4277,11 @@ ShellRoot {
 
     FlightDeck {
         id: flightDeck
+        shellRoot: root
+    }
+
+    SettingsWindow {
+        id: settingsWindow
         shellRoot: root
     }
 

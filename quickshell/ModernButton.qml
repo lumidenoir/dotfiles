@@ -32,7 +32,7 @@ MouseArea {
         color: mbtn.isActive ? Qt.rgba(mbtn.accent.r, mbtn.accent.g, mbtn.accent.b, 0.15)
                              : (mbtn.containsMouse ? Qt.rgba(1, 1, 1, 0.15) : Qt.rgba(1, 1, 1, 0.1))
         border.color: "transparent"
-        Behavior on color { ColorAnimation { duration: mbtn.batteryMode ? 100 : ((shellRoot && !shellRoot.batteryCharging) ? 90 : 150) } }
+        Behavior on color { ColorAnimation { duration: 150 } }
     }
 
     RowLayout {
@@ -52,5 +52,5 @@ MouseArea {
     }
 
     scale: containsPress ? 0.95 : 1.0
-    Behavior on scale { NumberAnimation { duration: mbtn.batteryMode ? 100 : ((shellRoot && !shellRoot.batteryCharging) ? 90 : 150); easing.type: Easing.OutCubic } }
+    Behavior on scale { NumberAnimation { duration: mbtn.batteryMode ? 150 : 150; easing.type: Easing.OutCubic } }
 }

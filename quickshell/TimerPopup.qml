@@ -64,10 +64,10 @@ PopupWindow {
                     // Open: let scale/x springs start first, then reveal
                     // Close: exit immediately so springs bounce back behind nothing
                     PauseAnimation {
-                        duration: (shellRoot && shellRoot.batteryMode) ? 0 : ((shellRoot && !shellRoot.batteryCharging) ? (timerPopup.show ? 48 : 0) : (timerPopup.show ? 80 : 0))
+                        duration: (shellRoot && shellRoot.batteryMode) ? 0 : (timerPopup.show ? 80 : 0)
                     }
                     NumberAnimation {
-                        duration: (shellRoot && shellRoot.batteryMode) ? 100 : ((shellRoot && !shellRoot.batteryCharging) ? (timerPopup.show ? 108 : 90) : (timerPopup.show ? 180 : 150))
+                        duration: (shellRoot && shellRoot.batteryMode) ? 150 : (timerPopup.show ? 180 : 150)
                         easing.type: timerPopup.show ? Easing.OutQuad : Easing.InQuad
                     }
                 }

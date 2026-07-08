@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import Quickshell.Wayland
 import Quickshell.Io
+import Quickshell.Hyprland
 
 PanelWindow {
     id: widgetsWin
@@ -20,12 +21,33 @@ PanelWindow {
     property var shellRoot: null
     property real scaleFactor: shellRoot ? shellRoot.scaleFactor : 1.0
 
+    readonly property int activeWorkspaceWindowCount: {
+        if (!Hyprland.focusedWorkspace) return 0;
+        var activeId = Hyprland.focusedWorkspace.id;
+        var count = 0;
+        var list = Hyprland.toplevels.values;
+        for (var i = 0; i < list.length; i++) {
+            var tl = list[i];
+            if (tl.workspace && tl.workspace.id === activeId) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     Column {
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.rightMargin: Math.round(44 * scaleFactor)
         anchors.topMargin: Math.round(90 * scaleFactor)
         spacing: Math.round(10 * scaleFactor)
+
+        opacity: widgetsWin.activeWorkspaceWindowCount > 0 ? 0.0 : 1.0
+        visible: opacity > 0.01
+
+        Behavior on opacity {
+            NumberAnimation { duration: 350; easing.type: Easing.OutCubic }
+        }
 
         // ══════════════════════════════════════════════════════════════════
         // 1. CLOCK — "Timepiece" flavor: accent bar, bold time, AM/PM tag

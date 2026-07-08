@@ -36,7 +36,7 @@ Item {
         radius: 12
         color: (mainMouse.containsMouse || iconMouse.containsMouse || rightIconMouse.containsMouse) ? Qt.rgba(1, 1, 1, 0.15) : Qt.rgba(1, 1, 1, 0.1)
         border.color: "transparent"
-        Behavior on color { ColorAnimation { duration: mbtn.batteryMode ? 100 : ((shellRoot && !shellRoot.batteryCharging) ? 90 : 150) } }
+        Behavior on color { ColorAnimation { duration: 150 } }
     }
 
     MouseArea {
@@ -78,8 +78,8 @@ Item {
             }
 
             scale: iconMouse.containsPress ? 0.9 : (iconMouse.containsMouse ? 1.05 : 1.0)
-            Behavior on scale { NumberAnimation { duration: mbtn.batteryMode ? 100 : ((shellRoot && !shellRoot.batteryCharging) ? 90 : 150) } }
-            Behavior on color { ColorAnimation { duration: mbtn.batteryMode ? 100 : ((shellRoot && !shellRoot.batteryCharging) ? 90 : 150) } }
+            Behavior on scale { NumberAnimation { duration: 150 } }
+            Behavior on color { ColorAnimation { duration: 150 } }
         }
 
         // Text Column Stack (Vertical Redesigned Layout)
@@ -106,7 +106,7 @@ Item {
                 font.pixelSize: 10
                 Layout.fillWidth: true
                 elide: Text.ElideRight
-                Behavior on color { ColorAnimation { duration: mbtn.batteryMode ? 100 : ((shellRoot && !shellRoot.batteryCharging) ? 90 : 150) } }
+                Behavior on color { ColorAnimation { duration: 150 } }
             }
         }
 
@@ -122,7 +122,7 @@ Item {
                 color: rightIconMouse.containsMouse ? mbtn.colFg : Qt.rgba(mbtn.colFg.r, mbtn.colFg.g, mbtn.colFg.b, 0.3)
                 font.family: mbtn.fontFamily
                 font.pixelSize: 14
-                Behavior on color { ColorAnimation { duration: mbtn.batteryMode ? 100 : ((shellRoot && !shellRoot.batteryCharging) ? 90 : 150) } }
+                Behavior on color { ColorAnimation { duration: 150 } }
             }
 
             MouseArea {
@@ -137,5 +137,5 @@ Item {
     }
 
     scale: mainMouse.containsPress ? 0.98 : 1.0
-    Behavior on scale { NumberAnimation { duration: mbtn.batteryMode ? 100 : ((shellRoot && !shellRoot.batteryCharging) ? 90 : 150); easing.type: Easing.OutBack } }
+    Behavior on scale { NumberAnimation { duration: mbtn.batteryMode ? 150 : 150; easing.type: Easing.OutBack } }
 }

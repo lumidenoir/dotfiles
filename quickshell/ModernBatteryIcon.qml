@@ -46,7 +46,7 @@ Item {
                 if (battIcon.level <= 0.2) return "#FF3B30";
                 return battIcon.colFg;
             }
-            Behavior on width { NumberAnimation { duration: battIcon.batteryMode ? 100 : ((shellRoot && !shellRoot.batteryCharging) ? 180 : 300); easing.type: Easing.OutCubic } }
+            Behavior on width { NumberAnimation { duration: battIcon.batteryMode ? 200 : 300; easing.type: Easing.OutCubic } }
 
             // Shimmer Sweep
             Rectangle {

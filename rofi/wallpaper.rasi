@@ -1,0 +1,3 @@
+* {
+    wallpaper-path: url("/home/lumi/Pictures/wallpaper/gruvbox/field_planet.png", width);
+}

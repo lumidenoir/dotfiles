@@ -137,9 +137,9 @@ PanelWindow {
                 opacity: show ? 1.0 : 0.0
                 Behavior on opacity {
                     SequentialAnimation {
-                        PauseAnimation { duration: (shellRoot && shellRoot.batteryMode) ? 0 : ((shellRoot && !shellRoot.batteryCharging) ? (show ? 72 : 0) : (show ? 120 : 0)) }
+                        PauseAnimation { duration: (shellRoot && shellRoot.batteryMode) ? 0 : (show ? 120 : 0) }
                         NumberAnimation {
-                            duration: (shellRoot && shellRoot.batteryMode) ? 100 : ((shellRoot && !shellRoot.batteryCharging) ? (show ? 180 : 48) : (show ? 300 : 80))
+                            duration: (shellRoot && shellRoot.batteryMode) ? 150 : (show ? 300 : 80)
                             easing.type: show ? Easing.OutQuad : Easing.InQuad
                         }
                     }

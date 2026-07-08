@@ -6,7 +6,7 @@
 interval=0
 
 # load colors
-. ~/dotfiles/dwm/bar_themes/onedark
+. ~/dotfiles/dwm/bar_themes/active
 
 cpu() {
     cpu_val=$(grep -o "^[^ ]*" /proc/loadavg)

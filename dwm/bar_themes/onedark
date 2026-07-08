@@ -1,11 +1,11 @@
 #!/bin/bash
 # colors
 
-black=#23272e
+black=#1e222a
 green=#8ccf7e
 white=#bdc3c2
 grey=#282c34
 blue=#6cb5ed
 red=#e06e6e
 darkblue=$blue
-pink=#c47fd5
+pink=#d49fe8

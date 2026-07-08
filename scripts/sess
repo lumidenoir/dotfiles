@@ -1,12 +1,8 @@
 #!/usr/bin/env sh
 
 # List of options
-options="bspwm
-awesome
-qtile
-dwm
+options="dwm
 hyprland
-niri
 Quit"
 
 # Choose method

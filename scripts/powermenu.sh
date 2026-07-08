@@ -52,7 +52,7 @@ done
 rofi_options=$(echo -e "$rofi_options")
 
 # Launch rofi and get the selection
-chosen=$(echo "$rofi_options" | rofi -dmenu -p " Power" -i -theme ~/.config/rofi/spotlight.rasi)
+chosen=$(echo "$rofi_options" | rofi -dmenu -p " Power" -i -theme ~/dotfiles/rofi/dwm.rasi)
 
 if [ -n "$chosen" ]; then
     selected_action=""
@@ -73,7 +73,7 @@ if [ -n "$chosen" ]; then
         done
 
         if "$needs_confirmation"; then
-            confirm_chosen=$(echo -e "${icons[$key]} $key\n${icons[cancel]} No" | rofi -dmenu -p "󰇯 Are you sure?" -i -theme ~/.config/rofi/spotlight.rasi)
+            confirm_chosen=$(echo -e "${icons[$key]} $key\n${icons[cancel]} No" | rofi -dmenu -p "󰇯 Are you sure?" -i -theme ~/dotfiles/rofi/dwm.rasi)
             if [ "$confirm_chosen" = "${icons[$key]} $key" ]; then
                 ${actions[$selected_action]}
             fi

@@ -34,7 +34,10 @@ Rectangle {
             enabled: (groundControlShow || !showCard) && (shellRoot ? !shellRoot.batteryMode : true)
             SequentialAnimation {
                 PauseAnimation { duration: groundControlShow ? cardDelay : 0 }
-                NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
+                NumberAnimation {
+                    duration: groundControlShow ? 400 : 350
+                    easing.type: groundControlShow ? Easing.OutCubic : Easing.OutQuint
+                }
             }
         }
     }
@@ -43,7 +46,7 @@ Rectangle {
         enabled: shellRoot ? !shellRoot.batteryMode : true
         SequentialAnimation {
             PauseAnimation { duration: groundControlShow ? cardDelay : 0 }
-            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
         }
     }
 
@@ -58,4 +61,7 @@ Rectangle {
             SpringAnimation { spring: 3.5; damping: 0.70; mass: 0.8 }
         }
     }
+
+    layer.enabled: (opacity > 0.0 && opacity < 1.0) && (shellRoot ? !shellRoot.batteryMode : true)
 }
+

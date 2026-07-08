@@ -19,7 +19,7 @@ set statusbar-h-padding 8
 set statusbar-v-padding 3
 set scroll-step 50
 set scroll-hstep 50
-set smooth-scroll true
+set smooth-scroll false
 
 # --- Palette (Apple Dark Mode Calibration) ---
 # base canvas (Low halation, long-session reading)

@@ -8,4 +8,10 @@
     fg-col2: #ffffff;
     grey: #6272a4;
     width: 600;
+
+    // for WallSelect
+    main-bg:     #282a36E6;
+    main-fg:     #f8f8f2;
+    select-bg:   #bd93f9;
+    select-fg:   #282a36;
 }

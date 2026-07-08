@@ -22,7 +22,7 @@ MouseArea {
     Layout.preferredWidth: show ? (customWidth > 0 ? customWidth + 16 : contentWidth + 16) : 0
     Behavior on Layout.preferredWidth {
         NumberAnimation {
-            duration: shellRoot && shellRoot.batteryMode ? 100 : ((shellRoot && !shellRoot.batteryCharging) ? 180 : 300)
+            duration: shellRoot && shellRoot.batteryMode ? 180 : 250
             easing.type: Easing.OutExpo
         }
     }
@@ -38,7 +38,7 @@ MouseArea {
         radius: height / 2
         Behavior on color {
             ColorAnimation {
-                duration: shellRoot && shellRoot.batteryMode ? 100 : ((shellRoot && !shellRoot.batteryCharging) ? 120 : 200)
+                duration: shellRoot && shellRoot.batteryMode ? 150 : 200
             }
         }
 
@@ -48,11 +48,11 @@ MouseArea {
             loops: Animation.Infinite
             NumberAnimation {
                 to: 0.1
-                duration: shellRoot && shellRoot.batteryMode ? 100 : ((shellRoot && !shellRoot.batteryCharging) ? 300 : 500)
+                duration: shellRoot && shellRoot.batteryMode ? 250 : 400
             }
             NumberAnimation {
                 to: 1.0
-                duration: shellRoot && shellRoot.batteryMode ? 100 : ((shellRoot && !shellRoot.batteryCharging) ? 300 : 500)
+                duration: shellRoot && shellRoot.batteryMode ? 250 : 400
             }
             onRunningChanged: {
                 if (!running) {
@@ -89,7 +89,7 @@ MouseArea {
             visible: modRoot.text !== ""
             Behavior on color {
                 ColorAnimation {
-                    duration: shellRoot && shellRoot.batteryMode ? 100 : ((shellRoot && !shellRoot.batteryCharging) ? 120 : 200)
+                    duration: shellRoot && shellRoot.batteryMode ? 150 : 200
                 }
             }
         }

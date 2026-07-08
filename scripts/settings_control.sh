@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 # github https://github.com/Shringe/dunst-media-control
 
@@ -43,7 +43,7 @@ get_volume_icon() {
 }
 
 call_quickshell_ipc() {
-    if pgrep -x "quickshell" > /dev/null; then
+    if [[ "$XDG_CURRENT_DESKTOP" == "Hyprland" ]] && pgrep -x "quickshell" > /dev/null; then
         if quickshell -p "$HOME/dotfiles/quickshell" ipc call qsIpc "$@" >/dev/null 2>&1; then
             return 0
         elif quickshell ipc call qsIpc "$@" >/dev/null 2>&1; then
@@ -77,7 +77,7 @@ show_volume_notification() {
             else
                 body_text="$volume%"
             fi
-            notify-send -i $volume_icon -h int:value:"$progress_value" -t "$NOTIFICATION_TIMEOUT" \
+            notify-send -i $volume_icon -h int:value:"$progress_value" -h string:x-dunst-stack-tag:settings_volume -t "$NOTIFICATION_TIMEOUT" \
                 "Settings Control" "Volume: $body_text"
         fi
     fi
@@ -107,7 +107,7 @@ show_mic_notification() {
         status_text="Unmuted"
     fi
 
-    notify-send -i $mic_icon -t "$NOTIFICATION_TIMEOUT" "Settings Control" "Mic: $status_text"
+    notify-send -i $mic_icon -h string:x-dunst-stack-tag:settings_mic -t "$NOTIFICATION_TIMEOUT" "Settings Control" "Mic: $status_text"
 }
 
 get_brightness() {
@@ -138,7 +138,7 @@ show_brightness_notification() {
             echo "$brightness" > "$XDG_RUNTIME_DIR/wob.fifo"
         else
             local -r brightness_icon=$(get_brightness_icon "$brightness")
-            notify-send -i $brightness_icon -h int:value:"$brightness" -t "$NOTIFICATION_TIMEOUT" \
+            notify-send -i $brightness_icon -h int:value:"$brightness" -h string:x-dunst-stack-tag:settings_brightness -t "$NOTIFICATION_TIMEOUT" \
                 "Settings Control" "Brightness: $brightness%"
         fi
     fi

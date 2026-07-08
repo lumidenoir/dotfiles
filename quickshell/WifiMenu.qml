@@ -213,10 +213,10 @@ PanelWindow {
                 clip: true
                 Behavior on opacity {
                     SequentialAnimation {
-                        PauseAnimation { duration: (shellRoot && shellRoot.batteryMode) ? 0 : ((shellRoot && !shellRoot.batteryCharging) ? (show ? 90 : 0) : (show ? 150 : 0)) }
+                        PauseAnimation { duration: (shellRoot && shellRoot.batteryMode) ? 0 : (show ? 150 : 0) }
                         NumberAnimation {
-                            duration: (shellRoot && shellRoot.batteryMode) ? 100 : ((shellRoot && !shellRoot.batteryCharging) ? (show ? 120 : 90) : (show ? 200 : 150))
-                            easing.type: Easing.InOutQuad
+                            duration: (shellRoot && shellRoot.batteryMode) ? 150 : (show ? 200 : 150)
+                            easing.type: Easing.OutQuad
                         }
                     }
                 }
