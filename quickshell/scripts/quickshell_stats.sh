@@ -246,8 +246,8 @@ while true; do
     time_str=${time_str//\"/\\\"}
 
     # --- Fetch Emails via python3 helper ---
-    # Query emails every 60 seconds (every 12 loops of 5s) or on startup
-    if [ "$loop_count" -eq 0 ] || [ $((loop_count % 720)) -eq 0 ]; then
+    # Query emails every 30 minutes (every 360 loops of 5s) or on startup
+    if [ "$loop_count" -eq 0 ] || [ $((loop_count % 360)) -eq 0 ]; then
         emails_json=$(python3 -c '
 import subprocess, json
 try:

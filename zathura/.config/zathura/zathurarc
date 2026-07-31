@@ -14,12 +14,8 @@ set recolor-darkcolor  "#e5e5ea"   # soft off-white, not clinical #fff
 set font "GeistMono Nerd Font 11"
 set window-title-basename true
 set guioptions ""
-set page-padding 2
 set statusbar-h-padding 8
 set statusbar-v-padding 3
-set scroll-step 50
-set scroll-hstep 50
-set smooth-scroll false
 
 # --- Palette (Apple Dark Mode Calibration) ---
 # base canvas (Low halation, long-session reading)

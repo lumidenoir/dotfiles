@@ -41,8 +41,10 @@ ShellRoot {
     readonly property var _notchWidths: ({
         1: 280 * scaleFactor, 4: 240 * scaleFactor, 5: 240 * scaleFactor, 6: 200 * scaleFactor, 3: 200 * scaleFactor,
         7: 200 * scaleFactor, 8: 200 * scaleFactor, 9: 200 * scaleFactor, 10: 240 * scaleFactor, 11: 240 * scaleFactor,
-        12: 260 * scaleFactor, 13: 280 * scaleFactor, 14: 340 * scaleFactor, 15: 260 * scaleFactor, 16: 220 * scaleFactor
+        12: 260 * scaleFactor, 13: 280 * scaleFactor, 14: 340 * scaleFactor, 15: 260 * scaleFactor, 16: 220 * scaleFactor,
+        17: 290 * scaleFactor
     })
+
     property real _cachedNotchWidth: 180 * scaleFactor
     Connections {
         target: notchLayout
@@ -102,7 +104,12 @@ ShellRoot {
     readonly property int stateDragLocalSend: 14
     readonly property int stateLocalSendSuccess: 15
     readonly property int stateComms: 16
+    readonly property int stateDiskAlert: 17
+    property string diskAlertTitle: ""
+    property string diskAlertSubtitle: ""
+    property bool diskAlertMounted: true
     property bool flightDeckActive: false
+
 
     property bool topHuggingStyle: false
     property real notchSpringStiffness: 3.5
@@ -457,7 +464,8 @@ ShellRoot {
     }
 
     // Guard: never let prevIslandState be a transient state (prevents chaining)
-    readonly property var _transientStates: [root.stateOsd, root.stateBatteryLow, root.stateCharging, root.stateDnd, root.stateWaterAlert, root.stateStretchAlert, root.stateF1Alert, root.stateCpuAlert, root.stateDragLocalSend, root.stateLocalSendSuccess]
+    readonly property var _transientStates: [root.stateOsd, root.stateBatteryLow, root.stateCharging, root.stateDnd, root.stateWaterAlert, root.stateStretchAlert, root.stateF1Alert, root.stateCpuAlert, root.stateDragLocalSend, root.stateLocalSendSuccess, root.stateDiskAlert]
+
     function safeSavePrev() {
         if (_transientStates.indexOf(root.islandState) === -1) {
             root.prevIslandState = root.islandState;
@@ -870,6 +878,42 @@ ShellRoot {
             }
         }
     }
+
+    Timer {
+        id: diskAlertTimer
+        interval: 3500 // 3.5 seconds
+        repeat: false
+        onTriggered: {
+            if (root.islandState === root.stateDiskAlert) {
+                root.islandState = root.prevIslandState;
+            }
+        }
+    }
+
+    Process {
+        id: pDiskMonitor
+        command: ["python3", root.scriptsDir + "/disk_monitor.py"]
+        running: true
+        stdout: SplitParser {
+            onRead: function(data) {
+                try {
+                    var parts = data.trim().split("|");
+                    if (parts.length >= 3) {
+                        var isAdd = parts[0] === "add";
+                        root.diskAlertTitle = parts[1];
+                        root.diskAlertSubtitle = parts[2];
+                        root.diskAlertMounted = isAdd;
+                        root.safeSavePrev();
+                        root.islandState = root.stateDiskAlert;
+                        diskAlertTimer.restart();
+                        playSoundSafely(pPlaySound);
+                    }
+                } catch(e) {}
+            }
+        }
+    }
+
+
 
     Timer {
         id: localSendTimer
@@ -3569,7 +3613,82 @@ ShellRoot {
                     }
                 }
             }
+
+            // Disk / USB Plugged Alert Pill (stateDiskAlert: 17) — single line
+            RowLayout {
+                id: diskAlertLayout
+                opacity: (root.islandState === root.stateDiskAlert && !root.isAnyPopupOpen && notchRect.width >= 192) ? 1.0 : 0.0
+                visible: opacity > 0
+                scale: opacity > 0 ? 1.0 : 0.9
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: root.batteryMode ? 150 : 250
+                        easing.type: Easing.OutQuad
+                    }
+                }
+                Behavior on scale {
+                    enabled: true
+                    SpringAnimation {
+                        spring: 4.8
+                        damping: 0.8
+                        mass: 0.6
+                    }
+                }
+                anchors.fill: parent
+                anchors.leftMargin: 14
+                anchors.rightMargin: 14
+                spacing: 7
+
+                // Drive icon
+                Text {
+                    text: root.diskAlertMounted ? "󰋊" : "󱊞"
+                    color: root.diskAlertMounted ? "#76B900" : "#FFA500"
+                    font {
+                        family: root.iconFontFamily
+                        pixelSize: 13
+                    }
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                // Drive name — fills remaining space, truncates with ellipsis
+                Text {
+                    text: root.diskAlertTitle !== "" ? root.diskAlertTitle : "USB Drive"
+                    color: root.colFg
+                    font {
+                        family: root.fontFamily
+                        pixelSize: 10
+                        bold: true
+                    }
+                    elide: Text.ElideRight
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                // Separator dot
+                Text {
+                    text: "·"
+                    color: root.colMuted
+                    font {
+                        family: root.fontFamily
+                        pixelSize: 10
+                    }
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                // Status label — fixed width, never truncated
+                Text {
+                    text: root.diskAlertMounted ? "Connected" : "Disconnected"
+                    color: root.diskAlertMounted ? "#76B900" : "#FFA500"
+                    font {
+                        family: root.fontFamily
+                        pixelSize: 10
+                        bold: true
+                    }
+                    Layout.alignment: Qt.AlignVCenter
+                }
+            }
         }
+
 
         // LocalSend Drag & Drop Layout
         Item {
@@ -3761,44 +3880,6 @@ ShellRoot {
             }
         }
 
-        // iOS-style microphone and camera privacy indicators
-        Row {
-            id: privacyDots
-            anchors.right: parent.right
-            anchors.rightMargin: 12 * scaleFactor
-            anchors.verticalCenter: parent.top
-            anchors.verticalCenterOffset: root.topHuggingStyle ? Math.round(20 * scaleFactor) : Math.round(24 * scaleFactor)
-            spacing: 4 * scaleFactor
-            z: 100
-
-            // Microphone active dot (Orange)
-            Rectangle {
-                width: 6 * scaleFactor
-                height: 6 * scaleFactor
-                radius: 3 * scaleFactor
-                color: "#FF9500" // Apple Orange
-                opacity: root.isMicActive ? 1.0 : 0.0
-                scale: root.isMicActive ? 1.0 : 0.0
-                antialiasing: true
-
-                Behavior on scale { SpringAnimation { spring: 3.5; damping: 0.7; mass: 0.8 } }
-                Behavior on opacity { NumberAnimation { duration: 150 } }
-            }
-
-            // Camera active dot (Green)
-            Rectangle {
-                width: 6 * scaleFactor
-                height: 6 * scaleFactor
-                radius: 3 * scaleFactor
-                color: "#34C759" // Apple Green
-                opacity: root.isCamActive ? 1.0 : 0.0
-                scale: root.isCamActive ? 1.0 : 0.0
-                antialiasing: true
-
-                Behavior on scale { SpringAnimation { spring: 3.5; damping: 0.7; mass: 0.8 } }
-                Behavior on opacity { NumberAnimation { duration: 150 } }
-            }
-        }
 
         Row {
             id: bubbleRow
@@ -3917,99 +3998,192 @@ ShellRoot {
             }
         }
 
-        Row {
-            id: sysTray
-            anchors.right: parent.right
-            anchors.rightMargin: 16
-            anchors.verticalCenter: parent.top
-            anchors.verticalCenterOffset: root.topHuggingStyle ? Math.round(20 * scaleFactor) : Math.round(24 * scaleFactor)
-            spacing: 8
+        // ── System Tray Pill ─────────────────────────────────────────────────
+        // macOS-style frosted glass pill containing privacy dots and tray icons.
+        Rectangle {
+            id: trayPillBg
+            anchors.right:              parent.right
+            anchors.rightMargin:        Math.round(12 * scaleFactor)
+            anchors.verticalCenter:     parent.top
+            anchors.verticalCenterOffset: root.topHuggingStyle
+                                          ? Math.round(20 * scaleFactor)
+                                          : Math.round(24 * scaleFactor)
 
-            Repeater {
-                model: SystemTray.items
-                delegate: Item {
-                    id: trayItemRoot
-                    width: 20
-                    height: 20
+            height: Math.round(32 * scaleFactor)
 
-                    scale: sysTrayMouse.containsMouse ? 1.15 : 1.0
-                    Behavior on scale {
-                        enabled: true
-                        SpringAnimation {
-                            spring: 4.5
-                            damping: 0.65
-                            mass: 0.6
+            // Width tracks content + padding
+            width: contentRow.implicitWidth + Math.round(16 * scaleFactor)
+            Behavior on width {
+                SpringAnimation { spring: 4.0; damping: 0.75; mass: 0.5 }
+            }
+
+            radius: height / 2
+
+            // Visible whenever there are tray items or privacy dots are active
+            visible: opacity > 0
+            opacity: (sysTray.count > 0 || root.isMicActive || root.isCamActive) ? 1.0 : 0.0
+            Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutQuad } }
+
+            // macOS frosted dark glass
+            color: Qt.rgba(0.05, 0.05, 0.07, 0.92)
+            border.color: Qt.rgba(1, 1, 1, 0.11)
+            border.width: 1
+
+            // 1px top-highlight shimmer
+            Rectangle {
+                anchors {
+                    top:         parent.top
+                    topMargin:   1
+                    left:        parent.left
+                    leftMargin:  Math.round(parent.radius * 0.55)
+                    right:       parent.right
+                    rightMargin: Math.round(parent.radius * 0.55)
+                }
+                height: 1
+                radius: 1
+                color:  Qt.rgba(1, 1, 1, 0.09)
+            }
+
+            Row {
+                id: contentRow
+                anchors.centerIn: parent
+                spacing: Math.round(8 * scaleFactor)
+
+                // ── Privacy indicator chip (mic / cam dots) ─────────────────
+                Item {
+                    id: privacyChip
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    readonly property real chipWidth: (root.isMicActive || root.isCamActive)
+                        ? ((root.isMicActive && root.isCamActive)
+                           ? Math.round(20 * scaleFactor)
+                           : Math.round(12 * scaleFactor))
+                        : 0
+                    width:  chipWidth
+                    height: Math.round(16 * scaleFactor)
+                    visible: chipWidth > 0
+                    clip: true
+                    Behavior on width { SpringAnimation { spring: 4.0; damping: 0.72; mass: 0.5 } }
+
+                    Row {
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: Math.round(4 * scaleFactor)
+
+                        Rectangle {
+                            id: micDot
+                            width: Math.round(6 * scaleFactor); height: width; radius: width / 2
+                            color: "#FF9500"
+                            visible: root.isMicActive
+                            opacity: root.isMicActive ? 1.0 : 0.0
+                            scale:   root.isMicActive ? 1.0 : 0.0
+                            antialiasing: true
+                            Behavior on scale   { SpringAnimation { spring: 3.5; damping: 0.7; mass: 0.8 } }
+                            Behavior on opacity { NumberAnimation { duration: 150 } }
+                        }
+
+                        Rectangle {
+                            id: camDot
+                            width: Math.round(6 * scaleFactor); height: width; radius: width / 2
+                            color: "#34C759"
+                            visible: root.isCamActive
+                            opacity: root.isCamActive ? 1.0 : 0.0
+                            scale:   root.isCamActive ? 1.0 : 0.0
+                            antialiasing: true
+                            Behavior on scale   { SpringAnimation { spring: 3.5; damping: 0.7; mass: 0.8 } }
+                            Behavior on opacity { NumberAnimation { duration: 150 } }
                         }
                     }
+                }
 
-                    QsMenuAnchor {
-                        id: menuAnchor
-                        menu: modelData.menu
-                        anchor {
-                            window: barWindow
-                            // Use barWindow.contentItem as reference to get stable coords
-                            // that won't drift when the tray reflows.
-                            rect: Qt.rect(
-                                trayItemRoot.mapToItem(barWindow.contentItem, 0, 0).x,
-                                trayItemRoot.mapToItem(barWindow.contentItem, 0, 0).y,
-                                trayItemRoot.width,
-                                trayItemRoot.height
-                            )
+                // ── Tray icons ───────────────────────────────────────────────
+                Repeater {
+                    id: sysTray
+                    model: SystemTray.items
+                    delegate: Item {
+                        id: trayItemRoot
+                        width:  Math.round(18 * scaleFactor)
+                        height: Math.round(18 * scaleFactor)
+
+                        scale: sysTrayMouse.containsMouse ? 1.18 : 1.0
+                        Behavior on scale {
+                            SpringAnimation { spring: 4.5; damping: 0.65; mass: 0.6 }
                         }
-                    }
 
-                    IconImage {
-                        anchors.fill: parent
-                        source: modelData.icon
-                    }
-
-                    // Floating label tooltip above the icon
-                    Rectangle {
-                        id: trayTooltip
-                        visible: sysTrayMouse.containsMouse && (modelData.tooltip.title !== "" || modelData.title !== "")
-                        anchors.bottom: parent.top
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        anchors.bottomMargin: 6
-                        width:  ttLabel.implicitWidth + 12
-                        height: ttLabel.implicitHeight + 8
-                        radius: 6
-                        color:  Qt.rgba(0.05, 0.05, 0.10, 0.92)
-                        border.color: Qt.rgba(1, 1, 1, 0.15)
-                        border.width: 1
-                        z: 200
-
-                        opacity: sysTrayMouse.containsMouse ? 1.0 : 0.0
-                        Behavior on opacity { NumberAnimation { duration: 120; easing.type: Easing.OutQuad } }
-
-                        Text {
-                            id: ttLabel
-                            anchors.centerIn: parent
-                            text: modelData.tooltip.title !== "" ? modelData.tooltip.title : modelData.title
-                            color: "#ffffff"
-                            font {
-                                family: root.fontFamily
-                                pixelSize: Math.round(11 * root.scaleFactor)
-                                weight: Font.Medium
+                        QsMenuAnchor {
+                            id: menuAnchor
+                            menu: modelData.menu
+                            anchor {
+                                window: barWindow
+                                rect: Qt.rect(0, 0, trayItemRoot.width, trayItemRoot.height)
                             }
                         }
-                    }
 
-                    MouseArea {
-                        id: sysTrayMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        acceptedButtons: Qt.LeftButton | Qt.RightButton
-                        onClicked: mouse => {
-                            if (mouse.button === Qt.RightButton && modelData.hasMenu) {
-                                menuAnchor.open();
-                            } else {
-                                modelData.activate();
+                        IconImage {
+                            anchors.fill: parent
+                            source: modelData.icon
+                        }
+
+                        // Floating tooltip above icon
+                        Rectangle {
+                            id: trayTooltip
+                            visible: sysTrayMouse.containsMouse &&
+                                     (modelData.tooltip.title !== "" || modelData.title !== "")
+                            anchors.bottom:           parent.top
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.bottomMargin:     Math.round(8 * scaleFactor)
+                            width:  ttLabel.implicitWidth + Math.round(14 * scaleFactor)
+                            height: ttLabel.implicitHeight + Math.round(8 * scaleFactor)
+                            radius: Math.round(7 * scaleFactor)
+                            color:  Qt.rgba(0.05, 0.05, 0.10, 0.96)
+                            border.color: Qt.rgba(1, 1, 1, 0.14)
+                            border.width: 1
+                            z: 200
+
+                            opacity: sysTrayMouse.containsMouse ? 1.0 : 0.0
+                            Behavior on opacity {
+                                NumberAnimation { duration: 130; easing.type: Easing.OutQuad }
+                            }
+
+                            Rectangle {
+                                anchors { top: parent.top; topMargin: 1; left: parent.left; leftMargin: 4; right: parent.right; rightMargin: 4 }
+                                height: 1; radius: 1
+                                color: Qt.rgba(1, 1, 1, 0.08)
+                            }
+
+                            Text {
+                                id: ttLabel
+                                anchors.centerIn: parent
+                                text: modelData.tooltip.title !== "" ? modelData.tooltip.title : modelData.title
+                                color: "#ffffff"
+                                font {
+                                    family:    root.fontFamily
+                                    pixelSize: Math.round(11 * root.scaleFactor)
+                                    weight:    Font.Medium
+                                }
+                            }
+                        }
+
+                        MouseArea {
+                            id: sysTrayMouse
+                            anchors.fill:    parent
+                            hoverEnabled:    true
+                            acceptedButtons: Qt.LeftButton | Qt.RightButton
+                            onClicked: mouse => {
+                                if (mouse.button === Qt.RightButton && modelData.hasMenu) {
+                                    var pos = trayItemRoot.mapToItem(barWindow.contentItem, 0, 0);
+                                    menuAnchor.anchor.rect = Qt.rect(pos.x, pos.y, trayItemRoot.width, trayItemRoot.height);
+                                    menuAnchor.open();
+                                } else {
+                                    modelData.activate();
+                                }
                             }
                         }
                     }
                 }
             }
         }
+
+        // ── Privacy dots now live inside trayPillBg ──────────────────────────
     }
 
 
@@ -4065,6 +4239,17 @@ ShellRoot {
             queueNotification(["notify-send", "-u", "critical", "-i", "thermal-hot", "CPU Temperature High", "CPU is at 84°C. Top process: " + root.topCpuProcess]);
             playSoundSafely(pPlaySound);
         }
+        function triggerDiskAlert() {
+            root.diskAlertTitle = "SanDisk Ultra USB";
+            root.diskAlertSubtitle = "Connected (64 GB)";
+            root.diskAlertMounted = true;
+            root.safeSavePrev();
+            root.islandState = root.stateDiskAlert;
+            diskAlertTimer.restart();
+            queueNotification(["notify-send", "-u", "normal", "-i", "drive-removable-media", "USB Connected", root.diskAlertTitle + " (" + root.diskAlertSubtitle + ")"]);
+            playSoundSafely(pPlaySound);
+        }
+
         function triggerWaterAlert() {
             root.safeSavePrev();
             root.islandState = root.stateWaterAlert;

@@ -43,26 +43,49 @@ while true; do
         continue
     fi
 
-    # Switch between Quickshell and Waybar based on battery level (< 25% and discharging vs >= 25% or charging)
-    if [[ "$STATUS" == "Discharging" ]] && (( CAPACITY < 25 )); then
-        target="waybar"
-    else
-        target="quickshell"
-    fi
-
-    if [[ "$target" == "waybar" ]]; then
+    # Only manage Wayland bars (Quickshell / Waybar) and notification daemon (dunst) if running in a Wayland session
+    if [[ "$XDG_SESSION_TYPE" == "wayland" ]] || [[ -n "$WAYLAND_DISPLAY" ]]; then
+        # Determine the current running panel
         if pgrep -x "quickshell" >/dev/null; then
-            pkill quickshell
+            current="quickshell"
+        elif pgrep -x "waybar" >/dev/null; then
+            current="waybar"
+        else
+            current="none"
         fi
-        if ! pgrep -x "waybar" >/dev/null; then
-            waybar -c ~/.config/waybar/hypr/config.json -s ~/.config/waybar/hypr/style.css &
+
+        # Determine the target panel based on battery status and capacity (with hysteresis)
+        if [[ "$STATUS" == "Discharging" ]] && (( CAPACITY < 15 )); then
+            target="waybar"
+        elif (( CAPACITY > 25 )); then
+            target="quickshell"
+        else
+            target="$current"
+            if [[ "$target" == "none" ]]; then
+                target="quickshell"  # Default fallback
+            fi
         fi
-    else
-        if pgrep -x "waybar" >/dev/null; then
-            pkill waybar
-        fi
-        if ! pgrep -x "quickshell" >/dev/null; then
-            quickshell -p "$HOME/dotfiles/quickshell" &
+
+        if [[ "$target" == "waybar" ]]; then
+            if pgrep -x "quickshell" >/dev/null; then
+                pkill quickshell
+            fi
+            if ! pgrep -x "waybar" >/dev/null; then
+                waybar -c ~/.config/waybar/hypr/config.json -s ~/.config/waybar/hypr/style.css &
+            fi
+            if ! pgrep -x "dunst" >/dev/null; then
+                dunst &
+            fi
+        else
+            if pgrep -x "waybar" >/dev/null; then
+                pkill waybar
+            fi
+            if pgrep -x "dunst" >/dev/null; then
+                pkill dunst
+            fi
+            if ! pgrep -x "quickshell" >/dev/null; then
+                quickshell -p "$HOME/dotfiles/quickshell" &
+            fi
         fi
     fi
 

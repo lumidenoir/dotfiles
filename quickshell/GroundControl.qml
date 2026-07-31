@@ -205,6 +205,25 @@ PanelWindow {
             border.color: Qt.rgba(1, 1, 1, 0.08)
             border.width: 1
 
+            // Top-highlight shimmer — 1px bright streak at the very top of the pill,
+            // identical to the notch and tray pill. Fades in/out with the panel.
+            Rectangle {
+                id: gcTopHighlight
+                anchors {
+                    top:         parent.top
+                    topMargin:   1
+                    left:        parent.left
+                    leftMargin:  Math.round(animRect.radius * 0.6)
+                    right:       parent.right
+                    rightMargin: Math.round(animRect.radius * 0.6)
+                }
+                height: 1
+                radius: 1
+                color:  Qt.rgba(1, 1, 1, 0.10)
+                opacity: groundControl.show ? 1.0 : 0.0
+                Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutQuad } }
+            }
+
             Behavior on width {
                 enabled: !groundControl.suppressOpenAnimation && (groundControl.show || groundControl.isClosing) && (shellRoot ? !shellRoot.batteryMode : true)
                 SpringAnimation {
@@ -532,13 +551,24 @@ PanelWindow {
                                         onMoved: {
                                             if (shellRoot) {
                                                 shellRoot.volumeMic = Math.round(value * 100) + "%";
-                                                shellRoot.pVolSetMic.command = ["wpctl", "set-volume", "@DEFAULT_AUDIO_SOURCE@", value.toFixed(2)];
-                                                shellRoot.pVolSetMic.running = true;
+                                                micDebounce.micValue = value;
+                                                micDebounce.restart();
                                             }
                                         }
                                         onIconClicked: {
                                             if (shellRoot)
                                                 shellRoot.pMicMute.running = true;
+                                        }
+                                        Timer {
+                                            id: micDebounce
+                                            property real micValue: 0
+                                            interval: 80
+                                            onTriggered: {
+                                                if (shellRoot) {
+                                                    shellRoot.pVolSetMic.command = ["wpctl", "set-volume", "@DEFAULT_AUDIO_SOURCE@", micValue.toFixed(2)];
+                                                    shellRoot.pVolSetMic.running = true;
+                                                }
+                                            }
                                         }
                                     }
 
@@ -605,7 +635,7 @@ PanelWindow {
                                         }
 
                                         Text {
-                                            text: "AirPlay Audio Output"
+                                            text: "Audio Output Devices"
                                             color: groundControl.shellRoot ? groundControl.shellRoot.colFg : "#ffffff"
                                             font {
                                                 family: groundControl.shellRoot ? groundControl.shellRoot.fontFamily : "sans-serif"
@@ -785,17 +815,69 @@ PanelWindow {
                                 }
                             }
 
-                            // 4. Dedicated F1 Calendar Card
                             CCCard {
                                 id: cardF1
                                 shellRoot: groundControl.shellRoot
                                 groundControlShow: groundControl.show
                                 cardDelay: 120
-                                Layout.preferredHeight: 146
+                                Layout.preferredHeight: 150
                                 clip: true
 
                                 border.color: shellRoot && shellRoot.islandState === shellRoot.stateF1Alert ? "#E10600" : Qt.rgba(1, 1, 1, 0.08)
                                 border.width: shellRoot && shellRoot.islandState === shellRoot.stateF1Alert ? 1.5 : 1
+
+                                // ── Live countdown state ──────────────────────────────────────
+                                property string countdownText: "—"
+                                property bool   isLive:   false
+                                property bool   isUrgent: false
+                                property bool   hasEvent: shellRoot && shellRoot.f1NextEventIso !== ""
+
+                                function computeCountdown() {
+                                    if (!shellRoot || shellRoot.f1NextEventIso === "") {
+                                        countdownText = "—"; isLive = false; isUrgent = false; return;
+                                    }
+                                    var target   = new Date(shellRoot.f1NextEventIso);
+                                    var now      = new Date();
+                                    var diff     = target - now; // ms
+                                    if (diff <= 0) {
+                                        if (Math.abs(diff) < 7200000) {
+                                            countdownText = "LIVE"; isLive = true; isUrgent = false;
+                                        } else {
+                                            countdownText = "Ended"; isLive = false; isUrgent = false;
+                                        }
+                                        return;
+                                    }
+                                    isLive = false;
+                                    var totalSec = Math.floor(diff / 1000);
+                                    var days  = Math.floor(totalSec / 86400);
+                                    var hours = Math.floor((totalSec % 86400) / 3600);
+                                    var mins  = Math.floor((totalSec % 3600) / 60);
+                                    var secs  = totalSec % 60;
+                                    isUrgent = (totalSec < 3600);
+                                    if (days > 0)       countdownText = days + "d " + hours + "h " + mins + "m";
+                                    else if (hours > 0) countdownText = hours + "h " + mins + "m";
+                                    else if (mins > 0)  countdownText = mins + "m " + secs + "s";
+                                    else                countdownText = secs + "s";
+                                }
+
+                                Component.onCompleted: computeCountdown()
+
+                                // Tick every second when urgent/live, every 30s otherwise
+                                Timer {
+                                    id: f1CountdownTimer
+                                    interval: (cardF1.isUrgent || cardF1.isLive) ? 1000 : 30000
+                                    repeat:   true
+                                    running:  groundControl.show && cardF1.hasEvent
+                                    triggeredOnStart: true
+                                    onTriggered: cardF1.computeCountdown()
+                                }
+
+                                Connections {
+                                    target: shellRoot || null
+                                    ignoreUnknownSignals: true
+                                    function onF1NextEventIsoChanged() { cardF1.computeCountdown(); }
+                                }
+                                // ─────────────────────────────────────────────────────────────
 
                                 MouseArea {
                                     id: f1MouseArea
@@ -803,9 +885,8 @@ PanelWindow {
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
-                                        if (shellRoot && shellRoot.f1CalendarPopup) {
+                                        if (shellRoot && shellRoot.f1CalendarPopup)
                                             shellRoot.f1CalendarPopup.show = !shellRoot.f1CalendarPopup.show;
-                                        }
                                     }
 
                                     ColumnLayout {
@@ -813,41 +894,80 @@ PanelWindow {
                                         anchors.margins: 12
                                         spacing: 6
 
+                                        // Header
                                         RowLayout {
                                             Layout.fillWidth: true
                                             spacing: 6
                                             Text {
                                                 text: "󰛄"
                                                 color: "#E10600"
-                                                font {
-                                                    family: shellRoot ? shellRoot.iconFontFamily : "sans-serif"
-                                                    pixelSize: 14
-                                                }
+                                                font { family: shellRoot ? shellRoot.iconFontFamily : "sans-serif"; pixelSize: 14 }
                                             }
                                             Text {
                                                 text: "F1 Calendar"
                                                 color: shellRoot ? shellRoot.colFg : "#ffffff"
-                                                font {
-                                                    family: shellRoot ? shellRoot.fontFamily : "sans-serif"
-                                                    pixelSize: 12
-                                                    bold: true
+                                                font { family: shellRoot ? shellRoot.fontFamily : "sans-serif"; pixelSize: 12; bold: true }
+                                            }
+                                            Item { Layout.fillWidth: true }
+
+                                            // ── Countdown chip ────────────────────────────────
+                                            Rectangle {
+                                                id: countdownChip
+                                                visible: cardF1.hasEvent
+                                                height: 18
+                                                width:  chipLabel.implicitWidth + (cardF1.isLive ? 18 : 10)
+                                                radius: height / 2
+                                                color: cardF1.isLive   ? Qt.rgba(0.88, 0.0, 0.0, 0.22)
+                                                     : cardF1.isUrgent ? Qt.rgba(0.88, 0.0, 0.0, 0.14)
+                                                     :                   Qt.rgba(1, 1, 1, 0.06)
+                                                border.color: cardF1.isLive   ? "#E10600"
+                                                            : cardF1.isUrgent ? Qt.rgba(0.88, 0.0, 0.0, 0.50)
+                                                            :                   Qt.rgba(1, 1, 1, 0.10)
+                                                border.width: 1
+                                                Behavior on color        { ColorAnimation { duration: 400 } }
+                                                Behavior on border.color { ColorAnimation { duration: 400 } }
+                                                Behavior on width        { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+
+                                                // Pulsing dot for LIVE state
+                                                Rectangle {
+                                                    id: liveDot
+                                                    visible: cardF1.isLive
+                                                    anchors.left:           parent.left
+                                                    anchors.leftMargin:     5
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    width: 5; height: 5; radius: 2.5
+                                                    color: "#E10600"
+                                                    antialiasing: true
+                                                    SequentialAnimation on opacity {
+                                                        loops: Animation.Infinite
+                                                        running: cardF1.isLive && groundControl.show
+                                                        NumberAnimation { from: 1.0; to: 0.2; duration: 700; easing.type: Easing.InOutSine }
+                                                        NumberAnimation { from: 0.2; to: 1.0; duration: 700; easing.type: Easing.InOutSine }
+                                                    }
+                                                }
+
+                                                Text {
+                                                    id: chipLabel
+                                                    anchors.centerIn: parent
+                                                    anchors.horizontalCenterOffset: cardF1.isLive ? 4 : 0
+                                                    text: cardF1.countdownText
+                                                    color: cardF1.isLive   ? "#FF3B30"
+                                                         : cardF1.isUrgent ? "#FF9500"
+                                                         : (shellRoot ? shellRoot.colFg : "#ffffff")
+                                                    font {
+                                                        family:    shellRoot ? shellRoot.fontFamily : "sans-serif"
+                                                        pixelSize: 10
+                                                        bold:      true
+                                                    }
+                                                    Behavior on color { ColorAnimation { duration: 400 } }
                                                 }
                                             }
-                                            Item {
-                                                Layout.fillWidth: true
-                                            }
+
                                             Text {
                                                 text: "󰃭"
                                                 color: f1MouseArea.containsMouse ? "#E10600" : (shellRoot ? shellRoot.colMuted : "#888888")
-                                                font {
-                                                    family: shellRoot ? shellRoot.iconFontFamily : "sans-serif"
-                                                    pixelSize: 14
-                                                }
-                                                Behavior on color {
-                                                    ColorAnimation {
-                                                        duration: 150
-                                                    }
-                                                }
+                                                font { family: shellRoot ? shellRoot.iconFontFamily : "sans-serif"; pixelSize: 14 }
+                                                Behavior on color { ColorAnimation { duration: 150 } }
                                             }
                                         }
 
@@ -864,11 +984,7 @@ PanelWindow {
                                             Text {
                                                 text: shellRoot && shellRoot.f1NextEventName !== "" ? shellRoot.f1NextEventName : "No upcoming F1 events"
                                                 color: shellRoot ? shellRoot.colFg : "#ffffff"
-                                                font {
-                                                    family: shellRoot ? shellRoot.fontFamily : "sans-serif"
-                                                    pixelSize: 11
-                                                    bold: true
-                                                }
+                                                font { family: shellRoot ? shellRoot.fontFamily : "sans-serif"; pixelSize: 11; bold: true }
                                                 elide: Text.ElideRight
                                                 Layout.fillWidth: true
                                             }
@@ -878,21 +994,13 @@ PanelWindow {
                                                 Text {
                                                     text: shellRoot && shellRoot.f1NextEventTime !== "" ? shellRoot.f1NextEventTime : ""
                                                     color: shellRoot ? Qt.rgba(shellRoot.colFg.r, shellRoot.colFg.g, shellRoot.colFg.b, 0.65) : Qt.rgba(1, 1, 1, 0.65)
-                                                    font {
-                                                        family: shellRoot ? shellRoot.fontFamily : "sans-serif"
-                                                        pixelSize: 10
-                                                    }
+                                                    font { family: shellRoot ? shellRoot.fontFamily : "sans-serif"; pixelSize: 10 }
                                                 }
-                                                Item {
-                                                    Layout.fillWidth: true
-                                                }
+                                                Item { Layout.fillWidth: true }
                                                 Text {
                                                     text: shellRoot && shellRoot.f1NextEventLocation !== "" ? "📍 " + shellRoot.f1NextEventLocation : ""
                                                     color: shellRoot ? Qt.rgba(shellRoot.colFg.r, shellRoot.colFg.g, shellRoot.colFg.b, 0.65) : Qt.rgba(1, 1, 1, 0.65)
-                                                    font {
-                                                        family: shellRoot ? shellRoot.fontFamily : "sans-serif"
-                                                        pixelSize: 10
-                                                    }
+                                                    font { family: shellRoot ? shellRoot.fontFamily : "sans-serif"; pixelSize: 10 }
                                                     elide: Text.ElideRight
                                                     Layout.maximumWidth: 140
                                                 }
@@ -910,23 +1018,15 @@ PanelWindow {
                                             Layout.fillWidth: true
                                             spacing: 4
                                             visible: shellRoot && shellRoot.f1MainRaceText !== ""
-
                                             Text {
                                                 text: "Race:"
                                                 color: "#E10600"
-                                                font {
-                                                    family: shellRoot ? shellRoot.fontFamily : "sans-serif"
-                                                    pixelSize: 10
-                                                    bold: true
-                                                }
+                                                font { family: shellRoot ? shellRoot.fontFamily : "sans-serif"; pixelSize: 10; bold: true }
                                             }
                                             Text {
                                                 text: shellRoot ? shellRoot.f1MainRaceText : ""
                                                 color: shellRoot ? Qt.rgba(shellRoot.colFg.r, shellRoot.colFg.g, shellRoot.colFg.b, 0.75) : Qt.rgba(1, 1, 1, 0.75)
-                                                font {
-                                                    family: shellRoot ? shellRoot.fontFamily : "sans-serif"
-                                                    pixelSize: 10
-                                                }
+                                                font { family: shellRoot ? shellRoot.fontFamily : "sans-serif"; pixelSize: 10 }
                                                 elide: Text.ElideRight
                                                 Layout.fillWidth: true
                                             }
@@ -1277,7 +1377,6 @@ PanelWindow {
                                         opacity: status === Image.Ready ? 0.20 : 0.0
                                         Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutQuad } }
                                         visible: (shellRoot && shellRoot.spotifyArtUrl && shellRoot.spotifyArtUrl.length > 8)
-                                        onStatusChanged: console.log("spotifyArtBg status changed:", status, "source:", source)
                                     }
 
                                     MultiEffect {
@@ -1493,7 +1592,7 @@ PanelWindow {
                                 shellRoot: groundControl.shellRoot
                                 groundControlShow: groundControl.show
                                 cardDelay: 180
-                                Layout.preferredHeight: 110
+                                Layout.preferredHeight: (shellRoot && shellRoot.latestEmails && shellRoot.latestEmails.length > 0) ? 110 : 64
                                 clip: true
 
                                 MouseArea {

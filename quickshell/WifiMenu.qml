@@ -73,23 +73,17 @@ PanelWindow {
 
     Process {
         id: pGetWifi
-        // C-4 FIX: use a tab separator instead of colon to avoid SSID-with-colon breakage
-        command: ["sh", "-c", "nmcli --terse --fields IN-USE,SSID,SECURITY dev wifi list | sort -r"]
+        // C-4 FIX: use tab separator (-s '\t') to avoid SSID-with-colon breakage
+        command: ["sh", "-c", "nmcli -t -s '\t' --fields IN-USE,SSID,SECURITY dev wifi list | sort -r"]
         stdout: SplitParser {
             onRead: data => {
                 var d = data.trim();
                 if (d.length > 0) {
-                    // Format is: IN-USE:SSID:SECURITY  where SSID may contain colons
-                    // Split on first and last colon to safely extract all three fields
-                    var idx1 = d.indexOf(":");
-                    var idx2 = d.lastIndexOf(":");
-                    if (idx1 > -1 && idx2 > idx1) {
-                        var inUse = d.substring(0, idx1).trim();
-                        // Middle field is SSID (may contain colons)
-                        var ssid = d.substring(idx1 + 1, idx2).trim();
-                        var sec = d.substring(idx2 + 1).trim();
-                        // SECURITY field is exactly one field and never contains a colon
-                        // so lastIndexOf correctly finds the separator before SECURITY
+                    var parts = d.split("\t");
+                    if (parts.length >= 3) {
+                        var inUse = parts[0].trim();
+                        var ssid = parts[1].trim();
+                        var sec = parts[2].trim();
                         var secure = (sec !== "" && sec !== "--");
                         var connected = (inUse === "*");
                         if (ssid !== "" && !seenSsids[ssid]) {

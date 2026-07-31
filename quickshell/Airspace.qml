@@ -299,7 +299,7 @@ PanelWindow {
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: "Click a workspace to switch  •  Hover a window for details  •  1-9 to jump"
-                        color: Qt.rgba(1, 1, 1, 0.32)
+                        color: Qt.rgba(1, 1, 1, 0.65)
                         font {
                             family: shellRoot ? shellRoot.fontFamily : "sans-serif"
                             pixelSize: Math.round(11 * scaleFactor)
@@ -465,8 +465,8 @@ PanelWindow {
 
                                               Image {
                                                   anchors.horizontalCenter: parent.horizontalCenter
-                                                  width: Math.min(Math.round(24 * _sf), parent.width - 4)
-                                                  height: Math.min(Math.round(24 * _sf), parent.height - 10)
+                                                  width: Math.max(0, Math.min(Math.round(24 * _sf), parent.width - 4))
+                                                  height: Math.max(0, Math.min(Math.round(24 * _sf), parent.height - 10))
                                                   source: "image://icon/" + (model.modelData.appClass || "").toLowerCase()
                                                   fillMode: Image.PreserveAspectFit
                                                   smooth: true
@@ -490,6 +490,45 @@ PanelWindow {
                                                   visible: parent.parent.width > 50 && parent.parent.height > 40
                                               }
                                           }
+
+                                         // Top-right close button badge on hover
+                                         Rectangle {
+                                             id: closeBtn
+                                             visible: winMouse.containsMouse && winBlock.width >= 24 && winBlock.height >= 24
+                                             anchors.top: parent.top
+                                             anchors.right: parent.right
+                                             anchors.topMargin: Math.round(-4 * _sf)
+                                             anchors.rightMargin: Math.round(-4 * _sf)
+                                             width: Math.round(16 * _sf)
+                                             height: Math.round(16 * _sf)
+                                             radius: Math.round(8 * _sf)
+                                             color: closeBtnMouse.containsMouse ? "#FF3B30" : Qt.rgba(0.2, 0.2, 0.2, 0.90)
+                                             border.color: "#FFFFFF"
+                                             border.width: 1
+                                             z: 30
+
+                                             Text {
+                                                 anchors.centerIn: parent
+                                                 text: "✕"
+                                                 color: "#FFFFFF"
+                                                 font {
+                                                     family: shellRoot ? shellRoot.fontFamily : "sans-serif"
+                                                     pixelSize: Math.round(9 * _sf)
+                                                     bold: true
+                                                 }
+                                             }
+
+                                             MouseArea {
+                                                 id: closeBtnMouse
+                                                 anchors.fill: parent
+                                                 hoverEnabled: true
+                                                 cursorShape: Qt.PointingHandCursor
+                                                 onClicked: function(mouse) {
+                                                     mouse.accepted = true;
+                                                     airspaceWin.closeWindow(model.modelData.address);
+                                                 }
+                                             }
+                                         }
 
                                          // Hover to show tooltip + click/drag to focus/move
                                          MouseArea {
@@ -561,14 +600,10 @@ PanelWindow {
                                              }
                                              onClicked: function(mouse) {
                                                  if (!airspaceWin.dragActive) {
-                                                     if (mouse.button === Qt.RightButton) {
-                                                         airspaceWin.closeWindow(model.modelData.address);
-                                                     } else {
-                                                         airspaceWin.focusWindow(wsDelegate.workspaceId, model.modelData.address);
-                                                     }
+                                                     airspaceWin.focusWindow(wsDelegate.workspaceId, model.modelData.address);
                                                  }
                                              }
-                                             acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                             acceptedButtons: Qt.LeftButton
                                          }
                                      }
                                  }

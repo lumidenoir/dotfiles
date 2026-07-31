@@ -6,89 +6,92 @@ import Quickshell.Hyprland
 import Quickshell.Io
 import QtQuick.Controls
 
+// ─────────────────────────────────────────────────────────────────────────────
+// FlightDeck — Reimagined Auto-Hiding Minimized Window Shelf
+// Hidden by default; triggers on hover at bottom edge when minimized windows exist.
+// ─────────────────────────────────────────────────────────────────────────────
 PanelWindow {
-    id: flightDeckWindow
+    id: root
 
-    // Anchor to the bottom edge of the screen
     anchors.bottom: true
-    anchors.left: true
-    anchors.right: true
+    margins.bottom: Math.round(4 * scaleFactor)
 
-    // Dynamic height: expands when open, and stays tall during the sliding animation to prevent clipping glitches
-    implicitHeight: (panelOpen || popupPanel.y < Math.round(190 * scaleFactor)) ? Math.round(200 * scaleFactor) : Math.round(8 * scaleFactor)
-    color: "transparent"
+    property var  shellRoot:   null
+    property real scaleFactor: shellRoot ? shellRoot.scaleFactor : 1.0
+    property var  clients:     []
+    property bool shelfOpen:   false
 
-    // Overlay layer: floats above all windows without affecting their layout
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.namespace: "flight_deck"
-    WlrLayershell.exclusiveZone: 0   // Don't steal space from tiling layouts
+    // Window size tightly wraps the dock zone at bottom center including floating tooltips
+    visible:        clients.length > 0
+    implicitWidth:  clients.length > 0 ? (dockPill.implicitWidth + Math.round(24 * scaleFactor)) : 0
+    implicitHeight: clients.length > 0 ? Math.round(94 * scaleFactor) : 0
+    color:          "transparent"
+
+
+    WlrLayershell.layer:         WlrLayer.Overlay
+    WlrLayershell.namespace:     "flight_deck"
+    WlrLayershell.exclusiveZone: 0
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
-    property var shellRoot: null
-    property real scaleFactor: shellRoot ? shellRoot.scaleFactor : 1.0
-    property var minimizedClients: []
-
-    // Hover tracking with closing delay to prevent glitches
-    property bool hovered: false
-    property bool panelOpen: false
-
-    onHoveredChanged: {
-        if (hovered) {
-            closeTimer.stop();
-            panelOpen = true;
-        } else {
-            closeTimer.restart();
+    // Static input region matching dock bounds at bottom center
+    mask: Region {
+        Region {
+            item: root.clients.length > 0 ? maskArea : null
         }
+    }
+
+    function requestOpen() {
+        if (clients.length === 0) return;
+        leaveTimer.stop();
+        shelfOpen = true;
+    }
+    function requestClose() {
+        leaveTimer.restart();
     }
 
     Timer {
-        id: closeTimer
-        interval: 350 // Deliberate debounce prevents accidental re-open on quick mouse leave+re-enter
-        repeat: false
-        onTriggered: {
-            flightDeckWindow.panelOpen = false;
-        }
+        id: leaveTimer
+        interval: 320
+        repeat:   false
+        onTriggered: { root.shelfOpen = false; root.hovIdx = -1; }
     }
 
-    // ── Live window event listener (replaces polling) ──────────────────────────
-    // Listens to socket2 for movewindow/minimized events and refreshes only when needed.
-    // Falls back to a one-shot timer if the socket exits unexpectedly.
+    // ── Tracked hover state for tooltips ─────────────────────────────────────
+    property int hovIdx: -1
+
+    // ── Data Pipeline ─────────────────────────────────────────────────────────
     Process {
-        id: pDeckEvents
+        id: evtSock
         command: ["sh", "-c",
             "socat - UNIX-CONNECT:/tmp/hypr/${HYPRLAND_INSTANCE_SIGNATURE}/.socket2.sock 2>/dev/null"]
         running: true
         stdout: SplitParser {
             onRead: function(data) {
                 var ev = data.trim().split(">>")[0];
-                if (ev === "openwindow" || ev === "closewindow" ||
-                    ev === "movewindow" || ev === "createworkspace" ||
+                if (ev === "openwindow"     || ev === "closewindow"   ||
+                    ev === "movewindow"     || ev === "createworkspace" ||
                     ev === "closeworkspace" || ev === "minimizewindow") {
-                    pGetClients.running = true;
+                    getClients.running = true;
                 }
             }
         }
-        // Auto-restart on socket disconnect
-        onExited: {
-            pDeckRestartTimer.restart();
-        }
-    }
-    Timer {
-        id: pDeckRestartTimer
-        interval: 750
-        repeat: false
-        onTriggered: { pDeckEvents.running = true; pGetClients.running = true; }
+        onExited: { sockRestartTimer.restart(); }
     }
 
-    // Initial load and workspace-switch refresh
-    Component.onCompleted: pGetClients.running = true
+    Timer {
+        id: sockRestartTimer
+        interval: 750; repeat: false
+        onTriggered: { evtSock.running = true; getClients.running = true; }
+    }
+
+    Component.onCompleted: getClients.running = true
     Connections {
         target: Hyprland
-        function onFocusedWorkspaceChanged() { pGetClients.running = true }
+        function onFocusedWorkspaceChanged() { getClients.running = true; }
     }
 
     Process {
-        id: pGetClients
+        id: getClients
         command: ["hyprctl", "clients", "-j"]
         stdout: StdioCollector {
             onStreamFinished: {
@@ -96,232 +99,238 @@ PanelWindow {
                     var all = JSON.parse(text.trim());
                     var mins = [];
                     for (var i = 0; i < all.length; i++) {
-                        var c = all[i];
-                        if (c.workspace.name === "special:minimized" && c.mapped) {
-                            mins.push(c);
-                        }
+                        if (all[i].workspace.name === "special:minimized" && all[i].mapped)
+                            mins.push(all[i]);
                     }
-                    flightDeckWindow.minimizedClients = mins;
-                } catch(e) {
-                    flightDeckWindow.minimizedClients = [];
-                }
+                    root.clients = mins;
+                    if (mins.length === 0 && root.shelfOpen) {
+                        root.shelfOpen = false;
+                        root.hovIdx = -1;
+                    }
+                } catch(e) { root.clients = []; }
             }
         }
     }
 
+    function restoreWindow(modelData) {
+        var ws = Hyprland.focusedWorkspace ? Hyprland.focusedWorkspace.id : 1;
+        Hyprland.dispatch("hl.dsp.window.move({ workspace = \"" + ws + "\", window = \"address:" + modelData.address + "\" })");
+        Hyprland.dispatch("hl.dsp.focus({ window = \"address:" + modelData.address + "\" })");
+        getClients.running = true;
+    }
+
+    function closeWindow(modelData) {
+        Hyprland.dispatch("hl.dsp.window.close({ window = \"address:" + modelData.address + "\" })");
+        getClients.running = true;
+    }
+
+    // ── Main Content Container ───────────────────────────────────────────────
     Item {
+        id: maskArea
         anchors.fill: parent
 
         HoverHandler {
-            id: windowHover
+            id: dockHover
             onHoveredChanged: {
-                flightDeckWindow.hovered = windowHover.hovered;
+                if (hovered) root.requestOpen();
+                else         root.requestClose();
             }
         }
 
-        // ── Closed Indicator Handle (horizontal, visible when collapsed and windows are minimized) ──
+        // ── 1. Closed Indicator (subtle pill at bottom edge when hidden) ──────
         Rectangle {
-            visible: !flightDeckWindow.panelOpen && flightDeckWindow.minimizedClients.length > 0
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: Math.round(2 * scaleFactor)
+            id: indicatorCapsule
+            anchors.bottom:           parent.bottom
+            anchors.bottomMargin:     Math.round(2 * scaleFactor)
             anchors.horizontalCenter: parent.horizontalCenter
-            width: Math.round(80 * scaleFactor)
+
+            width:  dockHover.hovered ? Math.round(56 * scaleFactor) : Math.round(44 * scaleFactor)
             height: Math.round(4 * scaleFactor)
             radius: Math.round(2 * scaleFactor)
-            color: Qt.rgba(1, 1, 1, 0.20)
+
+            color: dockHover.hovered
+                   ? Qt.rgba(1, 1, 1, 0.85)
+                   : Qt.rgba(1, 1, 1, 0.40)
             border.color: Qt.rgba(1, 1, 1, 0.15)
             border.width: 1
+
+            opacity: (!root.shelfOpen && root.clients.length > 0) ? 1.0 : 0.0
+
+            Behavior on width { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+            Behavior on color { ColorAnimation { duration: 150 } }
+            Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutQuad } }
         }
 
-        // ── Pulsing Blue Indicator Strip (horizontal, visible when collapsed and windows are minimized) ──
+        // ── 2. Open Glass Dock Pill (slides up on trigger hover) ─────────────
         Rectangle {
-            id: blueIndicator
-            visible: !flightDeckWindow.panelOpen && flightDeckWindow.minimizedClients.length > 0
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: Math.round(2 * scaleFactor)
+            id: dockPill
             anchors.horizontalCenter: parent.horizontalCenter
-            width: Math.round(28 * scaleFactor)
-            height: Math.round(4 * scaleFactor)
-            radius: Math.round(2 * scaleFactor)
-            color: "#007AFF"
-            opacity: 0.85
+            anchors.bottom:           parent.bottom
 
-            // Slow breathing pulse animation
-            SequentialAnimation on opacity {
-                loops: Animation.Infinite
-                running: blueIndicator.visible
-                NumberAnimation { from: 0.40; to: 0.95; duration: 1600; easing.type: Easing.InOutSine }
-                NumberAnimation { from: 0.95; to: 0.40; duration: 1600; easing.type: Easing.InOutSine }
-            }
-        }
+            implicitWidth:  iconRow.implicitWidth + Math.round(28 * scaleFactor)
+            implicitHeight: Math.round(52 * scaleFactor)
+            radius:         height / 2
 
-        // ── Sliding popup panel (rendered outside the 8px strip via y offset) ────
-        Rectangle {
-            id: popupPanel
-
-            y: flightDeckWindow.panelOpen
-               ? Math.round(80 * scaleFactor)
-               : Math.round(200 * scaleFactor) + Math.round(10 * scaleFactor)
-
-            anchors.horizontalCenter: parent.horizontalCenter
-            height: Math.round(112 * scaleFactor)
-            width: Math.round(520 * scaleFactor)
-
-            radius: Math.round(16 * scaleFactor)
-            clip: false
-
-            // Glassmorphic background
-            color: Qt.rgba(0.05, 0.05, 0.08, 0.88)
-            border.color: Qt.rgba(1, 1, 1, 0.08)
+            color:        Qt.rgba(0.07, 0.07, 0.11, 0.88)
+            border.color: Qt.rgba(1, 1, 1, 0.12)
             border.width: 1
 
-            // Smooth spring sliding animation
-            Behavior on y {
-                SpringAnimation {
-                    spring: 4.8
-                    damping: 0.82
-                    mass: 0.55
+            // Smooth slide up & opacity transition
+            transform: Translate {
+                y: root.shelfOpen ? 0 : Math.round(24 * scaleFactor)
+                Behavior on y {
+                    NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
                 }
             }
 
-            // Opacity fade to match the slide animation
-            opacity: flightDeckWindow.panelOpen ? 1.0 : 0.0
+            opacity: root.shelfOpen ? 1.0 : 0.0
             Behavior on opacity {
-                NumberAnimation {
-                    duration: 180
-                    easing.type: Easing.OutQuad
-                }
+                NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
             }
 
-            // ── Empty state ────────────────────────────────────────────────────
+            Behavior on implicitWidth {
+                NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
+            }
+
+            // Inner top specular highlight
+            Rectangle {
+                anchors {
+                    top:         parent.top
+                    topMargin:   1
+                    left:        parent.left
+                    leftMargin:  Math.round(dockPill.radius * 0.5)
+                    right:       parent.right
+                    rightMargin: Math.round(dockPill.radius * 0.5)
+                }
+                height: 1
+                color:  Qt.rgba(1, 1, 1, 0.09)
+            }
+
+            // Icons Row
             Row {
+                id: iconRow
                 anchors.centerIn: parent
-                visible: flightDeckWindow.minimizedClients.length === 0
-                         && flightDeckWindow.panelOpen
-                spacing: Math.round(8 * scaleFactor)
+                spacing: Math.round(12 * scaleFactor)
 
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "~"
-                    color: Qt.rgba(1, 1, 1, 0.20)
-                    font.pixelSize: Math.round(25 * scaleFactor)
-                    font.family: shellRoot ? shellRoot.iconFontFamily : "monospace"
-                }
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "DECK EMPTY"
-                    color: Qt.rgba(1, 1, 1, 0.25)
-                    font {
-                        family: shellRoot ? shellRoot.fontFamily : "sans-serif"
-                        pixelSize: Math.round(9 * scaleFactor)
-                        bold: true
-                    }
-                    horizontalAlignment: Text.AlignHCenter
-                }
-            }
+                Repeater {
+                    model: root.clients
 
-            // ── Window cards ───────────────────────────────────────────────────
-            ScrollView {
-                anchors.fill: parent
-                anchors.margins: Math.round(8 * scaleFactor)
-                visible: flightDeckWindow.minimizedClients.length > 0
-                ScrollBar.horizontal.policy: ScrollBar.AsNeeded
-                ScrollBar.vertical.policy: ScrollBar.AlwaysOff
-                clip: false
+                    delegate: Item {
+                        id: iconSlot
+                        width:  Math.round(36 * scaleFactor)
+                        height: Math.round(36 * scaleFactor)
 
-                Row {
-                    height: parent.height
-                    spacing: Math.round(10 * scaleFactor)
-                    anchors.verticalCenter: parent.verticalCenter
+                        readonly property bool isHov: root.hovIdx === index
+                        readonly property bool isPrs: iconMouse.containsPress
 
-                    // Header
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: "Deck"
-                        color: Qt.rgba(1, 1, 1, 0.32)
-                        font {
-                            family: shellRoot ? shellRoot.fontFamily : "sans-serif"
-                            pixelSize: Math.round(8 * scaleFactor)
-                            capitalization: Font.AllUppercase
-                            letterSpacing: 0.8
-                            bold: true
-                        }
-                        rightPadding: Math.round(4 * scaleFactor)
-                    }
+                        // ── Tooltip ───────────────────────────────────────────
+                        Rectangle {
+                            id: tip
+                            visible: iconSlot.isHov
+                            z: 100
+                            anchors.bottom: parent.top
+                            anchors.bottomMargin: Math.round(12 * scaleFactor)
+                            anchors.horizontalCenter: parent.horizontalCenter
 
-                    Repeater {
-                        model: flightDeckWindow.minimizedClients
-                        delegate: Rectangle {
-                            id: card
-                            anchors.verticalCenter: parent.verticalCenter
-                            width: Math.round(78 * scaleFactor)
-                            height: Math.round(78 * scaleFactor)
-                            radius: Math.round(12 * scaleFactor)
+                            width:  tipText.implicitWidth + Math.round(16 * scaleFactor)
+                            height: Math.round(24 * scaleFactor)
+                            radius: Math.round(6 * scaleFactor)
 
-                            color: cardMouse.containsMouse
-                                   ? Qt.rgba(1, 1, 1, 0.12)
-                                   : Qt.rgba(1, 1, 1, 0.05)
-                            border.color: cardMouse.containsMouse
-                                          ? Qt.rgba(0.0, 0.48, 1.0, 0.65) // Sleek blue border
-                                          : Qt.rgba(1, 1, 1, 0.06)
+                            color: Qt.rgba(0.08, 0.08, 0.12, 0.94)
+                            border.color: Qt.rgba(1, 1, 1, 0.16)
                             border.width: 1
 
-                            // High quality spring scale animations for the card
-                            scale: cardMouse.containsPress ? 0.90 : (cardMouse.containsMouse ? 1.05 : 1.0)
-
-                            Behavior on scale {
-                                SpringAnimation { spring: 5.0; damping: 0.7; mass: 0.6 }
-                            }
-                            Behavior on color { ColorAnimation { duration: 120 } }
-
-                            Column {
+                            Text {
+                                id: tipText
                                 anchors.centerIn: parent
-                                spacing: Math.round(4 * scaleFactor)
-
-                                Image {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    width: Math.round(28 * scaleFactor)
-                                    height: Math.round(28 * scaleFactor)
-                                    source: "image://icon/" + modelData.class.toLowerCase()
-                                    fillMode: Image.PreserveAspectFit
-                                    smooth: true
-
-                                    // Dynamic scale bounce on the app icon on hover
-                                    scale: cardMouse.containsMouse ? 1.15 : 1.0
-                                    Behavior on scale {
-                                        SpringAnimation { spring: 4.5; damping: 0.65; mass: 0.6 }
-                                    }
+                                text: {
+                                    var p = (modelData.class || "App").split(".");
+                                    var n = p[p.length - 1];
+                                    return n.charAt(0).toUpperCase() + n.slice(1);
                                 }
-
-                                Text {
-                                    width: Math.round(66 * scaleFactor)
-                                    text: {
-                                        var p = modelData.class.split(".");
-                                        var n = p[p.length - 1];
-                                        return n.charAt(0).toUpperCase() + n.slice(1);
-                                    }
-                                    color: cardMouse.containsMouse
-                                           ? "#FFFFFF"
-                                           : Qt.rgba(1, 1, 1, 0.60)
-                                    font {
-                                        family: shellRoot ? shellRoot.fontFamily : "sans-serif"
-                                        pixelSize: Math.round(9 * scaleFactor)
-                                        bold: true
-                                    }
-                                    elide: Text.ElideRight
-                                    horizontalAlignment: Text.AlignHCenter
+                                color: "#FFFFFF"
+                                font {
+                                    family:    shellRoot ? shellRoot.fontFamily : "sans-serif"
+                                    pixelSize: Math.round(11 * scaleFactor)
+                                    bold:      true
                                 }
+                            }
+                        }
+
+                        // ── Icon Image ────────────────────────────────────────
+                        Image {
+                            id: iconImg
+                            anchors.centerIn: parent
+                            width:  Math.round(36 * scaleFactor)
+                            height: Math.round(36 * scaleFactor)
+                            source: "image://icon/" + (modelData.class ? modelData.class.toLowerCase() : "application-x-executable")
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            antialiasing: true
+
+                            y: iconSlot.isHov ? Math.round(-4 * scaleFactor) : 0
+                            Behavior on y {
+                                NumberAnimation { duration: 150; easing.type: Easing.OutBack; easing.overshoot: 0.4 }
+                            }
+
+                            scale: iconSlot.isPrs ? 0.88 : (iconSlot.isHov ? 1.18 : 1.0)
+                            Behavior on scale {
+                                NumberAnimation { duration: 150; easing.type: Easing.OutBack; easing.overshoot: 0.5 }
+                            }
+                        }
+
+                        // ── Close Badge ───────────────────────────────────────
+                        Rectangle {
+                            id: closeBadge
+                            visible: iconSlot.isHov
+                            z: 50
+                            width:  Math.round(14 * scaleFactor)
+                            height: Math.round(14 * scaleFactor)
+                            radius: width / 2
+
+                            x: iconImg.x + iconImg.width - width / 2 + Math.round(2 * scaleFactor)
+                            y: iconImg.y - height / 2 + Math.round(2 * scaleFactor)
+
+                            color: closeMouse.containsMouse ? "#FF3B30" : Qt.rgba(0.12, 0.12, 0.16, 0.95)
+                            border.color: Qt.rgba(1, 1, 1, 0.3)
+                            border.width: 1
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "✕"
+                                color: "#FFFFFF"
+                                font.pixelSize: Math.round(7 * scaleFactor)
+                                font.bold: true
                             }
 
                             MouseArea {
-                                id: cardMouse
+                                id: closeMouse
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    var ws = Hyprland.focusedWorkspace ? Hyprland.focusedWorkspace.id : 1;
-                                    Hyprland.dispatch("hl.dsp.window.move({ workspace = \"" + ws + "\", window = \"address:" + modelData.address + "\" })");
-                                    pGetClients.running = true;
+                                onClicked: function(mouse) {
+                                    mouse.accepted = true;
+                                    root.closeWindow(modelData);
+                                }
+                            }
+                        }
+
+                        // ── Primary Icon Mouse Area ────────────────────────────
+                        MouseArea {
+                            id: iconMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+
+                            onEntered: { root.requestOpen(); root.hovIdx = index; }
+                            onExited:  { if (root.hovIdx === index) root.hovIdx = -1; root.requestClose(); }
+
+                            onClicked: function(mouse) {
+                                if (mouse.button === Qt.RightButton || mouse.button === Qt.MiddleButton) {
+                                    root.closeWindow(modelData);
+                                } else {
+                                    root.restoreWindow(modelData);
                                 }
                             }
                         }
