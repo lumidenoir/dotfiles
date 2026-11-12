@@ -1,1 +1,1 @@
-/home/lumi/dotfiles/dwm/themes/onedark.h
+/home/krishna/dotfiles/dwm/themes/onedark.h

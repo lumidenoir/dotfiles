@@ -79,7 +79,7 @@ def main():
             if e['start'] > now:
                 # Format to local time
                 local_dt = e['start'].astimezone(None)
-                local_str = local_dt.strftime("%a %b %d at %H:%M")
+                local_str = local_dt.strftime("%a, %b %d • %H:%M")
                 print(f"{e['summary']}|{local_str}|{e['location']}|{e['start'].isoformat()}")
                 return
         print("No upcoming events")
@@ -90,7 +90,7 @@ def main():
         for e in events:
             if e['start'] > now:
                 local_dt = e['start'].astimezone(None)
-                local_str = local_dt.strftime("%a %b %d at %H:%M")
+                local_str = local_dt.strftime("%a, %b %d • %H:%M")
                 # Strip emoji prefix for clean text in list if desired, but let's keep them!
                 print(f"{e['summary']}|{local_str}")
                 count += 1
@@ -103,7 +103,7 @@ def main():
         for e in events:
             if now <= e['start'] <= four_weeks_limit:
                 local_dt = e['start'].astimezone(None)
-                local_str = local_dt.strftime("%a %b %d at %H:%M")
+                local_str = local_dt.strftime("%a, %b %d • %H:%M")
                 print(f"{e['summary']}|{local_str}|{e['location']}")
 
     elif opt == "--this-week-race":
@@ -111,7 +111,7 @@ def main():
         for e in events:
             if e['start'] > now and "🏁 Race" in e['summary']:
                 local_dt = e['start'].astimezone(None)
-                local_str = local_dt.strftime("%a %b %d at %H:%M")
+                local_str = local_dt.strftime("%a, %b %d • %H:%M")
                 print(f"{e['summary']}|{local_str}")
                 return
         print("No upcoming race")

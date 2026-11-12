@@ -1,0 +1,4 @@
+singleton Players Players.qml
+singleton Motion Motion.qml
+singleton Cursor Cursor.qml
+singleton CharacterBus CharacterBus.qml

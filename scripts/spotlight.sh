@@ -2,7 +2,7 @@
 
 # --- config ---
 DIR=~/org
-MOVIE_DIRS=("/mnt/storage/Movies" "/run/media/$USER/7958-E812/movie")
+MOVIE_DIRS=("/mnt/shared/Movies" "/run/media/$USER/7958-E812/movie")
 DOC_DIRS=("books" "college")
 BOOKMARK_FILE="$HOME/.cache/.bookmarks"
 EMOJI_FILE="$HOME/dotfiles/misc/emojis.txt"
@@ -67,7 +67,6 @@ show_shortcuts() {
 !l <query>   - Search Library files (filtered)
 !m <query>   - Search Movies (filtered)
 !e <query>   - Search Emojis (filtered)
-!c           - Clipboard manager
 !t           - Select theme / wallpaper
 !ocr         - Screen OCR
 !h or ?      - Show this help list
@@ -121,7 +120,7 @@ mode_library() {
 		load_assets "$icon" "$DIR/$sub"
 	done
 	local choice
-	choice=$(printf '%s\n' "${!ASSET[@]}" | rofi_menu "${filter_arg[@]}" -p "Library" -theme-str "window{width:35em;}" -theme-str 'entry{placeholder:"Search library books and files...";}')
+	choice=$(printf '%s\n' "${!ASSET[@]}" | rofi_menu "${filter_arg[@]}" -p "Library" -theme-str "window{width:40em;}" -theme-str 'entry{placeholder:"Search library books and files...";}')
 	[[ -n "$choice" ]] && xdg-open "${ASSET[$choice]}"
 }
 
@@ -132,7 +131,7 @@ mode_movie() {
 	load_assets "🎬   " "${MOVIE_DIRS[0]}"
 	load_assets "󰋊   " "${MOVIE_DIRS[1]}"
 	local choice
-	choice=$(printf '%s\n' "${!ASSET[@]}" | rofi_menu "${filter_arg[@]}" -p "Movies" -theme-str "window{width:35em;}" -theme-str 'entry{placeholder:"Select movie to play...";}')
+	choice=$(printf '%s\n' "${!ASSET[@]}" | rofi_menu "${filter_arg[@]}" -p "Movies" -theme-str "window{width:40em;}" -theme-str 'entry{placeholder:"Select movie to play...";}')
 	[[ -n "$choice" ]] && mpv "${ASSET[$choice]}"
 }
 
@@ -230,10 +229,6 @@ main() {
 				;;
 			"!e "* | "!emoji "*)
 				mode_emoji "${choice#* }"
-				exit 0
-				;;
-			"!c" | "!clip")
-				mode_clipboard
 				exit 0
 				;;
 			"!t" | "!theme")

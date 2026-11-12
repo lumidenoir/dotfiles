@@ -109,8 +109,8 @@ source = auto
 ; method = oss
 ; source = /dev/dsp
 
-; method = jack
-; source = default
+method = pipewire
+source = auto
 
 # The options 'sample_rate', 'sample_bits', 'channels' and 'autoconnect' can be configured for some input methods:
 #   sample_rate: fifo, pipewire, sndio, oss
@@ -131,7 +131,7 @@ source = auto
 #   remix: Allow pipewire to remix audio channels to match cava's channel count. Useful for surround sound.
 #   virtual: Set the node to virtual, to avoid recording notifications from the DE.
 #
-; sample_rate = 44100
+sample_rate = 44100
 ; sample_bits = 16
 ; channels = 2
 ; autoconnect = 2

@@ -1,0 +1,85 @@
+{"query": "play aimer brave shine", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "stream track afterlife by aimer", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "play aimer ref:rain", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "open anime mkv in mpv player", "expected_intent": "play_media", "is_action": true, "tag": "play_media"}
+{"query": "stream post rock instrumental tracks", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "stream track starboy by the weeknd", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "find that url in my clipboard history", "expected_intent": "mindspace", "is_action": false, "tag": "mindspace"}
+{"query": "what did i copy to clipboard earlier", "expected_intent": "mindspace", "is_action": false, "tag": "mindspace"}
+{"query": "did i copy that bearer token from postman", "expected_intent": "mindspace", "is_action": false, "tag": "mindspace"}
+{"query": "show recent clips from clipboard stash", "expected_intent": "mindspace", "is_action": false, "tag": "mindspace"}
+{"query": "what did i copy earlier", "expected_intent": "mindspace", "is_action": false, "tag": "mindspace"}
+{"query": "check clipboard history for link", "expected_intent": "mindspace", "is_action": false, "tag": "mindspace"}
+{"query": "find that snippet i copied in mindspace", "expected_intent": "mindspace", "is_action": false, "tag": "mindspace"}
+{"query": "search clips for token", "expected_intent": "mindspace", "is_action": false, "tag": "mindspace"}
+{"query": "did i copy that command from terminal", "expected_intent": "mindspace", "is_action": false, "tag": "mindspace"}
+{"query": "show recent clipboard history entries", "expected_intent": "mindspace", "is_action": false, "tag": "mindspace"}
+{"query": "search mindspace for json response", "expected_intent": "mindspace", "is_action": false, "tag": "mindspace"}
+{"query": "what was the url i copied five minutes ago", "expected_intent": "mindspace", "is_action": false, "tag": "mindspace"}
+{"query": "find copied password in stash", "expected_intent": "mindspace", "is_action": false, "tag": "mindspace"}
+{"query": "did i copy that bash snippet earlier", "expected_intent": "mindspace", "is_action": false, "tag": "mindspace"}
+{"query": "check clipboard for api endpoint", "expected_intent": "mindspace", "is_action": false, "tag": "mindspace"}
+{"query": "retrieve last copied text block", "expected_intent": "mindspace", "is_action": false, "tag": "mindspace"}
+{"query": "what did i copy from browser", "expected_intent": "mindspace", "is_action": false, "tag": "mindspace"}
+{"query": "search mindspace clips for ssh command", "expected_intent": "mindspace", "is_action": false, "tag": "mindspace"}
+{"query": "play reaper by kelsey lu", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "play kelsey lu blood album", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "refactor database connection pool and fix query latency", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "calculate the definite integral of x squared from 0 to 5", "expected_intent": "rag_knowledge", "is_action": false, "tag": "ood_general"}
+{"query": "dont let me forget to renew car insurance policy this weekend", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "explain consistent hashing in distributed caching clusters", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "play yoko kanno cowboy bebop ost", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "stream relaxing nature sounds for focus", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "task control block tcb structure in os kernel internals", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "task parallelism vs data parallelism in concurrent computing", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "how to build a todo list app in react with redux toolkit", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "how does celery beat schedule recurring background tasks", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "what is rate monotonic scheduling for periodic real time tasks", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "multitasking preemptive vs cooperative scheduling models", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "how does windows task manager measure cpu utilization", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "task switching overhead and context switch cost in x86", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "how to implement celery background task in python django", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "todoist api webhook payload schema documentation", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "completely fair scheduler cfs red black tree task management", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "how does task scheduling work in the linux kernel", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "asyncio create_task vs gather event loop mechanics", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "task group in python 3.11 exception groups and structured concurrency", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "priority inversion problem in real time operating systems freertos", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "multitasking in real time embedded systems rtos preemptive scheduling", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "task offloading in edge cloud computing latency minimization", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "task allocation in multi robot swarms consensus algorithms", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "task management theory in organizational behavior and ergonomics", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "task difficulty and cognitive load theory in educational psychology", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "dividing tasks in concurrent mapreduce big data jobs", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "how does kubernetes job controller manage batch tasks and pods", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "taskbar behavior in hyprland waybar window list module", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "scheduling tasks with cron in linux systemd timer units", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "todo comments in codebases and technical debt tracking tools", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "executive branch powers and checks and balances in us constitution", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_run"}
+{"query": "order of operations in arithmetic pemdas rules", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_run"}
+{"query": "what is a runtime error vs compile time error in rust", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_run"}
+{"query": "meaning of the phrase run of the mill origin", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_run"}
+{"query": "run length encoding lossless data compression algorithm explanation", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_run"}
+{"query": "watch studio ghibli spirited away in mpv", "expected_intent": "play_media", "is_action": true, "tag": "play_media"}
+{"query": "listen to ambient rainfall and thunder audio", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "find notes on aerothermodynamics stagnation enthalpy", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "play season 1 finale of death note", "expected_intent": "play_media", "is_action": true, "tag": "play_media"}
+{"query": "play downloaded anime episode 3 in full screen", "expected_intent": "play_media", "is_action": true, "tag": "play_media"}
+{"query": "watch anime show in mpv with subtitles", "expected_intent": "play_media", "is_action": true, "tag": "play_media"}
+{"query": "watch anime episode 6 in mpv", "expected_intent": "play_media", "is_action": true, "tag": "play_media"}
+{"query": "what is paxos consensus algorithm", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "what is the difference between nuclear fission and fusion", "expected_intent": "rag_knowledge", "is_action": false, "tag": "ood_general"}
+{"query": "what is the half life of carbon 14 dating", "expected_intent": "rag_knowledge", "is_action": false, "tag": "ood_general"}
+{"query": "what is the capital city of australia", "expected_intent": "rag_knowledge", "is_action": false, "tag": "ood_general"}
+{"query": "what is lsm tree log structured merge tree in rocksdb", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "what is the difference between specific impulse and thrust", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "what is entropy in shannon information theory", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "what is the difference between tcp bbr and cubic congestion control", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "what is heat pipe capillary action wick limit in thermal engineering", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "what is the difference between mutex spinlock and semaphore", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "what is the difference between symmetric and asymmetric cryptography", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "what is a memory fence memory barrier in cpu instruction reordering", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "what is the difference between lagrangian and eulerian frame of reference", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "explain the concept of boundary layer displacement thickness", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "explain the math behind fast fourier transform cooley tukey algorithm", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "play bill evans peace piece on piano", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}

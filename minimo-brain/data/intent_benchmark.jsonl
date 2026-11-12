@@ -1,0 +1,112 @@
+{"query": "remind me to check the slides tomorrow", "expected_intent": "add_task", "is_action": true}
+{"query": "add a task for database migration", "expected_intent": "add_task", "is_action": true}
+{"query": "new todo due 23rd evening p1", "expected_intent": "add_task", "is_action": true}
+{"query": "schedule task to review pull request", "expected_intent": "add_task", "is_action": true}
+{"query": "create a reminder for monday morning", "expected_intent": "add_task", "is_action": true}
+{"query": "finetune the ui interactions and synth background process cycle", "expected_intent": "add_task", "is_action": true}
+{"query": "refactor database connection pool and fix query latency", "expected_intent": "add_task", "is_action": true}
+{"query": "bug in opengl rendering please add a task to fix it tonight", "expected_intent": "add_task", "is_action": true}
+{"query": "make sure i dont forget to push git commits before leaving", "expected_intent": "add_task", "is_action": true}
+{"query": "remind me to buy groceries today at 6pm", "expected_intent": "add_task", "is_action": true}
+{"query": "urgent task to restart production nginx server", "expected_intent": "add_task", "is_action": true}
+{"query": "todo: submit reimbursement receipts", "expected_intent": "add_task", "is_action": true}
+{"query": "task: fix broken link in documentation", "expected_intent": "add_task", "is_action": true}
+{"query": "remind me to call mom this evening", "expected_intent": "add_task", "is_action": true}
+{"query": "set a high priority reminder for doctor appointment next tuesday", "expected_intent": "add_task", "is_action": true}
+
+{"query": "what are my pending tasks", "expected_intent": "list_tasks", "is_action": false}
+{"query": "show my todo list", "expected_intent": "list_tasks", "is_action": false}
+{"query": "list tasks", "expected_intent": "list_tasks", "is_action": false}
+{"query": "view upcoming tasks", "expected_intent": "list_tasks", "is_action": false}
+{"query": "check my todoist", "expected_intent": "list_tasks", "is_action": false}
+{"query": "what do i need to do today", "expected_intent": "list_tasks", "is_action": false}
+{"query": "what items are left on my agenda", "expected_intent": "list_tasks", "is_action": false}
+{"query": "what are my todos for today", "expected_intent": "list_tasks", "is_action": false}
+{"query": "display active tasks", "expected_intent": "list_tasks", "is_action": false}
+{"query": "show all overdue tasks", "expected_intent": "list_tasks", "is_action": false}
+
+{"query": "play reaper by kelsey lu", "expected_intent": "play_music", "is_action": true}
+{"query": "play something chill", "expected_intent": "play_music", "is_action": true}
+{"query": "stream chillhop beats", "expected_intent": "play_music", "is_action": true}
+{"query": "play some jazz music", "expected_intent": "play_music", "is_action": true}
+{"query": "put on background study beats", "expected_intent": "play_music", "is_action": true}
+{"query": "play acoustic guitar songs", "expected_intent": "play_music", "is_action": true}
+{"query": "stream piano playlist", "expected_intent": "play_music", "is_action": true}
+{"query": "put on energetic synthwave music", "expected_intent": "play_music", "is_action": true}
+{"query": "play aimer brave shine", "expected_intent": "play_music", "is_action": true}
+{"query": "listen to lofi beats in the background", "expected_intent": "play_music", "is_action": true}
+
+{"query": "watch frieren episode 5", "expected_intent": "play_media", "is_action": true}
+{"query": "play steins gate episode 1", "expected_intent": "play_media", "is_action": true}
+{"query": "watch cyberpunk edgerunners", "expected_intent": "play_media", "is_action": true}
+{"query": "play attack on titan season 4", "expected_intent": "play_media", "is_action": true}
+{"query": "stream movie interstellar", "expected_intent": "play_media", "is_action": true}
+{"query": "open downloaded episode in mpv", "expected_intent": "play_media", "is_action": true}
+
+{"query": "pause music", "expected_intent": "mpris_control", "is_action": true}
+{"query": "resume playback", "expected_intent": "mpris_control", "is_action": true}
+{"query": "skip to next song", "expected_intent": "mpris_control", "is_action": true}
+{"query": "play previous track", "expected_intent": "mpris_control", "is_action": true}
+{"query": "stop audio", "expected_intent": "mpris_control", "is_action": true}
+{"query": "whats playing right now", "expected_intent": "mpris_control", "is_action": true}
+{"query": "what is this current song", "expected_intent": "mpris_control", "is_action": true}
+{"query": "can we turn this off please it is too loud", "expected_intent": "mpris_control", "is_action": true}
+{"query": "drop the volume a bit", "expected_intent": "mpris_control", "is_action": true}
+{"query": "mute playback", "expected_intent": "mpris_control", "is_action": true}
+
+{"query": "!git status", "expected_intent": "run_cmd", "is_action": true}
+{"query": "$df -h", "expected_intent": "run_cmd", "is_action": true}
+{"query": "!systemctl status mpd", "expected_intent": "run_cmd", "is_action": true}
+{"query": "run uptime in terminal", "expected_intent": "run_cmd", "is_action": true}
+
+{"query": "what window is this", "expected_intent": "active_window", "is_action": false}
+{"query": "what is the currently focused application", "expected_intent": "active_window", "is_action": false}
+{"query": "which process has focus right now", "expected_intent": "active_window", "is_action": false}
+
+{"query": "daily horizon", "expected_intent": "daily_horizon", "is_action": false}
+{"query": "give me my morning briefing", "expected_intent": "daily_horizon", "is_action": false}
+{"query": "what is my daily horizon today", "expected_intent": "daily_horizon", "is_action": false}
+
+{"query": "what did i copy to clipboard earlier", "expected_intent": "mindspace", "is_action": false}
+{"query": "did i copy that bearer token from postman", "expected_intent": "mindspace", "is_action": false}
+{"query": "find that url in my clipboard history", "expected_intent": "mindspace", "is_action": false}
+
+{"query": "hello there", "expected_intent": "chat", "is_action": false}
+{"query": "how are you doing today", "expected_intent": "chat", "is_action": false}
+{"query": "thanks a lot for your help", "expected_intent": "chat", "is_action": false}
+{"query": "never mind cancel that", "expected_intent": "chat", "is_action": false}
+{"query": "abort task creation", "expected_intent": "chat", "is_action": false}
+{"query": "forget what i said", "expected_intent": "chat", "is_action": false}
+
+{"query": "what is paxos consensus algorithm", "expected_intent": "rag_knowledge", "is_action": false}
+{"query": "explain raft leader election", "expected_intent": "rag_knowledge", "is_action": false}
+{"query": "how does b-tree indexing work in databases", "expected_intent": "rag_knowledge", "is_action": false}
+{"query": "derive navier stokes equation in cylindrical coordinates", "expected_intent": "rag_knowledge", "is_action": false}
+{"query": "what is the difference between process and thread", "expected_intent": "rag_knowledge", "is_action": false}
+{"query": "explain cap theorem trade-offs", "expected_intent": "rag_knowledge", "is_action": false}
+{"query": "notes on aerothermodynamics", "expected_intent": "rag_knowledge", "is_action": false}
+{"query": "what did i write about rayleigh flow in my notes", "expected_intent": "rag_knowledge", "is_action": false}
+
+{"query": "what is fanno flow", "expected_intent": "rag_knowledge", "is_action": false}
+{"query": "what are fanno flows in compressible gas dynamics", "expected_intent": "rag_knowledge", "is_action": false}
+{"query": "explain fanno line in thermodynamics", "expected_intent": "rag_knowledge", "is_action": false}
+{"query": "how does cash flow analysis work for startups", "expected_intent": "rag_knowledge", "is_action": false}
+{"query": "explain optical flow calculation with lucas kanade", "expected_intent": "rag_knowledge", "is_action": false}
+{"query": "what causes buffer overflow in c programs", "expected_intent": "rag_knowledge", "is_action": false}
+{"query": "air flow separation over an airfoil at high angle of attack", "expected_intent": "rag_knowledge", "is_action": false}
+
+{"query": "how does task scheduling work in the linux kernel", "expected_intent": "rag_knowledge", "is_action": false}
+{"query": "how to implement celery background task in python", "expected_intent": "rag_knowledge", "is_action": false}
+{"query": "explain asyncio create_task event loop mechanics", "expected_intent": "rag_knowledge", "is_action": false}
+{"query": "how to build a todo list in react with redux", "expected_intent": "rag_knowledge", "is_action": false}
+{"query": "priority inversion problem in real time operating systems", "expected_intent": "rag_knowledge", "is_action": false}
+
+{"query": "remind me what is the formula for entropy", "expected_intent": "rag_knowledge", "is_action": false}
+{"query": "remind me how quicksort algorithm works", "expected_intent": "rag_knowledge", "is_action": false}
+{"query": "remind me who invented the linux kernel", "expected_intent": "rag_knowledge", "is_action": false}
+{"query": "remind me what is amontons law of friction", "expected_intent": "rag_knowledge", "is_action": false}
+
+{"query": "what does it mean to play with fire", "expected_intent": "rag_knowledge", "is_action": false}
+{"query": "how enzymes play a crucial role in cellular respiration", "expected_intent": "rag_knowledge", "is_action": false}
+{"query": "reading list for graduate fluid dynamics", "expected_intent": "rag_knowledge", "is_action": false}
+{"query": "how does a doubly linked list work in c", "expected_intent": "rag_knowledge", "is_action": false}

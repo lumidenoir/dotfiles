@@ -1,0 +1,77 @@
+## CAVA HEADLESS TELEMETRY PROFILE // 24-BAND RTA
+## Tuned for Quickshell UI IPC via Raw FIFO Stream
+
+[general]
+# Framerate: 25 FPS for ultralight CPU footprint (cuts CPU by >60% while matching human ocular flicker threshold)
+framerate = 25
+
+# Exact bar count matching your UI layout
+bars = 24
+
+# Frequency cutoff limits (eliminates sub-bass DC rumble and ultrasonic noise)
+lower_cutoff_freq = 32
+higher_cutoff_freq = 16000
+
+# Continuous dynamic gain adjustment (1) or fixed calibration (0)
+autosens = 1
+
+# Seconds of silence before sleep (0 = never sleep, continuous real-time stream)
+sleep_timer = 0
+
+
+[input]
+# Native PipeWire capture node (captures system-wide sink audio seamlessly)
+method = pipewire
+source = auto
+
+
+[output]
+# Headless raw binary byte stream directly into UNIX FIFO
+method = raw
+raw_target = /tmp/cava.fifo
+data_format = binary
+bit_format = 8bit
+
+# Zero byte separator disabled so each frame is a strict 24-byte packet
+bar_delimiter = 0
+
+
+[smoothing]
+# Monstercat disabled for discrete per-band RTA studio behavior
+monstercat = 0
+waves = 0
+
+# Noise reduction: Master smoothing & gravity falloff in Cava 1.0.0 (0-100, default 77).
+# 84 provides damped, smooth transient attack without visual slapping,
+# and liquid physical gravity decay with zero strobe flicker.
+noise_reduction = 84
+
+
+[eq]
+# 1/f Pink-noise compensation curve across the 24 discrete bands.
+# Attenuates high-energy sub-bass (1-6) and boosts lower-power treble (16-24)
+# so kick drums, vocals, and hi-hats move with balanced visual energy.
+1 = 0.55
+2 = 0.60
+3 = 0.65
+4 = 0.70
+5 = 0.75
+6 = 0.80
+7 = 0.85
+8 = 0.90
+9 = 0.95
+10 = 1.00
+11 = 1.05
+12 = 1.10
+13 = 1.15
+14 = 1.25
+15 = 1.35
+16 = 1.45
+17 = 1.60
+18 = 1.75
+19 = 1.90
+20 = 2.10
+21 = 2.30
+22 = 2.50
+23 = 2.75
+24 = 3.00

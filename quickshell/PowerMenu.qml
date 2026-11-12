@@ -17,10 +17,13 @@ PanelWindow {
     property int selectedIndex: 0
     property bool isClosing: false
     property real savedCloseTarget: 120
-    // Snap to 36px circle on open, then spring-expand (avoids pop from pill width)
+    // Snap to 32px circle on open, then spring-expand (avoids pop from pill width)
     property bool suppressOpenAnimation: false
 
+    property int pendingAction: -1
+
     WlrLayershell.keyboardFocus: show ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+    WlrLayershell.namespace: "quickshell"
 
     anchors.top: true
     anchors.bottom: true
@@ -32,9 +35,45 @@ PanelWindow {
     // Visibility managed by isClosing so both phases stay alive
     visible: show || isClosing
 
+    function triggerAction(idx) {
+        pendingAction = idx;
+        show = false;
+        actionTimer.restart();
+    }
+
+    Timer {
+        id: actionTimer
+        interval: 220
+        repeat: false
+        onTriggered: {
+            rootWindow.isClosing = false;
+            var act = rootWindow.pendingAction;
+            rootWindow.pendingAction = -1;
+            if (act === 0) pShutdown.running = true;
+            else if (act === 1) pReboot.running = true;
+            else if (act === 2) pSuspend.running = true;
+            else if (act === 3) pHibernate.running = true;
+            else if (act === 4) pLock.running = true;
+            else if (act === 5) pLogout.running = true;
+        }
+    }
+
+    // Safety watchdog: ensures isClosing never stays stuck if sleep/DPMS interrupts animation
+    Timer {
+        id: closeWatchdog
+        interval: 1000
+        repeat: false
+        onTriggered: {
+            if (rootWindow.isClosing) {
+                rootWindow.isClosing = false;
+            }
+        }
+    }
+
     onShowChanged: {
         if (show) {
             isClosing = false;
+            closeWatchdog.stop();
             suppressOpenAnimation = true;
             snapResetTimer.start();
             savedCloseTarget = Qt.binding(function() { return shellRoot ? shellRoot.closedNotchWidth : 120; });
@@ -43,12 +82,13 @@ PanelWindow {
         } else {
             savedCloseTarget = shellRoot ? shellRoot.closedNotchWidth : 120;
             isClosing = true;
+            closeWatchdog.restart();
         }
     }
 
     Timer {
         id: snapResetTimer
-        interval: 16
+        interval: 32
         repeat: false
         onTriggered: rootWindow.suppressOpenAnimation = false
     }
@@ -63,23 +103,21 @@ PanelWindow {
         id: powerMenuContent
         anchors.fill: parent
         focus: show
-        Keys.onEscapePressed: show = false
+        Keys.onEscapePressed: {
+            rootWindow.pendingAction = -1;
+            show = false;
+        }
         Keys.onLeftPressed: selectedIndex = Math.max(0, selectedIndex - 1)
         Keys.onRightPressed: selectedIndex = Math.min(layout.children.length - 1, selectedIndex + 1)
-        Keys.onReturnPressed: {
-            show = false;
-            if (selectedIndex === 0) pShutdown.running = true;
-            else if (selectedIndex === 1) pReboot.running = true;
-            else if (selectedIndex === 2) pSuspend.running = true;
-            else if (selectedIndex === 3) pHibernate.running = true;
-            else if (selectedIndex === 4) pLock.running = true;
-            else if (selectedIndex === 5) pLogout.running = true;
-        }
+        Keys.onReturnPressed: rootWindow.triggerAction(selectedIndex)
 
         MouseArea {
             anchors.fill: parent
             enabled: show
-            onClicked: show = false
+            onClicked: {
+                rootWindow.pendingAction = -1;
+                show = false;
+            }
         }
 
         Rectangle {
@@ -89,26 +127,26 @@ PanelWindow {
             anchors.horizontalCenter: parent.horizontalCenter
 
             // Snap to circle on open, then spring to full size; collapse via isClosing on close
-            width: rootWindow.suppressOpenAnimation ? 36 * rootWindow.scaleFactor : rootWindow.show ? (layout.implicitWidth + 48) : (rootWindow.isClosing ? 36 * rootWindow.scaleFactor : savedCloseTarget)
+            width: rootWindow.suppressOpenAnimation ? 32 * rootWindow.scaleFactor : rootWindow.show ? (layout.implicitWidth + 48) : (rootWindow.isClosing ? 32 * rootWindow.scaleFactor : savedCloseTarget)
+            height: rootWindow.suppressOpenAnimation ? 32 * rootWindow.scaleFactor : rootWindow.show ? (layout.implicitHeight + 36) : (rootWindow.isClosing ? 32 * rootWindow.scaleFactor : 32 * rootWindow.scaleFactor)
+            radius: Math.round(4 * (typeof scaleFactor !== "undefined" ? scaleFactor : (typeof s !== "undefined" ? s : 1.0)))
+            color: "transparent"
 
-            height: rootWindow.suppressOpenAnimation ? 36 * rootWindow.scaleFactor : rootWindow.show ? (layout.implicitHeight + 36) : (rootWindow.isClosing ? 36 * rootWindow.scaleFactor : 40 * rootWindow.scaleFactor)
-
-            color: Qt.rgba(0.02, 0.02, 0.02, 1.0)
-            
-            radius: rootWindow.suppressOpenAnimation ? 18 * rootWindow.scaleFactor : (rootWindow.show ? 24 * rootWindow.scaleFactor : (rootWindow.isClosing ? 18 * rootWindow.scaleFactor : 20 * rootWindow.scaleFactor))
-            border.color: Qt.rgba(1, 1, 1, 0.08)
-            border.width: 1
-
-            // Shape always opaque during animation; window hide is via isClosing
+            SurfaceCard {
+                id: pmGlassCard
+                anchors.fill: parent
+                radius: animRect.radius
+                contentPadding: 0
+            }
             opacity: 1.0
 
             function checkCloseFinished() {
                 if (!rootWindow.show && rootWindow.isClosing) {
                     var sf = rootWindow.scaleFactor;
-                    var targetWidth = 36 * sf;
-                    var targetHeight = 36 * sf;
-                    if (Math.abs(width - targetWidth) < 1.0 && Math.abs(height - targetHeight) < 1.0) {
+                    var target = Math.round(32 * sf);
+                    if (Math.abs(width - target) < 1.8 && Math.abs(height - target) < 1.8) {
                         rootWindow.isClosing = false;
+                        closeWatchdog.stop();
                     }
                 }
             }
@@ -116,19 +154,10 @@ PanelWindow {
             onWidthChanged: checkCloseFinished()
             onHeightChanged: checkCloseFinished()
 
-            // Shape springs — coherent mass feel (Dynamic Island)
-            Behavior on radius {
-                enabled: (show || isClosing) && !(shellRoot && shellRoot.batteryMode)
-                SpringAnimation { spring: 4.8; damping: 0.8; mass: 0.6 }
-            }
-            Behavior on width {
-                enabled: !rootWindow.suppressOpenAnimation && (show || isClosing) && !(shellRoot && shellRoot.batteryMode)
-                SpringAnimation { spring: 4.8; damping: 0.8; mass: 0.6 }
-            }
-            Behavior on height {
-                enabled: !rootWindow.suppressOpenAnimation && (show || isClosing) && !(shellRoot && shellRoot.batteryMode)
-                SpringAnimation { spring: 4.8; damping: 0.8; mass: 0.6 }
-            }
+            // Liquid spring animation
+            Behavior on radius { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+            Behavior on width { NumberAnimation { duration: 250; easing.type: Easing.OutBack; easing.overshoot: 1.15 } }
+            Behavior on height { NumberAnimation { duration: 250; easing.type: Easing.OutBack; easing.overshoot: 1.15 } }
 
             Item {
                 anchors.fill: parent
@@ -146,10 +175,7 @@ PanelWindow {
                 }
 
                 scale: show ? 1.0 : 0.95
-                Behavior on scale {
-                    enabled: true
-                    SpringAnimation { spring: 3.5; damping: 0.8; mass: 0.8 }
-                }
+                Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
 
                 RowLayout {
                     id: layout
@@ -160,21 +186,20 @@ PanelWindow {
                     Column {
                         spacing: 6
                         Rectangle {
-                            width: 50; height: 50; radius: 25
+                            width: 50; height: 50; radius: 4
                             anchors.horizontalCenter: parent.horizontalCenter
-                            color: (sdMouse.containsMouse || selectedIndex === 0) ? Qt.rgba(1, 0.2, 0.2, 0.8) : Qt.rgba(1, 1, 1, 0.08)
+                            color: (sdMouse.containsMouse || selectedIndex === 0) ? Qt.rgba(1, 0.2, 0.2, 0.85) : ((shellRoot && shellRoot.isPearlMode) ? Qt.rgba(0, 0, 0, 0.06) : Qt.rgba(1, 1, 1, 0.08))
+                            border.color: (sdMouse.containsMouse || selectedIndex === 0) ? Qt.rgba(1, 1, 1, 0.3) : ((shellRoot && shellRoot.isPearlMode) ? Qt.rgba(0, 0, 0, 0.10) : Qt.rgba(1, 1, 1, 0.12))
+                            border.width: 1
                             scale: (sdMouse.containsMouse || selectedIndex === 0) ? 1.12 : 1.0
-                            Behavior on scale {
-                                enabled: true
-                                SpringAnimation { spring: 4.5; damping: 0.65; mass: 0.6 }
-                            }
-                            Text { anchors.centerIn: parent; text: "󰐥"; color: shellRoot ? shellRoot.colFg : "white"; font.family: shellRoot ? shellRoot.iconFontFamily : "sans-serif"; font.pixelSize: 20 }
-                            MouseArea { id: sdMouse; anchors.fill: parent; hoverEnabled: true; onEntered: selectedIndex = 0; onClicked: { show = false; pShutdown.running = true } }
+                            Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+                            Text { anchors.centerIn: parent; text: "󰐥"; color: (sdMouse.containsMouse || selectedIndex === 0) ? "#ffffff" : (shellRoot ? shellRoot.colFgPrimary : "white"); font.family: shellRoot ? shellRoot.iconFontFamily : "sans-serif"; font.pixelSize: 20 }
+                            MouseArea { id: sdMouse; anchors.fill: parent; hoverEnabled: true; onEntered: selectedIndex = 0; onClicked: rootWindow.triggerAction(0) }
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: "Shut Down"
-                            color: shellRoot ? shellRoot.colMuted : "#888888"
+                            color: shellRoot ? shellRoot.colFgSecondary : "#888888"
                             font.family: shellRoot ? shellRoot.fontFamily : "sans-serif"
                             font.pixelSize: 9
                             font.bold: true
@@ -184,21 +209,20 @@ PanelWindow {
                     Column {
                         spacing: 6
                         Rectangle {
-                            width: 50; height: 50; radius: 25
+                            width: 50; height: 50; radius: 4
                             anchors.horizontalCenter: parent.horizontalCenter
-                            color: (rbMouse.containsMouse || selectedIndex === 1) ? Qt.rgba(0.2, 0.8, 0.2, 0.8) : Qt.rgba(1, 1, 1, 0.08)
+                            color: (rbMouse.containsMouse || selectedIndex === 1) ? Qt.rgba(0.2, 0.8, 0.2, 0.85) : ((shellRoot && shellRoot.isPearlMode) ? Qt.rgba(0, 0, 0, 0.06) : Qt.rgba(1, 1, 1, 0.08))
+                            border.color: (rbMouse.containsMouse || selectedIndex === 1) ? Qt.rgba(1, 1, 1, 0.3) : ((shellRoot && shellRoot.isPearlMode) ? Qt.rgba(0, 0, 0, 0.10) : Qt.rgba(1, 1, 1, 0.12))
+                            border.width: 1
                             scale: (rbMouse.containsMouse || selectedIndex === 1) ? 1.12 : 1.0
-                            Behavior on scale {
-                                enabled: true
-                                SpringAnimation { spring: 4.5; damping: 0.65; mass: 0.6 }
-                            }
-                            Text { anchors.centerIn: parent; text: "󰑓"; color: shellRoot ? shellRoot.colFg : "white"; font.family: shellRoot ? shellRoot.iconFontFamily : "sans-serif"; font.pixelSize: 20 }
-                            MouseArea { id: rbMouse; anchors.fill: parent; hoverEnabled: true; onEntered: selectedIndex = 1; onClicked: { show = false; pReboot.running = true } }
+                            Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+                            Text { anchors.centerIn: parent; text: "󰑓"; color: (rbMouse.containsMouse || selectedIndex === 1) ? "#ffffff" : (shellRoot ? shellRoot.colFgPrimary : "white"); font.family: shellRoot ? shellRoot.iconFontFamily : "sans-serif"; font.pixelSize: 20 }
+                            MouseArea { id: rbMouse; anchors.fill: parent; hoverEnabled: true; onEntered: selectedIndex = 1; onClicked: rootWindow.triggerAction(1) }
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: "Reboot"
-                            color: shellRoot ? shellRoot.colMuted : "#888888"
+                            color: shellRoot ? shellRoot.colFgSecondary : "#888888"
                             font.family: shellRoot ? shellRoot.fontFamily : "sans-serif"
                             font.pixelSize: 9
                             font.bold: true
@@ -208,21 +232,20 @@ PanelWindow {
                     Column {
                         spacing: 6
                         Rectangle {
-                            width: 50; height: 50; radius: 25
+                            width: 50; height: 50; radius: 4
                             anchors.horizontalCenter: parent.horizontalCenter
-                            color: (spMouse.containsMouse || selectedIndex === 2) ? Qt.rgba(0.2, 0.2, 1.0, 0.8) : Qt.rgba(1, 1, 1, 0.08)
+                            color: (spMouse.containsMouse || selectedIndex === 2) ? Qt.rgba(0.2, 0.4, 1.0, 0.85) : ((shellRoot && shellRoot.isPearlMode) ? Qt.rgba(0, 0, 0, 0.06) : Qt.rgba(1, 1, 1, 0.08))
+                            border.color: (spMouse.containsMouse || selectedIndex === 2) ? Qt.rgba(1, 1, 1, 0.3) : ((shellRoot && shellRoot.isPearlMode) ? Qt.rgba(0, 0, 0, 0.10) : Qt.rgba(1, 1, 1, 0.12))
+                            border.width: 1
                             scale: (spMouse.containsMouse || selectedIndex === 2) ? 1.12 : 1.0
-                            Behavior on scale {
-                                enabled: true
-                                SpringAnimation { spring: 4.5; damping: 0.65; mass: 0.6 }
-                            }
-                            Text { anchors.centerIn: parent; text: "󰤄"; color: shellRoot ? shellRoot.colFg : "white"; font.family: shellRoot ? shellRoot.iconFontFamily : "sans-serif"; font.pixelSize: 20 }
-                            MouseArea { id: spMouse; anchors.fill: parent; hoverEnabled: true; onEntered: selectedIndex = 2; onClicked: { show = false; pSuspend.running = true } }
+                            Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+                            Text { anchors.centerIn: parent; text: "󰤄"; color: (spMouse.containsMouse || selectedIndex === 2) ? "#ffffff" : (shellRoot ? shellRoot.colFgPrimary : "white"); font.family: shellRoot ? shellRoot.iconFontFamily : "sans-serif"; font.pixelSize: 20 }
+                            MouseArea { id: spMouse; anchors.fill: parent; hoverEnabled: true; onEntered: selectedIndex = 2; onClicked: rootWindow.triggerAction(2) }
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: "Sleep"
-                            color: shellRoot ? shellRoot.colMuted : "#888888"
+                            color: shellRoot ? shellRoot.colFgSecondary : "#888888"
                             font.family: shellRoot ? shellRoot.fontFamily : "sans-serif"
                             font.pixelSize: 9
                             font.bold: true
@@ -232,21 +255,20 @@ PanelWindow {
                     Column {
                         spacing: 6
                         Rectangle {
-                            width: 50; height: 50; radius: 25
+                            width: 50; height: 50; radius: 4
                             anchors.horizontalCenter: parent.horizontalCenter
-                            color: (hbMouse.containsMouse || selectedIndex === 3) ? Qt.rgba(0.2, 0.8, 0.8, 0.8) : Qt.rgba(1, 1, 1, 0.08)
+                            color: (hbMouse.containsMouse || selectedIndex === 3) ? Qt.rgba(0.2, 0.8, 0.8, 0.85) : ((shellRoot && shellRoot.isPearlMode) ? Qt.rgba(0, 0, 0, 0.06) : Qt.rgba(1, 1, 1, 0.08))
+                            border.color: (hbMouse.containsMouse || selectedIndex === 3) ? Qt.rgba(1, 1, 1, 0.3) : ((shellRoot && shellRoot.isPearlMode) ? Qt.rgba(0, 0, 0, 0.10) : Qt.rgba(1, 1, 1, 0.12))
+                            border.width: 1
                             scale: (hbMouse.containsMouse || selectedIndex === 3) ? 1.12 : 1.0
-                            Behavior on scale {
-                                enabled: true
-                                SpringAnimation { spring: 4.5; damping: 0.65; mass: 0.6 }
-                            }
-                            Text { anchors.centerIn: parent; text: "󰒲"; color: shellRoot ? shellRoot.colFg : "white"; font.family: shellRoot ? shellRoot.iconFontFamily : "sans-serif"; font.pixelSize: 20 }
-                            MouseArea { id: hbMouse; anchors.fill: parent; hoverEnabled: true; onEntered: selectedIndex = 3; onClicked: { show = false; pHibernate.running = true } }
+                            Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+                            Text { anchors.centerIn: parent; text: "󰒲"; color: (hbMouse.containsMouse || selectedIndex === 3) ? "#ffffff" : (shellRoot ? shellRoot.colFgPrimary : "white"); font.family: shellRoot ? shellRoot.iconFontFamily : "sans-serif"; font.pixelSize: 20 }
+                            MouseArea { id: hbMouse; anchors.fill: parent; hoverEnabled: true; onEntered: selectedIndex = 3; onClicked: rootWindow.triggerAction(3) }
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: "Hibernate"
-                            color: shellRoot ? shellRoot.colMuted : "#888888"
+                            color: shellRoot ? shellRoot.colFgSecondary : "#888888"
                             font.family: shellRoot ? shellRoot.fontFamily : "sans-serif"
                             font.pixelSize: 9
                             font.bold: true
@@ -256,21 +278,20 @@ PanelWindow {
                     Column {
                         spacing: 6
                         Rectangle {
-                            width: 50; height: 50; radius: 25
+                            width: 50; height: 50; radius: 4
                             anchors.horizontalCenter: parent.horizontalCenter
-                            color: (lkMouse.containsMouse || selectedIndex === 4) ? Qt.rgba(0.8, 0.2, 0.8, 0.8) : Qt.rgba(1, 1, 1, 0.08)
+                            color: (lkMouse.containsMouse || selectedIndex === 4) ? Qt.rgba(0.8, 0.2, 0.8, 0.85) : ((shellRoot && shellRoot.isPearlMode) ? Qt.rgba(0, 0, 0, 0.06) : Qt.rgba(1, 1, 1, 0.08))
+                            border.color: (lkMouse.containsMouse || selectedIndex === 4) ? Qt.rgba(1, 1, 1, 0.3) : ((shellRoot && shellRoot.isPearlMode) ? Qt.rgba(0, 0, 0, 0.10) : Qt.rgba(1, 1, 1, 0.12))
+                            border.width: 1
                             scale: (lkMouse.containsMouse || selectedIndex === 4) ? 1.12 : 1.0
-                            Behavior on scale {
-                                enabled: true
-                                SpringAnimation { spring: 4.5; damping: 0.65; mass: 0.6 }
-                            }
-                            Text { anchors.centerIn: parent; text: "󰌾"; color: shellRoot ? shellRoot.colFg : "white"; font.family: shellRoot ? shellRoot.iconFontFamily : "sans-serif"; font.pixelSize: 20 }
-                            MouseArea { id: lkMouse; anchors.fill: parent; hoverEnabled: true; onEntered: selectedIndex = 4; onClicked: { show = false; pLock.running = true } }
+                            Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+                            Text { anchors.centerIn: parent; text: "󰌾"; color: (lkMouse.containsMouse || selectedIndex === 4) ? "#ffffff" : (shellRoot ? shellRoot.colFgPrimary : "white"); font.family: shellRoot ? shellRoot.iconFontFamily : "sans-serif"; font.pixelSize: 20 }
+                            MouseArea { id: lkMouse; anchors.fill: parent; hoverEnabled: true; onEntered: selectedIndex = 4; onClicked: rootWindow.triggerAction(4) }
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: "Lock"
-                            color: shellRoot ? shellRoot.colMuted : "#888888"
+                            color: shellRoot ? shellRoot.colFgSecondary : "#888888"
                             font.family: shellRoot ? shellRoot.fontFamily : "sans-serif"
                             font.pixelSize: 9
                             font.bold: true
@@ -280,21 +301,20 @@ PanelWindow {
                     Column {
                         spacing: 6
                         Rectangle {
-                            width: 50; height: 50; radius: 25
+                            width: 50; height: 50; radius: 4
                             anchors.horizontalCenter: parent.horizontalCenter
-                            color: (loMouse.containsMouse || selectedIndex === 5) ? Qt.rgba(0.8, 0.8, 0.2, 0.8) : Qt.rgba(1, 1, 1, 0.08)
+                            color: (loMouse.containsMouse || selectedIndex === 5) ? Qt.rgba(0.8, 0.8, 0.2, 0.85) : ((shellRoot && shellRoot.isPearlMode) ? Qt.rgba(0, 0, 0, 0.06) : Qt.rgba(1, 1, 1, 0.08))
+                            border.color: (loMouse.containsMouse || selectedIndex === 5) ? Qt.rgba(1, 1, 1, 0.3) : ((shellRoot && shellRoot.isPearlMode) ? Qt.rgba(0, 0, 0, 0.10) : Qt.rgba(1, 1, 1, 0.12))
+                            border.width: 1
                             scale: (loMouse.containsMouse || selectedIndex === 5) ? 1.12 : 1.0
-                            Behavior on scale {
-                                enabled: true
-                                SpringAnimation { spring: 4.5; damping: 0.65; mass: 0.6 }
-                            }
-                            Text { anchors.centerIn: parent; text: "󰍃"; color: shellRoot ? shellRoot.colFg : "white"; font.family: shellRoot ? shellRoot.iconFontFamily : "sans-serif"; font.pixelSize: 20 }
-                            MouseArea { id: loMouse; anchors.fill: parent; hoverEnabled: true; onEntered: selectedIndex = 5; onClicked: { show = false; pLogout.running = true } }
+                            Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+                            Text { anchors.centerIn: parent; text: "󰍃"; color: (loMouse.containsMouse || selectedIndex === 5) ? "#ffffff" : (shellRoot ? shellRoot.colFgPrimary : "white"); font.family: shellRoot ? shellRoot.iconFontFamily : "sans-serif"; font.pixelSize: 20 }
+                            MouseArea { id: loMouse; anchors.fill: parent; hoverEnabled: true; onEntered: selectedIndex = 5; onClicked: rootWindow.triggerAction(5) }
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: "Log Out"
-                            color: shellRoot ? shellRoot.colMuted : "#888888"
+                            color: shellRoot ? shellRoot.colFgSecondary : "#888888"
                             font.family: shellRoot ? shellRoot.fontFamily : "sans-serif"
                             font.pixelSize: 9
                             font.bold: true

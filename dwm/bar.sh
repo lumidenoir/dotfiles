@@ -39,10 +39,26 @@ mem() {
 }
 
 wlan() {
-    case "$(cat /sys/class/net/wlan0/operstate 2>/dev/null)" in
-    up) printf "^c$black^ ^b$red^ 󰤨 ^d^%s""^c$blue^^b$grey^ Connected" ;;
-    down) printf "^c$black^ ^b$red^ 󰤭 ^d^%s""^c$blue^^b$grey^ Disconnected" ;;
-    esac
+    local status="Disconnected"
+    local icon="󰤭"
+    
+    for dev in /sys/class/net/*; do
+        dev_name=$(basename "$dev")
+        if [ "$dev_name" != "lo" ] && [ -f "$dev/operstate" ]; then
+            state=$(cat "$dev/operstate" 2>/dev/null)
+            if [ "$state" = "up" ]; then
+                case "$dev_name" in
+                    en*|eth*) icon="󰈀" ;;
+                    wl*) icon="󰤨" ;;
+                    *) icon="󰲝" ;;
+                esac
+                status="Connected"
+                break
+            fi
+        fi
+    done
+
+    printf "^c$black^ ^b$red^ $icon ^d^%s""^c$blue^^b$grey^ $status"
 }
 
 clock() {

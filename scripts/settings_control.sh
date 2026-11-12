@@ -21,12 +21,35 @@ readonly BRIGHTNESS_LOW_ICON="moon.svg"
 readonly BRIGHTNESS_MED_ICON="circle-half-stroke.svg"
 readonly BRIGHTNESS_HIGH_ICON="sun.svg"
 
+is_fiio_active() {
+    if pgrep -x "mpd" >/dev/null; then
+        if mpc outputs 2>/dev/null | grep -A 2 "FiiO" | grep -q "enabled" && mpc status 2>/dev/null | grep -q "\[playing\]"; then
+            return 0
+        fi
+    fi
+    return 1
+}
+
 get_volume() {
-    pactl get-sink-volume @DEFAULT_SINK@ | grep -Po '[0-9]{1,3}(?=%)' | head -1
+    if is_fiio_active; then
+        amixer -c NANO sget PCM | grep -Po '\[[0-9]+%\]' | head -1 | tr -d '[]%'
+    else
+        pactl get-sink-volume @DEFAULT_SINK@ | grep -Po '[0-9]{1,3}(?=%)' | head -1
+    fi
 }
 
 get_mute_status() {
-    pactl get-sink-mute @DEFAULT_SINK@ | grep -Po '(?<=Mute: )(yes|no)'
+    if is_fiio_active; then
+        local status
+        status=$(amixer -c NANO sget PCM | grep -Po '\[(on|off)\]' | head -1 | tr -d '[]')
+        if [[ "$status" == "off" ]]; then
+            echo "yes"
+        else
+            echo "no"
+        fi
+    else
+        pactl get-sink-mute @DEFAULT_SINK@ | grep -Po '(?<=Mute: )(yes|no)'
+    fi
 }
 
 get_volume_icon() {
@@ -43,10 +66,10 @@ get_volume_icon() {
 }
 
 call_quickshell_ipc() {
-    if [[ "$XDG_CURRENT_DESKTOP" == "Hyprland" ]] && pgrep -x "quickshell" > /dev/null; then
-        if quickshell -p "$HOME/dotfiles/quickshell" ipc call qsIpc "$@" >/dev/null 2>&1; then
+    if [[ "$XDG_CURRENT_DESKTOP" == "Hyprland" ]] && { pgrep -x "quickshell" > /dev/null || pgrep -x "qs" > /dev/null; }; then
+        if qs -p "$HOME/dotfiles/quickshell" ipc call qsIpc "$@" >/dev/null 2>&1; then
             return 0
-        elif quickshell ipc call qsIpc "$@" >/dev/null 2>&1; then
+        elif quickshell -p "$HOME/dotfiles/quickshell" ipc call qsIpc "$@" >/dev/null 2>&1; then
             return 0
         fi
     fi
@@ -111,10 +134,7 @@ show_mic_notification() {
 }
 
 get_brightness() {
-    local current max
-    current=$(brightnessctl g)
-    max=$(brightnessctl m)
-    echo $((current * 100 / max))
+    ddcutil getvcp 10 --terse | awk '{print $4}'
 }
 
 get_brightness_icon() {
@@ -181,25 +201,37 @@ show_music_notification() {
 }
 
 volume_up() {
-    pactl set-sink-mute @DEFAULT_SINK@ 0
-    local current_volume
-    current_volume=$(get_volume)
-    
-    if (( current_volume + VOLUME_STEP > MAX_VOLUME )); then
-        pactl set-sink-volume @DEFAULT_SINK@ "${MAX_VOLUME}%"
+    if is_fiio_active; then
+        amixer -q -c NANO sset PCM 1+
     else
-        pactl set-sink-volume @DEFAULT_SINK@ "+${VOLUME_STEP}%"
+        pactl set-sink-mute @DEFAULT_SINK@ 0
+        local current_volume
+        current_volume=$(get_volume)
+        
+        if (( current_volume + VOLUME_STEP > MAX_VOLUME )); then
+            pactl set-sink-volume @DEFAULT_SINK@ "${MAX_VOLUME}%"
+        else
+            pactl set-sink-volume @DEFAULT_SINK@ "+${VOLUME_STEP}%"
+        fi
     fi
     show_volume_notification
 }
 
 volume_down() {
-    pactl set-sink-volume @DEFAULT_SINK@ "-${VOLUME_STEP}%"
+    if is_fiio_active; then
+        amixer -q -c NANO sset PCM 1-
+    else
+        pactl set-sink-volume @DEFAULT_SINK@ "-${VOLUME_STEP}%"
+    fi
     show_volume_notification
 }
 
 volume_mute() {
-    pactl set-sink-mute @DEFAULT_SINK@ toggle
+    if is_fiio_active; then
+        amixer -q -c NANO sset PCM toggle
+    else
+        pactl set-sink-mute @DEFAULT_SINK@ toggle
+    fi
     show_volume_notification
 }
 
@@ -209,12 +241,12 @@ mic_mute() {
 }
 
 brightness_up() {
-    brightnessctl set "${BRIGHTNESS_STEP}%+"
+    ddcutil setvcp 10 + ${BRIGHTNESS_STEP} --noverify --sleep-multiplier .1
     show_brightness_notification
 }
 
 brightness_down() {
-    brightnessctl set "${BRIGHTNESS_STEP}%-"
+    ddcutil setvcp 10 - ${BRIGHTNESS_STEP} --noverify --sleep-multiplier .1
     show_brightness_notification
 }
 

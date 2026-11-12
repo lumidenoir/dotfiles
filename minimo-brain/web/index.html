@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#181825">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Minimo Brain · Cross-Device Synthesis</title>
+  
+  <!-- Modern Typography: Outfit & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons via CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Marked.js for markdown rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <link rel="stylesheet" href="/static/style.css?v=20261024_03">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="avatar-container" id="avatarContainer">
+          <div class="avatar-ring"></div>
+          <div class="avatar-face" id="avatarFace">✦</div>
+        </div>
+        <div class="header-title-box">
+          <div class="header-title">Minimo Brain</div>
+          <div class="header-subtitle">
+            <span class="status-dot" id="statusDot"></span>
+            <span id="statusText">Connecting...</span>
+            <span class="tailscale-tag" id="tailscaleTag">Tailscale</span>
+          </div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="tasksDrawerBtn" title="Todoist Tasks" aria-label="Tasks Drawer">
+          <i data-lucide="check-square"></i>
+          <span class="badge-count" id="tasksCountBadge">0</span>
+        </button>
+        <button class="icon-btn" id="clearChatBtn" title="Reset Session" aria-label="Clear Session">
+          <i data-lucide="rotate-ccw"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Filter Pills / Modes -->
+    <nav class="mode-bar">
+      <button class="mode-pill active" data-mode="all">
+        <i data-lucide="sparkles"></i> All
+      </button>
+      <button class="mode-pill" data-mode="tasks">
+        <i data-lucide="check-circle-2"></i> Tasks
+      </button>
+      <button class="mode-pill" data-mode="notes">
+        <i data-lucide="file-text"></i> Notes
+      </button>
+      <button class="mode-pill" data-mode="books">
+        <i data-lucide="book-open"></i> Books
+      </button>
+      <button class="mode-pill" data-mode="media">
+        <i data-lucide="film"></i> Media
+      </button>
+    </nav>
+
+    <!-- Main Message Deck -->
+    <main class="chat-deck" id="chatDeck">
+      <!-- Welcome Hero (shown when empty) -->
+      <div class="welcome-hero" id="welcomeHero">
+        <div class="hero-icon-bubble">
+          <i data-lucide="cpu"></i>
+        </div>
+        <h2>Connected to Minimo Brain</h2>
+        <p>Headless cognitive synthesis engine running live on your Arch Linux host over Tailscale.</p>
+        <div class="quick-chips">
+          <button class="chip" onclick="quickPrompt('What are my pending tasks?')">📋 Show Tasks</button>
+          <button class="chip" onclick="quickPrompt('Is Frieren anime present in storage?')">🎬 Check Frieren</button>
+          <button class="chip" onclick="quickPrompt('What are PID controller tuning rules in my notes?')">📚 PID Tuning</button>
+          <button class="chip" onclick="quickPrompt('$ df -h')">💻 Disk Usage</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Floating Live Agent Indicator -->
+    <div class="live-status-bar" id="liveStatusBar" style="display: none;">
+      <div class="live-spinner"></div>
+      <span id="liveStatusLabel">Synthesizing answer...</span>
+    </div>
+
+    <!-- Input Footer -->
+    <footer class="input-deck">
+      <form class="input-form" id="inputForm" onsubmit="return false;">
+        <div class="input-wrapper">
+          <textarea
+            id="queryInput"
+            rows="1"
+            placeholder="Ask Minimo, manage tasks, inspect media..."
+            autocomplete="off"
+            autocorrect="off"
+            spellcheck="false"
+          ></textarea>
+          <button type="submit" class="send-btn" id="sendBtn" aria-label="Send">
+            <i data-lucide="arrow-up"></i>
+          </button>
+        </div>
+      </form>
+    </footer>
+
+    <!-- Tasks Drawer (Slide-in Modal) -->
+    <div class="drawer-overlay" id="drawerOverlay"></div>
+    <div class="drawer" id="tasksDrawer">
+      <div class="drawer-header">
+        <div class="drawer-title-group">
+          <i data-lucide="check-square" class="drawer-icon"></i>
+          <h3>Todoist Tasks</h3>
+        </div>
+        <button class="icon-btn close-drawer-btn" id="closeDrawerBtn" aria-label="Close Tasks">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="drawer-body" id="drawerTasksList">
+        <div class="drawer-loading">
+          <div class="live-spinner"></div>
+          <span>Loading tasks from host...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js?v=20261024_03"></script>
+</body>
+</html>

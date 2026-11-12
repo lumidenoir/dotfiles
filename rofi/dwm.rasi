@@ -1,4 +1,4 @@
-@import "themes/active.rasi"
+@import "themes/onedark.rasi"
 
 configuration{
     modi: "run,drun,window";

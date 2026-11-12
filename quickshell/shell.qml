@@ -11,67 +11,824 @@ import Quickshell.Io
 import Quickshell.Services.Notifications
 import Quickshell.Services.SystemTray
 import Quickshell.Widgets
+import QtQuick.Effects
+import Quickshell.Services.Mpris
+import "Singletons"
 
 ShellRoot {
     id: root
+    readonly property real fontScale: scaleFactor * root.fontSizeMultiplier
     property bool _initApp: {
         Qt.application.organization = "Quickshell";
         Qt.application.domain = "quickshell.org";
         Qt.application.name = "Quickshell";
         return true;
     }
-    property color colBg: "#000000"
+    property real wallTopBrightness: 0.5
+    property real scaleFactorOverride: 0.0
+    property int themeOverride: 0 // 0: Auto, 1: Force Light, 2: Force Dark
+    property real darkOpacity: 0.60
+    property real lightOpacity: 0.12
+    property real fontSizeMultiplier: 1.0
+    property int visualizerShader: 0 // 0: Glow, 1: Silk Waves, 2: Cyber Bars, 3: Radial Aura
+
+    property bool wallTopIsDark: {
+        if (themeOverride === 1) return true;
+        if (themeOverride === 2) return false;
+        return !isPearlMode;
+    }
+
+    property color colBg: {
+        if (wallTopIsDark) {
+            return Qt.rgba(1, 1, 1, lightOpacity);
+        } else {
+            return Qt.rgba(0.08, 0.08, 0.09, darkOpacity);
+        }
+    }
+    
+    property color colBorder: {
+        if (wallTopIsDark) {
+            return Qt.rgba(1, 1, 1, 0.22);
+        } else {
+            return Qt.rgba(1, 1, 1, 0.08);
+        }
+    }
+
+    function runProcessSafely(proc, cmdArr) {
+        if (proc && !proc.running) {
+            if (cmdArr !== undefined && cmdArr !== null) {
+                proc.command = cmdArr;
+            }
+            proc.running = true;
+        }
+    }
+
+    function checkWallpaperBrightness() {
+        // Decommissioned: HUD wallpaper runs on OLED dark palette
+    }
+
+    property real wallLuminance: 0.50
+    property real wallSigma: 0.05
+    property real wallSaturation: 0.20
+    property string wallDominantHex: "#6D4A54"
+    readonly property color wallDominantColor: Qt.color(wallDominantHex)
+    property string userGlassPreference: "auto"
+    property bool autoGlassMode: userGlassPreference === "auto"
+
+    // Dynamic Apple Vibrancy Palette (Calibrated SF Deep Ink with subtle ambient environmental tinting)
+    readonly property color colVibrantInk: {
+        var r = Math.min(0.18, 0.114 + (wallDominantColor.r * 0.03));
+        var g = Math.min(0.18, 0.114 + (wallDominantColor.g * 0.03));
+        var b = Math.min(0.19, 0.122 + (wallDominantColor.b * 0.03));
+        return Qt.rgba(r, g, b, 0.98); // Apple SF Ink #1D1D1F
+    }
+    readonly property color colVibrantSecondary: {
+        var r = Math.min(0.50, 0.431 + (wallDominantColor.r * 0.04));
+        var g = Math.min(0.50, 0.431 + (wallDominantColor.g * 0.04));
+        var b = Math.min(0.52, 0.451 + (wallDominantColor.b * 0.04));
+        return Qt.rgba(r, g, b, 0.88); // Apple Secondary #6E6E73
+    }
+    readonly property color colVibrantMuted: {
+        var r = Math.min(0.60, 0.525 + (wallDominantColor.r * 0.04));
+        var g = Math.min(0.60, 0.525 + (wallDominantColor.g * 0.04));
+        var b = Math.min(0.62, 0.545 + (wallDominantColor.b * 0.04));
+        return Qt.rgba(r, g, b, 0.75); // Apple Tertiary #86868B
+    }
+
+    property string wallpaperPath: ""
+
+    FileView {
+        path: (Quickshell.env("HOME") || "/home/krishna") + "/.cache/wallpaper"
+        watchChanges: true
+        printErrors: false
+        onFileChanged: {
+            var p = text().trim();
+            if (p.length > 0) {
+                root.wallpaperPath = p;
+                root.checkWallpaperBrightness();
+            }
+        }
+    }
+
+    Process {
+        id: pGetWallpaperPath
+        command: ["cat", (Quickshell.env("HOME") || "/home/krishna") + "/.cache/wallpaper"]
+        stdout: SplitParser {
+            onRead: data => {
+                var p = data.trim();
+                if (p.length > 0 && p !== root.wallpaperPath) {
+                    root.wallpaperPath = p;
+                    root.checkWallpaperBrightness();
+                }
+            }
+        }
+    }
+
+    Timer {
+        id: wallPollTimer
+        interval: 2500
+        running: true
+        repeat: true
+        onTriggered: root.runProcessSafely(pGetWallpaperPath)
+    }
+
+    readonly property Item wallpaperBackdropRoot: Item {
+        id: wallpaperBackdropRoot
+        width: Screen.width > 0 ? Screen.width : 1920
+        height: Screen.height > 0 ? Screen.height : 1080
+        z: -999
+        opacity: 0.001
+
+        Image {
+            id: wallpaperImg
+            anchors.fill: parent
+            source: root.wallpaperPath !== "" ? ("file://" + root.wallpaperPath) : ""
+            fillMode: Image.PreserveAspectCrop
+            asynchronous: true
+        }
+    }
+    readonly property alias wallpaperBackdropItem: wallpaperBackdropRoot
+
+    // Dynamic color tint for light wallpapers to enhance contrast
+    property color colTint: {
+        if (wallTopIsDark) {
+            return Qt.rgba(0.0, 0.0, 0.0, 0.0);
+        } else {
+            return Qt.rgba(0.04, 0.04, 0.06, 0.15);
+        }
+    }
+
+    property color colGlass: {
+        if (wallTopIsDark) {
+            return Qt.rgba(1, 1, 1, 0.08);
+        } else {
+            return Qt.rgba(0.06, 0.06, 0.08, 0.50);
+        }
+    }
+
+    // =========================================================================
+    // VISIONOS 2-TIER SPATIAL GLASS ENGINE ("frosted" | "dark")
+    // =========================================================================
+    property string glassMode: "frosted"
+    readonly property bool isPearlMode: false
+    readonly property bool isFrostedMode: glassMode === "frosted"
+    readonly property bool isDarkMode: glassMode === "dark" || glassMode === "apple_dark"
+    readonly property real appleGlassModeValue: isDarkMode ? 1.0 : 0.0
+
+    property real customFrostBlur: 0.88
+    readonly property real glassBlurAmount: root.customFrostBlur
+    readonly property real glassRefraction: isFrostedMode ? 0.38 : 0.40
+    readonly property real glassChromAberration: 0.020
+    readonly property real glassEdgeHighlight: isDarkMode ? 0.32 : 0.28
+    readonly property real glassFresnel: 0.80
+    readonly property real glassBrightness: isDarkMode ? -0.20 : 0.0
+    readonly property real glassSaturation: isDarkMode ? 0.15 : 0.10
+    readonly property real glassBevelMode: 0.0
+    readonly property real glassZRadius: 28.0
+
+    Process {
+        id: pReadGlassMode
+        command: ["cat", (Quickshell.env("HOME") || "/home/krishna") + "/.cache/quickshell_glass_mode"]
+        stdout: SplitParser {
+            onRead: data => {
+                var m = data.trim();
+                if (m === "auto") {
+                    root.userGlassPreference = "auto";
+                    root.autoGlassMode = true;
+                    root.checkWallpaperBrightness();
+                } else if (m === "frosted" || m === "dark" || m === "apple_dark") {
+                    root.userGlassPreference = m;
+                    root.autoGlassMode = false;
+                    if (root.glassMode !== m) root.glassMode = m;
+                } else {
+                    // Default fallback for legacy "pearl" or unrecognized values
+                    root.userGlassPreference = "frosted";
+                    root.autoGlassMode = false;
+                    root.glassMode = "frosted";
+                }
+            }
+        }
+    }
+
+    Process {
+        id: pWriteGlassMode
+    }
+
+    function setGlassMode(mode) {
+        if (mode === "auto") {
+            root.userGlassPreference = "auto";
+            root.autoGlassMode = true;
+            pWriteGlassMode.command = ["sh", "-c", "mkdir -p " + (Quickshell.env("HOME") || "/home/krishna") + "/.cache && echo -n auto > " + (Quickshell.env("HOME") || "/home/krishna") + "/.cache/quickshell_glass_mode"];
+            if (pWriteGlassMode.running) pWriteGlassMode.running = false;
+            pWriteGlassMode.running = true;
+            root.checkWallpaperBrightness();
+            return;
+        }
+        var targetMode = (mode === "dark" || mode === "apple_dark") ? "dark" : "frosted";
+        root.userGlassPreference = targetMode;
+        root.autoGlassMode = false;
+        root.glassMode = targetMode;
+        pWriteGlassMode.command = ["sh", "-c", "mkdir -p " + (Quickshell.env("HOME") || "/home/krishna") + "/.cache && echo -n " + targetMode + " > " + (Quickshell.env("HOME") || "/home/krishna") + "/.cache/quickshell_glass_mode"];
+        if (pWriteGlassMode.running) pWriteGlassMode.running = false;
+        pWriteGlassMode.running = true;
+    }
+
+    // =========================================================================
+    // MINIMO BOT APPEARANCE ("dark" | "light")
+    // =========================================================================
+    property string minimoBotMode: "dark"
+    readonly property bool isMinimoLightMode: minimoBotMode === "light"
+
+    Process {
+        id: pReadMinimoBotMode
+        command: ["cat", (Quickshell.env("HOME") || "/home/krishna") + "/.cache/quickshell_minimo_mode"]
+        stdout: SplitParser {
+            onRead: data => {
+                var m = data.trim();
+                if (m === "light" || m === "dark") {
+                    root.minimoBotMode = m;
+                }
+            }
+        }
+    }
+
+    Process {
+        id: pWriteMinimoBotMode
+    }
+
+    function setMinimoBotMode(mode) {
+        var targetMode = (mode === "light") ? "light" : "dark";
+        root.minimoBotMode = targetMode;
+        pWriteMinimoBotMode.command = ["sh", "-c", "mkdir -p " + (Quickshell.env("HOME") || "/home/krishna") + "/.cache && echo -n " + targetMode + " > " + (Quickshell.env("HOME") || "/home/krishna") + "/.cache/quickshell_minimo_mode"];
+        if (pWriteMinimoBotMode.running) pWriteMinimoBotMode.running = false;
+        pWriteMinimoBotMode.running = true;
+    }
+
+    function toggleThemeMode() {
+        if (root.glassMode === "dark" || root.glassMode === "apple_dark") {
+            root.setGlassMode("frosted");
+        } else {
+            root.setGlassMode("dark");
+        }
+    }
+
+    readonly property color colFgPrimary: "#ffffff"
+    readonly property color colFgSecondary: Qt.rgba(1.0, 1.0, 1.0, 0.70)
+    readonly property color colBgPill: isFrostedMode ? Qt.rgba(0, 0, 0, 0.28) : Qt.rgba(0, 0, 0, 0.35)
+    readonly property color colCardBorder: Qt.rgba(1.0, 1.0, 1.0, 0.12)
+    readonly property color colCardInner: Qt.rgba(1.0, 1.0, 1.0, 0.04)
+
     property color colFg: "#ffffff"
-    property color colAccent: "#ffffff"
-    property color colMuted: Qt.rgba(1, 1, 1, 0.4)
-    property color colHover: Qt.rgba(1, 1, 1, 0.1)
-    property color colCrit: "#ff0000"
-    property color colSuccess: "#76B900"
-    property color colWarn: "#FFA500"
-    property color colSpotify: "#1DB954"
-    readonly property real scaleFactor: Screen.width > 2560 ? 1.25 : (Screen.width > 1920 ? 1.125 : 1.0)
-    property string fontFamily: "Geist"
-    property string iconFontFamily: "GeistMono Nerd Font"
+    property color colAccent: "#0A84FF" // Apple System Blue
+    property color colAccentSecondary: "#30D158" // Apple System Green
+    property color colMuted: Qt.rgba(1, 1, 1, 0.50)
+    property color colHover: Qt.rgba(1, 1, 1, 0.15)
+    property color colCrit: "#FF453A" // Apple System Red
+    property color colSuccess: "#30D158" // Apple System Green
+    property color colWarn: "#FF9F0A" // Apple System Orange
+    property color colSpotify: "#30D158"
+    property real scaleFactor: scaleFactorOverride > 0.0 ? scaleFactorOverride : (Screen.width > 2560 ? 1.25 : (Screen.width > 1920 ? 1.125 : 1.0))
+    property string fontFamily: "Ioskeley Mono"
+    property string textFontFamily: "Ioskeley Mono"
+    property string monoFontFamily: "Ioskeley Mono"
+    property string roundedFontFamily: "Ioskeley Mono"
+    property string serifFontFamily: "Ioskeley Mono"
+    property string iconFontFamily: "Symbols Nerd Font"
+    property string nerdFontFamily: "Symbols Nerd Font"
+
+    FontLoader { source: "file:///home/krishna/.local/share/fonts/i/IoskeleyMono_Regular.ttf" }
+    FontLoader { source: "file:///home/krishna/.local/share/fonts/i/IoskeleyMono_Bold.ttf" }
+    FontLoader { source: "file:///home/krishna/.local/share/fonts/i/IoskeleyMono_Medium.ttf" }
+    FontLoader { source: "file:///home/krishna/.local/share/fonts/i/IoskeleyMono_SemiBold.ttf" }
     property int fontSize: Math.round(11 * scaleFactor)
     property bool isDestroying: false
+    property bool hasBattery: false
 
-    property var currentNotif: null
-    property real notchWidth: notchLayout.implicitWidth
+    property var activeNotifQueue: []
+    // Computed — always in sync with activeNotifQueue, never manually written
+    readonly property bool notifActive: activeNotifQueue.length > 0
+    readonly property var currentNotifGroup: activeNotifQueue.length > 0 ? activeNotifQueue[0] : null
+    readonly property var currentNotifItem: (currentNotifGroup && currentNotifGroup.notifications && currentNotifGroup.notifications.length > 0) ? currentNotifGroup.notifications[0] : null
+    readonly property var currentNotifId: currentNotifItem ? (currentNotifItem.notifId !== undefined ? currentNotifItem.notifId : currentNotifItem.id) : null
+    readonly property string notifTitle: currentNotifItem ? currentNotifItem.summary : ""
+    readonly property string notifBody: currentNotifItem ? currentNotifItem.body : ""
+    readonly property string notifIcon: currentNotifGroup ? currentNotifGroup.appIcon : ""
+    readonly property var notifActions: currentNotifItem ? (currentNotifItem.actions || []) : []
+    readonly property bool notifHasActions: currentNotifItem ? (currentNotifItem.hasActions || (currentNotifItem.actions && currentNotifItem.actions.length > 0)) : false
+
+    property real notifProgress: 1.0
+    PropertyAnimation {
+        id: notifProgressAnim
+        target: root
+        property: "notifProgress"
+        from: 1.0
+        to: 0.0
+        duration: notifCloseTimer.interval
+        running: notifCloseTimer.running
+    }
+
+    property var _lastShownNotifId: -1
+
+    onActiveNotifQueueChanged: {
+        if (activeNotifQueue.length > 0) {
+            var head = activeNotifQueue[0].notifications[0];
+            if (head && head.id !== _lastShownNotifId) {
+                _lastShownNotifId = head.id;
+                notifCloseTimer.interval = root.notifDismissDelay;
+                notifCloseTimer.restart();
+            }
+        } else {
+            _lastShownNotifId = -1;
+            notifCloseTimer.stop();
+        }
+    }
+
+    function removeNotificationById(notifId) {
+        if (!notifId && notifId !== 0) return;
+
+        // 1. Remove from activeNotifQueue
+        var newQueue = [];
+        for (var i = 0; i < activeNotifQueue.length; i++) {
+            var group = activeNotifQueue[i];
+            var notifs = group.notifications.filter(function(n) { return n && n.id !== notifId; });
+            if (notifs.length > 0) {
+                newQueue.push({
+                    appName: group.appName,
+                    appIcon: group.appIcon,
+                    notifications: notifs
+                });
+            }
+        }
+        activeNotifQueue = newQueue;
+        // groupedNotifList auto-derives from activeNotifQueue — no manual update needed
+    }
+
+    function dismissFrontNotification() {
+        if (activeNotifQueue.length > 0) {
+            var newQueue = activeNotifQueue.slice();
+            var frontGroup = newQueue[0];
+            if (frontGroup.notifications && frontGroup.notifications.length > 1) {
+                var groupNotifs = frontGroup.notifications.slice();
+                groupNotifs.shift();
+                newQueue[0] = {
+                    appName: frontGroup.appName,
+                    appIcon: frontGroup.appIcon,
+                    notifications: groupNotifs
+                };
+                activeNotifQueue = newQueue;
+                // Force triggering re-check of head ID and restart close timer
+                var head = groupNotifs[0];
+                if (head) {
+                    _lastShownNotifId = head.id;
+                    notifCloseTimer.interval = root.notifDismissDelay;
+                    notifCloseTimer.restart();
+                }
+            } else {
+                newQueue.shift();
+                activeNotifQueue = newQueue;
+            }
+        }
+    }
+
+    // Safe C++ Notification Object lookup map
+    property var _notifObjMap: ({})
+    // Cache of live NotificationAction objects: { "notifId:actionId": actionObject }
+    property var _actionObjMap: ({})
+
+    function registerNotifObj(notif) {
+        if (!notif || !notif.id) return;
+        notif.tracked = true; // Keep the D-Bus notification alive!
+        _notifObjMap[notif.id] = notif;
+
+        // Store each individual action object for direct invocation later
+        try {
+            var acts = notif.actions;
+            if (acts && acts.length > 0) {
+                for (var i = 0; i < acts.length; i++) {
+                    var a = acts[i];
+                    if (a && a.identifier) {
+                        _actionObjMap[notif.id + ":" + a.identifier] = a;
+                        console.log("Registered action: " + notif.id + ":" + a.identifier + " = " + a.text);
+                    }
+                }
+            }
+        } catch(e) {
+            console.log("Error registering actions: " + e);
+        }
+    }
+
+    function invokeNotificationAction(notifId, actionId) {
+        console.log("invokeNotificationAction: notifId=" + notifId + " actionId=" + actionId);
+        try {
+            // First try the direct cached action object (most reliable)
+            var key = notifId + ":" + (actionId || "default");
+            var cachedAction = _actionObjMap[key];
+            if (cachedAction && typeof cachedAction.invoke === "function") {
+                console.log("Invoking cached action: " + key);
+                cachedAction.invoke();
+            } else {
+                // Fallback: iterate n.actions directly via index
+                var n = _notifObjMap[notifId];
+                if (n) {
+                    var invoked = false;
+                    for (var i = 0; i < n.actions.length; i++) {
+                        var a = n.actions[i];
+                        if (a && a.identifier === (actionId || "default")) {
+                            console.log("Invoking indexed action: " + a.identifier);
+                            if (typeof a.invoke === "function") { a.invoke(); invoked = true; break; }
+                        }
+                    }
+                    if (!invoked) console.log("No matching action found for actionId=" + actionId);
+                } else {
+                    console.log("No notification object for id=" + notifId);
+                }
+            }
+        } catch(e) {
+            console.log("Error invoking notification action: " + e);
+        }
+        // Clean up action entries for this notification
+        try {
+            for (var k in _actionObjMap) {
+                if (k.indexOf(notifId + ":") === 0) delete _actionObjMap[k];
+            }
+        } catch(e2) {}
+        
+        var nRef = _notifObjMap[notifId];
+        delete _notifObjMap[notifId];
+        removeNotificationById(notifId);
+        removeNotificationFromList(notifId);
+
+        // Delay dismissing the D-Bus notification slightly to ensure ActionInvoked signal is fully sent to the client first
+        if (nRef) {
+            root.delayedDismissQueue.push(nRef);
+            delayedDismissTimer.restart();
+        }
+    }
+
+    property var delayedDismissQueue: []
+    Timer {
+        id: delayedDismissTimer
+        interval: 200
+        repeat: false
+        onTriggered: {
+            while (root.delayedDismissQueue.length > 0) {
+                var n = root.delayedDismissQueue.shift();
+                if (n && typeof n.dismiss === "function") {
+                    n.dismiss();
+                } else if (n && typeof n.close === "function") {
+                    n.close();
+                } else if (n) {
+                    n.tracked = false;
+                }
+            }
+        }
+    }
+
+    function dismissNotificationSafely(notifId) {
+        try {
+            var n = _notifObjMap[notifId];
+            if (n && typeof n.dismiss === "function") {
+                n.dismiss();
+            } else if (n && typeof n.close === "function") {
+                n.close();
+            }
+        } catch(e) {}
+        delete _notifObjMap[notifId];
+        removeNotificationById(notifId);
+        removeNotificationFromList(notifId);
+    }
+
+    function dismissNotificationGroup(appName) {
+        if (!appName) return;
+
+        // 1. Collect all notification IDs for this app
+        var idsToDismiss = [];
+        for (var i = 0; i < root.groupedNotifList.length; i++) {
+            if (root.groupedNotifList[i].appName === appName) {
+                var notifs = root.groupedNotifList[i].notifications;
+                for (var k = 0; k < notifs.length; k++) {
+                    var nId = notifs[k].notifId !== undefined ? notifs[k].notifId : notifs[k].id;
+                    if (nId !== undefined && nId !== null) idsToDismiss.push(nId);
+                }
+                break;
+            }
+        }
+
+        // 2. Also check activeNotifQueue for any matching notifications
+        for (var a = 0; a < root.activeNotifQueue.length; a++) {
+            if (root.activeNotifQueue[a].appName === appName) {
+                var qNotifs = root.activeNotifQueue[a].notifications;
+                for (var qk = 0; qk < qNotifs.length; qk++) {
+                    var qId = qNotifs[qk].notifId !== undefined ? qNotifs[qk].notifId : qNotifs[qk].id;
+                    if (qId !== undefined && qId !== null && idsToDismiss.indexOf(qId) === -1) {
+                        idsToDismiss.push(qId);
+                    }
+                }
+            }
+        }
+
+        // 3. Dismiss D-Bus notification objects
+        for (var d = 0; d < idsToDismiss.length; d++) {
+            var notifId = idsToDismiss[d];
+            try {
+                var obj = _notifObjMap[notifId];
+                if (obj) {
+                    if (typeof obj.dismiss === "function") obj.dismiss();
+                    else if (typeof obj.close === "function") obj.close();
+                }
+            } catch(e) {}
+            delete _notifObjMap[notifId];
+        }
+
+        // 4. Atomically remove from activeNotifQueue
+        var newQueue = [];
+        for (var qi = 0; qi < root.activeNotifQueue.length; qi++) {
+            if (root.activeNotifQueue[qi].appName !== appName) {
+                newQueue.push(root.activeNotifQueue[qi]);
+            }
+        }
+        root.activeNotifQueue = newQueue;
+
+        // 5. Atomically remove from groupedNotifList in one assignment
+        var newList = [];
+        for (var gi = 0; gi < root.groupedNotifList.length; gi++) {
+            if (root.groupedNotifList[gi].appName !== appName) {
+                newList.push(root.groupedNotifList[gi]);
+            }
+        }
+        root.groupedNotifList = newList;
+
+        // 6. Clean up expanded map entry
+        var map = Object.assign({}, root._groupExpandedMap);
+        delete map[appName];
+        root._groupExpandedMap = map;
+    }
+
+    // ── Persistent Notification Center List (Ground Control) ──
+    property var _groupExpandedMap: ({})
+    property var groupedNotifList: []
+
+    readonly property int totalNotifCount: {
+        var count = 0;
+        for (var i = 0; i < groupedNotifList.length; i++) {
+            if (groupedNotifList[i].notifications)
+                count += groupedNotifList[i].notifications.length;
+        }
+        return count;
+    }
+
+    function addNotificationToList(notifItem) {
+        if (!notifItem) return;
+        var appName = notifItem.appName ? notifItem.appName : "System";
+        var appIcon = notifItem.appIcon ? notifItem.appIcon : "";
+        var nId = notifItem.id !== undefined ? notifItem.id : notifItem.notifId;
+
+        var listCopy = root.groupedNotifList.slice();
+        var groupFound = false;
+
+        for (var i = 0; i < listCopy.length; i++) {
+            if (listCopy[i].appName === appName) {
+                var notifs = listCopy[i].notifications.slice();
+                var dupIndex = -1;
+                for (var k = 0; k < notifs.length; k++) {
+                    var currId = notifs[k].id !== undefined ? notifs[k].id : notifs[k].notifId;
+                    if (currId === nId) {
+                        dupIndex = k;
+                        break;
+                    }
+                }
+                if (dupIndex !== -1) {
+                    notifs[dupIndex] = notifItem;
+                } else {
+                    notifs.unshift(notifItem);
+                }
+                listCopy[i] = {
+                    appName: appName,
+                    appIcon: appIcon,
+                    isExpanded: root._groupExpandedMap[appName] === true,
+                    notifications: notifs
+                };
+                if (i > 0) {
+                    var updatedGroup = listCopy.splice(i, 1)[0];
+                    listCopy.unshift(updatedGroup);
+                }
+                groupFound = true;
+                break;
+            }
+        }
+
+        if (!groupFound) {
+            listCopy.unshift({
+                appName: appName,
+                appIcon: appIcon,
+                isExpanded: root._groupExpandedMap[appName] === true,
+                notifications: [notifItem]
+            });
+        }
+
+        root.groupedNotifList = listCopy;
+    }
+
+    function removeNotificationFromList(notifId) {
+        if (!notifId && notifId !== 0) return;
+
+        var listCopy = [];
+        for (var i = 0; i < root.groupedNotifList.length; i++) {
+            var group = root.groupedNotifList[i];
+            var notifs = group.notifications.filter(function(n) {
+                var id = n.notifId !== undefined ? n.notifId : n.id;
+                return id !== notifId;
+            });
+            if (notifs.length > 0) {
+                listCopy.push({
+                    appName: group.appName,
+                    appIcon: group.appIcon,
+                    isExpanded: root._groupExpandedMap[group.appName] === true,
+                    notifications: notifs
+                });
+            }
+        }
+        root.groupedNotifList = listCopy;
+    }
+
+    function toggleGroupExpanded(index) {
+        if (index < 0 || index >= root.groupedNotifList.length) return;
+        var appName = root.groupedNotifList[index].appName;
+        var map = Object.assign({}, root._groupExpandedMap);
+        map[appName] = !(map[appName] === true);
+        root._groupExpandedMap = map;
+
+        var listCopy = root.groupedNotifList.slice();
+        for (var i = 0; i < listCopy.length; i++) {
+            if (listCopy[i].appName === appName) {
+                listCopy[i] = {
+                    appName: listCopy[i].appName,
+                    appIcon: listCopy[i].appIcon,
+                    isExpanded: map[appName] === true,
+                    notifications: listCopy[i].notifications
+                };
+                break;
+            }
+        }
+        root.groupedNotifList = listCopy;
+    }
+
+    function clearAllNotifications() {
+        for (var i = 0; i < root.groupedNotifList.length; i++) {
+            var group = root.groupedNotifList[i];
+            for (var j = 0; j < group.notifications.length; j++) {
+                var nId = group.notifications[j].notifId !== undefined ? group.notifications[j].notifId : group.notifications[j].id;
+                if (nId !== undefined && nId !== null) {
+                    try {
+                        var n = _notifObjMap[nId];
+                        if (n) {
+                            if (typeof n.dismiss === "function") n.dismiss();
+                            else if (typeof n.close === "function") n.close();
+                        }
+                    } catch(e) {}
+                    delete _notifObjMap[nId];
+                }
+            }
+        }
+        for (var a = 0; a < root.activeNotifQueue.length; a++) {
+            var ag = root.activeNotifQueue[a];
+            for (var b = 0; b < ag.notifications.length; b++) {
+                var anId = ag.notifications[b].notifId !== undefined ? ag.notifications[b].notifId : ag.notifications[b].id;
+                if (anId !== undefined && anId !== null) {
+                    try {
+                        var an = _notifObjMap[anId];
+                        if (an) {
+                            if (typeof an.dismiss === "function") an.dismiss();
+                            else if (typeof an.close === "function") an.close();
+                        }
+                    } catch(e) {}
+                    delete _notifObjMap[anId];
+                }
+            }
+        }
+        root._groupExpandedMap = {};
+        root.activeNotifQueue = [];
+        root.groupedNotifList = [];
+    }
+
+    property real notchWidth: notchRect && notchRect.notchLayout ? notchRect.notchLayout.implicitWidth : 0
     property alias notchRect: notchRect
     readonly property var _notchWidths: ({
-        1: 280 * scaleFactor, 4: 240 * scaleFactor, 5: 240 * scaleFactor, 6: 200 * scaleFactor, 3: 200 * scaleFactor,
-        7: 200 * scaleFactor, 8: 200 * scaleFactor, 9: 200 * scaleFactor, 10: 240 * scaleFactor, 11: 240 * scaleFactor,
-        12: 260 * scaleFactor, 13: 280 * scaleFactor, 14: 340 * scaleFactor, 15: 260 * scaleFactor, 16: 220 * scaleFactor,
-        17: 290 * scaleFactor
+        [root.stateMedia]: 380 * scaleFactor,
+        [root.stateTimer]: 340 * scaleFactor,
+        [root.stateStopwatch]: 340 * scaleFactor,
+        [root.stateRecording]: 280 * scaleFactor,
+        [root.stateOsd]: 200 * scaleFactor,
+        [root.stateBatteryLow]: 200 * scaleFactor,
+        [root.stateCharging]: 200 * scaleFactor,
+        [root.stateDnd]: 200 * scaleFactor,
+        [root.stateWaterAlert]: 360 * scaleFactor,
+        [root.stateStretchAlert]: 360 * scaleFactor,
+        [root.statePomodoro]: 360 * scaleFactor,
+        [root.stateF1Alert]: 260 * scaleFactor,
+        [root.stateCpuAlert]: 280 * scaleFactor,
+        [root.stateDragLocalSend]: 340 * scaleFactor,
+        [root.stateLocalSendSuccess]: 260 * scaleFactor,
+        [root.stateComms]: 220 * scaleFactor,
+        [root.stateDiskAlert]: 290 * scaleFactor,
+        [root.stateNudge]: Math.round(440 * scaleFactor)
     })
+
+    property bool bootSettled: false
+    Timer {
+        interval: 3000
+        running: true
+        repeat: false
+        onTriggered: root.bootSettled = true
+    }
+
+
+    property bool unlockTriggerPrimed: false
+    Timer {
+        interval: 800
+        running: true
+        repeat: false
+        onTriggered: root.unlockTriggerPrimed = true
+    }
+    FileView {
+        path: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/ricelin-unlock-trigger"
+        watchChanges: true
+        printErrors: false
+        onLoadFailed: setText("0")
+        onFileChanged: {
+            if (root.unlockTriggerPrimed) {
+                root.isLocked = false;
+            }
+        }
+    }
+
+    FileView {
+        path: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/ricelin-lock-trigger"
+        watchChanges: true
+        printErrors: false
+        onLoadFailed: setText("0")
+        onFileChanged: {
+            if (root.unlockTriggerPrimed) {
+                root.isLocked = true;
+                root.closeAllPopups();
+            }
+        }
+    }
 
     property real _cachedNotchWidth: 180 * scaleFactor
     Connections {
-        target: notchLayout
-        // Only update while in compact — prevents tiny text changes (e.g. "99%"→"100%")
-        // from bouncing _cachedNotchWidth and causing opacity flicker.
+        target: notchRect && notchRect.notchLayout ? notchRect.notchLayout : null
+        // Only update while in compact with a stability threshold to prevent tiny text changes
+        // from causing feedback loops and width jitter.
         function onImplicitWidthChanged() {
-            if (root.islandState === root.stateCompact && !root.isAnyPopupOpen) {
-                _cachedNotchWidth = notchLayout.implicitWidth + 40 * scaleFactor;
+            if (root.islandState === root.stateCompact && !root.isAnyPopupOpen && notchRect && notchRect.notchLayout) {
+                var target = Math.round(notchRect.notchLayout.implicitWidth + 40 * scaleFactor);
+                if (Math.abs(target - root._cachedNotchWidth) >= 3) {
+                    root._cachedNotchWidth = target;
+                }
             }
         }
     }
     // Also refresh when *returning* to compact, in case modules changed
     // while the island was in another state (e.g. Spotify started while in media state).
     onIslandStateChanged: {
-        if (root.islandState === root.stateCompact) {
-            _cachedNotchWidth = notchLayout.implicitWidth + 40 * scaleFactor;
+        if (root.islandState === root.stateCompact && notchRect && notchRect.notchLayout) {
+            var target = Math.round(notchRect.notchLayout.implicitWidth + 40 * scaleFactor);
+            if (Math.abs(target - root._cachedNotchWidth) >= 3) {
+                root._cachedNotchWidth = target;
+            }
         }
     }
     Component.onCompleted: {
-        _cachedNotchWidth = notchLayout.implicitWidth + 40 * scaleFactor;
-        root.reloadWalColors();
+        if (notchRect && notchRect.notchLayout) {
+            root._cachedNotchWidth = Math.round(notchRect.notchLayout.implicitWidth + 40 * scaleFactor);
+        }
+        root.runProcessSafely(pGetWallpaperPath);
+        root.runProcessSafely(pReadGlassMode);
+        root.runProcessSafely(pReadMinimoBotMode);
+        root.checkWallpaperBrightness();
+        root.runProcessSafely(pVolumeOut);
+        root.runProcessSafely(pVolumeMic);
+        root.loadScratchpad();
     }
-    // Cap at 45% of bar width so the pill never overlaps the side widgets
-    readonly property real closedNotchWidth: Math.min(
-        _notchWidths[islandState] ?? _cachedNotchWidth,
-        barWindow.width * 0.45
-    )
+    // Dynamic boundary capping: ensures center notch never overlaps left/right capsules
+    readonly property real closedNotchWidth: {
+        var screenW = Screen.width;
+        var targetW;
+        if (islandState === root.stateDiskAlert) {
+            var layoutW = (typeof diskAlertLayout !== "undefined" && diskAlertLayout) ? diskAlertLayout.implicitWidth : (290 * scaleFactor - 28);
+            targetW = Math.max(180 * scaleFactor, Math.min(360 * scaleFactor, layoutW + 28));
+        } else {
+            targetW = _notchWidths[islandState] ?? _cachedNotchWidth;
+        }
+        var rCapW = (typeof rightCapsule !== "undefined" && rightCapsule) ? rightCapsule.width : Math.round(280 * scaleFactor);
+        var lCapW = (typeof leftCapsule !== "undefined" && leftCapsule) ? leftCapsule.width : Math.round(200 * scaleFactor);
+        var rightBoundary = screenW - rCapW - Math.round(24 * scaleFactor);
+        var leftBoundary = Math.round(12 * scaleFactor) + lCapW + Math.round(12 * scaleFactor);
+        var maxCenterW = Math.min((rightBoundary - screenW / 2) * 2, (screenW / 2 - leftBoundary) * 2);
+        var safeMaxW = Math.max(140 * scaleFactor, maxCenterW);
+        return Math.min(targetW, safeMaxW);
+    }
     signal notificationReceived
 
     // Dynamic paths
@@ -105,16 +862,19 @@ ShellRoot {
     readonly property int stateLocalSendSuccess: 15
     readonly property int stateComms: 16
     readonly property int stateDiskAlert: 17
+    readonly property int statePomodoro: 18
+    readonly property int stateNudge: 19
     property string diskAlertTitle: ""
     property string diskAlertSubtitle: ""
     property bool diskAlertMounted: true
-    property bool flightDeckActive: false
+    property string diskAlertDev: ""
+    property string diskAlertType: "usb" // "usb" | "phone" | "bluetooth"
 
 
     property bool topHuggingStyle: false
-    property real notchSpringStiffness: 3.5
-    property real notchSpringDamping: 0.62
-    property real notchSpringMass: 0.75
+    property real notchSpringStiffness: 4.2
+    property real notchSpringDamping: 0.72
+    property real notchSpringMass: 0.65
     property int localSendDismissDelay: 2000
     property int localSendRevealDelay: 140
     property int notifDismissDelay: 4500
@@ -129,15 +889,16 @@ ShellRoot {
         property alias localSendDismissDelay: root.localSendDismissDelay
         property alias localSendRevealDelay: root.localSendRevealDelay
         property alias notifDismissDelay: root.notifDismissDelay
+        property alias scaleFactorOverride: root.scaleFactorOverride
+        property alias themeOverride: root.themeOverride
+        property alias darkOpacity: root.darkOpacity
+        property alias lightOpacity: root.lightOpacity
+        property alias fontSizeMultiplier: root.fontSizeMultiplier
+        property alias visualizerShader: root.visualizerShader
     }
 
     property int islandState: stateCompact
     property int prevIslandState: stateCompact // for restoring after OSD
-    property string notifTitle: ""
-    property string notifBody: ""
-    property string notifIcon: ""
-    property bool notifActive: false
-    property alias mediaExpanded: mediaPopup.show
 
     // F1, Emails, and CPU Hot alerts state variables
     property string f1NextEventName: ""
@@ -175,21 +936,34 @@ ShellRoot {
     property alias pRecordSel: pRecordSel
     property alias pRecordFull: pRecordFull
     property alias pWallTheme: pWallTheme
+    property alias audiophilePlayer: audiophilePlayer
+    property alias audiophileMiniPlayer: audiophileMiniPlayer
     property alias pOcrShot: pOcrShot
-    property alias wifiMenuPopup: wifiMenuPopup
+    property alias audioPopup: audioPopup
+    property var wifiMenuPopup: null
     property alias bluetoothMenuPopup: bluetoothMenuPopup
     property alias timerPopup: timerPopup
+    property alias alarmReminderPill: alarmReminderPill
+    property alias calendarPopup: calendarPopup
     property alias f1CalendarPopup: f1CalendarPopup
     property alias emailsPopup: emailsPopup
-    property alias wallpaperMenuPopup: wallpaperMenuPopup
+    property var wallpaperMenuPopup: null
+    property alias screenshotMenuPopup: screenshotMenuPopup
+    property alias screenSelector: screenSelector
     property alias settingsWindow: settingsWindow
+    property var sparklinePopup: null
+    property var powerProfilePopup: null
     property alias sinkModel: sinkModel
     property alias pListSinks: pListSinks
     property alias pSetSink: pSetSink
-    property alias notifList: notifList
-    property alias pRedshiftToggle: pRedshiftToggle
     property alias pCaffeineToggle: pCaffeineToggle
+    property alias pAudiophileToggle: pAudiophileToggle
     property alias pKeybindings: pKeybindings
+    property alias pTriggerStatsUpdate: pTriggerStatsUpdate
+    property alias barWindow: barWindow
+    property alias recordingTimer: recordingTimer
+    property var groundControl: null
+    property var airspace: null
 
     property var cpuHistory: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     property var ramHistory: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -197,6 +971,8 @@ ShellRoot {
     // Reactive list — re-evaluates automatically when any input property changes
     property var activeActivities: {
         var list = [];
+        if (root.pomodoroActive && (root.pomodoroRunning || root.pomodoroSeconds > 0))
+            list.push("pomodoro");
         if (root.spotifyStatus === "playing")
             list.push("media");
         if (root.timerRunning || (root.timerSeconds > 0 && root.timerSeconds < root.timerTotal))
@@ -205,14 +981,19 @@ ShellRoot {
             list.push("stopwatch");
         if (root.isRecording)
             list.push("recording");
+        if (root.isMicActive)
+            list.push("comms");
         return list;
     }
 
-    // Auto-promote/demote activities as they start or end
+    // Continuous activities default to compact pill notch display (isMaximized: false).
+    // When an activity starts, notch switches to its minimized pill.
     onActiveActivitiesChanged: {
         var acts = root.activeActivities;
         var currentAct = "";
-        if (root.islandState === root.stateMedia)
+        if (root.islandState === root.statePomodoro)
+            currentAct = "pomodoro";
+        else if (root.islandState === root.stateMedia)
             currentAct = "media";
         else if (root.islandState === root.stateTimer)
             currentAct = "timer";
@@ -220,33 +1001,31 @@ ShellRoot {
             currentAct = "stopwatch";
         else if (root.islandState === root.stateRecording)
             currentAct = "recording";
+        else if (root.islandState === root.stateComms)
+            currentAct = "comms";
 
         if (currentAct !== "" && acts.indexOf(currentAct) === -1) {
-            // Current activity ended — promote next or go compact
+            // Current activity ended — switch to next active activity or compact
             if (acts.length > 0) {
-                var n = acts[0];
-                if (n === "media")
-                    root.islandState = root.stateMedia;
-                else if (n === "timer")
-                    root.islandState = root.stateTimer;
-                else if (n === "stopwatch")
-                    root.islandState = root.stateStopwatch;
-                else if (n === "recording")
-                    root.islandState = root.stateRecording;
+                var nextAct = acts[0];
+                if (nextAct === "pomodoro") root.islandState = root.statePomodoro;
+                else if (nextAct === "media") root.islandState = root.stateMedia;
+                else if (nextAct === "timer") root.islandState = root.stateTimer;
+                else if (nextAct === "stopwatch") root.islandState = root.stateStopwatch;
+                else if (nextAct === "recording") root.islandState = root.stateRecording;
+                else if (nextAct === "comms") root.islandState = root.stateComms;
             } else {
                 root.islandState = root.stateCompact;
             }
         } else if (root.islandState === root.stateCompact && acts.length > 0) {
-            // Island is idle — auto-promote the first new activity
+            // Activity started — display as minimized pill in notch
             var first = acts[0];
-            if (first === "media")
-                root.islandState = root.stateMedia;
-            else if (first === "timer")
-                root.islandState = root.stateTimer;
-            else if (first === "stopwatch")
-                root.islandState = root.stateStopwatch;
-            else if (first === "recording")
-                root.islandState = root.stateRecording;
+            if (first === "pomodoro") root.islandState = root.statePomodoro;
+            else if (first === "media") root.islandState = root.stateMedia;
+            else if (first === "timer") root.islandState = root.stateTimer;
+            else if (first === "stopwatch") root.islandState = root.stateStopwatch;
+            else if (first === "recording") root.islandState = root.stateRecording;
+            else if (first === "comms") root.islandState = root.stateComms;
         }
     }
 
@@ -255,7 +1034,9 @@ ShellRoot {
         if (acts.length <= 1)
             return;
         var currentActivity = "";
-        if (root.islandState === root.stateMedia)
+        if (root.islandState === root.statePomodoro)
+            currentActivity = "pomodoro";
+        else if (root.islandState === root.stateMedia)
             currentActivity = "media";
         else if (root.islandState === root.stateTimer)
             currentActivity = "timer";
@@ -263,12 +1044,16 @@ ShellRoot {
             currentActivity = "stopwatch";
         else if (root.islandState === root.stateRecording)
             currentActivity = "recording";
+        else if (root.islandState === root.stateComms)
+            currentActivity = "comms";
 
         var currentIndex = acts.indexOf(currentActivity);
         var nextIndex = (currentIndex + 1) % acts.length;
         var nextActivity = acts[nextIndex];
 
-        if (nextActivity === "media")
+        if (nextActivity === "pomodoro")
+            root.islandState = root.statePomodoro;
+        else if (nextActivity === "media")
             root.islandState = root.stateMedia;
         else if (nextActivity === "timer")
             root.islandState = root.stateTimer;
@@ -276,15 +1061,123 @@ ShellRoot {
             root.islandState = root.stateStopwatch;
         else if (nextActivity === "recording")
             root.islandState = root.stateRecording;
+        else if (nextActivity === "comms")
+            root.islandState = root.stateComms;
     }
 
-    readonly property bool isAnyPopupOpen: (groundControl && groundControl.visible) || (wifiMenuPopup && wifiMenuPopup.visible) || (powerMenuPopup && powerMenuPopup.visible) || (bluetoothMenuPopup && bluetoothMenuPopup.visible) || (mediaPopup && mediaPopup.visible) || (timerPopup && timerPopup.visible) || (f1CalendarPopup && f1CalendarPopup.visible) || (emailsPopup && emailsPopup.visible) || (wallpaperMenuPopup && wallpaperMenuPopup.visible) || (airspace && airspace.visible)
+    property bool isLocked: false
+    readonly property bool isAnyPopupOpen: (groundControl && (groundControl.show || groundControl.visible)) ||
+                                           (airspace && (airspace.show || airspace.visible)) ||
+                                           (calendarPopup && (calendarPopup.show || calendarPopup.visible)) ||
+                                           (powerMenuPopup && (powerMenuPopup.show || powerMenuPopup.visible)) ||
+                                           (wallpaperMenuPopup && (wallpaperMenuPopup.show || wallpaperMenuPopup.visible)) ||
+                                           (screenshotMenuPopup && (screenshotMenuPopup.show || screenshotMenuPopup.visible)) ||
+                                           (audioPopup && (audioPopup.show || audioPopup.visible)) ||
+                                           (wifiMenuPopup && (wifiMenuPopup.show || wifiMenuPopup.visible)) ||
+                                           (bluetoothMenuPopup && (bluetoothMenuPopup.show || bluetoothMenuPopup.visible)) ||
+                                           (sparklinePopup && (sparklinePopup.show || sparklinePopup.visible)) ||
+                                           (powerProfilePopup && (powerProfilePopup.show || powerProfilePopup.visible)) ||
+                                           (f1CalendarPopup && (f1CalendarPopup.show || f1CalendarPopup.visible)) ||
+                                           (appLauncherPopup && (appLauncherPopup.show || appLauncherPopup.visible)) ||
+                                           (clipboardPopup && (clipboardPopup.show || clipboardPopup.visible)) ||
+                                           (spotlightPopup && (spotlightPopup.show || spotlightPopup.visible)) ||
+                                           (mindPilotPopup && (mindPilotPopup.show || mindPilotPopup.visible)) ||
+                                           (cheatsheetPopup && (cheatsheetPopup.show || cheatsheetPopup.visible)) ||
+                                           (emailsPopup && (emailsPopup.show || emailsPopup.visible)) ||
+                                           (alarmReminderPill && (alarmReminderPill.show || alarmReminderPill.visible))
+    readonly property bool isCenterPopupOpen: (groundControl && (groundControl.show || groundControl.visible || groundControl.isClosing)) ||
+                                           (airspace && (airspace.show || airspace.visible)) ||
+                                           (calendarPopup && (calendarPopup.show || calendarPopup.visible)) ||
+                                           (powerMenuPopup && (powerMenuPopup.show || powerMenuPopup.visible || powerMenuPopup.isClosing)) ||
+                                           (wallpaperMenuPopup && (wallpaperMenuPopup.show || wallpaperMenuPopup.visible)) ||
+                                           (appLauncherPopup && (appLauncherPopup.show || appLauncherPopup.visible || appLauncherPopup.isClosing)) ||
+                                           (clipboardPopup && (clipboardPopup.show || clipboardPopup.visible || clipboardPopup.isClosing)) ||
+                                           (spotlightPopup && (spotlightPopup.show || spotlightPopup.visible || spotlightPopup.isClosing)) ||
+                                           (screenshotMenuPopup && (screenshotMenuPopup.show || screenshotMenuPopup.visible)) ||
+                                           (alarmReminderPill && (alarmReminderPill.show || alarmReminderPill.visible || alarmReminderPill.isClosing))
+
+    Timer {
+        id: popupHandoffTimer
+        interval: 60 // ~4-5 compositor frames on 60-120Hz to guarantee clean framebuffer unmapping
+        repeat: false
+        property var pendingPopup: null
+        onTriggered: {
+            if (pendingPopup) {
+                if (typeof pendingPopup.hideImmediately !== "undefined") {
+                    pendingPopup.hideImmediately = false;
+                }
+                if (typeof pendingPopup.show !== "undefined") {
+                    pendingPopup.show = true;
+                } else if (typeof pendingPopup.visible !== "undefined") {
+                    pendingPopup.visible = true;
+                }
+                pendingPopup = null;
+            }
+        }
+    }
+
+    function togglePopup(targetPopup) {
+        if (!targetPopup) return;
+
+        var isOpen = (typeof targetPopup.show !== "undefined" && targetPopup.show) ||
+                     (typeof targetPopup.visible !== "undefined" && targetPopup.visible);
+
+        if (isOpen) {
+            popupHandoffTimer.stop();
+            popupHandoffTimer.pendingPopup = null;
+            if (typeof targetPopup.show !== "undefined") targetPopup.show = false;
+            else if (typeof targetPopup.visible !== "undefined") targetPopup.visible = false;
+            if (typeof targetPopup.close === "function") targetPopup.close();
+            return;
+        }
+
+        // Check if any sibling popup is currently open
+        var hadOpenPopup = root.isAnyPopupOpen;
+
+        // Close all other open popups first with immediate hide flags
+        root.closeAllPopupsExcept(targetPopup);
+
+        if (hadOpenPopup) {
+            // Sibling handoff: give Wayland compositor 60ms to swap clean buffer
+            popupHandoffTimer.pendingPopup = targetPopup;
+            popupHandoffTimer.restart();
+        } else {
+            popupHandoffTimer.stop();
+            popupHandoffTimer.pendingPopup = null;
+            if (typeof targetPopup.show !== "undefined") targetPopup.show = true;
+            else if (typeof targetPopup.visible !== "undefined") targetPopup.visible = true;
+        }
+    }
+
+    function closeAllPopups() {
+        closeAllPopupsExcept(null);
+    }
+
+    function closeAllPopupsExcept(exceptPopup) {
+        popupHandoffTimer.stop();
+        popupHandoffTimer.pendingPopup = null;
+        var popups = [groundControl, airspace, calendarPopup, powerMenuPopup, wallpaperMenuPopup, screenshotMenuPopup, audioPopup, wifiMenuPopup, bluetoothMenuPopup, sparklinePopup, powerProfilePopup, f1CalendarPopup, emailsPopup, timerPopup, spotlightPopup, mindPilotPopup];
+        for (var i = 0; i < popups.length; i++) {
+            var p = popups[i];
+            if (p && p !== exceptPopup) {
+                if (typeof p.hideImmediately !== "undefined") p.hideImmediately = true;
+                if (typeof p.show !== "undefined") p.show = false;
+                if (typeof p.close === "function") p.close();
+                if (typeof p.closeAllSubPopups === "function") p.closeAllSubPopups();
+            }
+        }
+    }
+
+    // Active Window Title State
+    property string activeWindowTitle: ""
+    property string activeWindowClass: ""
 
     // State properties
     property string wifiSsid: ""
     property string bluetoothDevice: ""
     property bool redshiftActive: false
     property bool caffeineActive: false
+    property bool audiophileActive: false
     property string powerDraw: "0.0"
     property string temperature: "0"
     property string updates: "0"
@@ -298,7 +1191,7 @@ ShellRoot {
     property int todayEmailsCount: 0
     property int hourEmailsCount: 0
     property int prevHourEmailsCount: 0
-    property bool showEmailPill: false
+    property bool showEmailPill: true
 
     Timer {
         id: emailPillTimer
@@ -306,10 +1199,10 @@ ShellRoot {
         repeat: false
         onTriggered: root.showEmailPill = false
     }
-    
+
     onHourEmailsCountChanged: {
         if (hourEmailsCount > prevHourEmailsCount) {
-            queueNotification(["notify-send", "-u", "normal", "-i", "mail-unread", "New Mail Received", "You have " + hourEmailsCount + " new mail(s) in the last hour."]);
+            //queueNotification(["notify-send", "-u", "normal", "-i", "mail-unread", "New Mail Received", "You have " + hourEmailsCount + " new mail(s) in the last hour."]);
             root.showEmailPill = true;
             emailPillTimer.restart();
         } else if (hourEmailsCount === 0) {
@@ -320,12 +1213,15 @@ ShellRoot {
     }
     
     property var latestEmails: []
+    property string emailLastSynced: ""
     property string volumeOut: "0%"
     property bool volumeMuted: false
     property string activeSinkName: "Default Output"
     property string volumeMic: "0%"
     property bool micMuted: false
     property string bluetoothStatus: "off"
+    property bool bluetoothPresent: false
+    property int diskUsage: 0
     property bool batteryMode: false
     property bool showBatteryModeIndicator: false
 
@@ -355,18 +1251,74 @@ ShellRoot {
         onTriggered: root.showMicIndicator = false
     }
 
-    property string spotifyStatus: "offline"
-    property string spotifyText: ""
-    property string spotifyArtUrl: ""
-    property double spotifyPosition: 0
-    property double spotifyLength: 0
-    property string spotifyPositionStr: "0:00"
-    property string spotifyLengthStr: "0:00"
-    property color colAccentSecondary: "#10b981"
+    property string spotifyStatus: Players.status
+    property string spotifyText: Players.text
+    property string spotifyTitle: Players.title
+    property string spotifyArtist: Players.artist
+    property string spotifyArtUrl: Players.artUrl
+    property string spotifyPlayerName: Players.playerName
+    property string displayPlayerName: Players.has ? Players.playerNameOf(Players.active) : Players.serviceLabel
+
+    property double spotifyPosition: 0.0
+    property double spotifyLength: Players.lengthSec
+    property string spotifyPositionStr: formatTime(spotifyPosition)
+    property string spotifyLengthStr: formatTime(spotifyLength)
+
+    property double _mediaAnchorPos: 0.0
+    property double _mediaAnchorTime: 0.0
+
+    function resyncMediaPosition() {
+        if (Players.has && Players.active) {
+            var p = Players.active.position;
+            _mediaAnchorPos = (p >= 0) ? p : 0.0;
+            _mediaAnchorTime = Date.now();
+            spotifyPosition = _mediaAnchorPos;
+            spotifyPositionStr = formatTime(spotifyPosition);
+        }
+    }
+
+    Connections {
+        target: Players
+        function onActiveChanged() { root.resyncMediaPosition(); }
+    }
+
+    Connections {
+        target: Players.has ? Players.active : null
+        ignoreUnknownSignals: true
+        function onPositionChanged() { root.resyncMediaPosition(); }
+        function onPlayingChanged() { root.resyncMediaPosition(); }
+        function onPlaybackStateChanged() { root.resyncMediaPosition(); }
+    }
+
+    Timer {
+        id: mediaPositionTimer
+        interval: 100 // 10 updates/sec for buttery-smooth progress tracking
+        running: root.spotifyStatus === "playing"
+        repeat: true
+        onTriggered: {
+            if (Players.has && Players.active) {
+                var pos = Players.active.position;
+                if (Math.abs(pos - root.spotifyPosition) > 1.5) {
+                    root._mediaAnchorPos = pos;
+                    root._mediaAnchorTime = Date.now();
+                }
+                var elapsed = (Date.now() - root._mediaAnchorTime) / 1000.0;
+                var cur = Math.max(0.0, root._mediaAnchorPos + elapsed);
+                if (root.spotifyLength > 0 && cur > root.spotifyLength) {
+                    cur = root.spotifyLength;
+                }
+                root.spotifyPosition = cur;
+                root.spotifyPositionStr = root.formatTime(cur);
+            }
+        }
+    }
     property string wifiIcon: "󰤯"
     property string wifiText: "Disconnected"
     property string wifiIp: ""
     property bool wifiEnabled: false
+    property bool ethernetConnected: false
+    property string networkDown: ""
+    property string networkUp: ""
 
     property bool showOsd: false
     property string osdText: "0%"
@@ -421,6 +1373,7 @@ ShellRoot {
     // Dynamic Island Alert Triggers (Charging / Low Battery / DND)
     property bool lastBatteryCharging: false
     onBatteryChargingChanged: {
+        if (!hasBattery) return;
         if (batteryCharging && !lastBatteryCharging) {
             root.safeSavePrev();
             root.islandState = root.stateCharging;
@@ -435,6 +1388,7 @@ ShellRoot {
 
     property bool lowBatteryNotified: false
     onBatteryCapChanged: {
+        if (!hasBattery) return;
         var cap = parseInt(batteryCap);
         if (!isNaN(cap)) {
             if (cap > 0 && cap <= 15 && !batteryCharging) {
@@ -464,7 +1418,7 @@ ShellRoot {
     }
 
     // Guard: never let prevIslandState be a transient state (prevents chaining)
-    readonly property var _transientStates: [root.stateOsd, root.stateBatteryLow, root.stateCharging, root.stateDnd, root.stateWaterAlert, root.stateStretchAlert, root.stateF1Alert, root.stateCpuAlert, root.stateDragLocalSend, root.stateLocalSendSuccess, root.stateDiskAlert]
+    readonly property var _transientStates: [root.stateOsd, root.stateBatteryLow, root.stateCharging, root.stateDnd, root.stateWaterAlert, root.stateStretchAlert, root.stateF1Alert, root.stateCpuAlert, root.stateDragLocalSend, root.stateLocalSendSuccess, root.stateDiskAlert, root.stateComms, root.stateNudge]
 
     function safeSavePrev() {
         if (_transientStates.indexOf(root.islandState) === -1) {
@@ -473,15 +1427,16 @@ ShellRoot {
     }
 
     function playSoundSafely(proc) {
-        proc.running = false;
-        proc.running = true;
+        if (proc && !proc.running) {
+            proc.running = true;
+        }
     }
 
     property bool triggerDndPillOnClose: false
     property bool lastDndActive: false
     onDndActiveChanged: {
         if (dndActive !== lastDndActive) {
-            if (groundControl.visible) {
+            if (groundControl && groundControl.visible) {
                 root.triggerDndPillOnClose = true;
             } else {
                 root.safeSavePrev();
@@ -490,18 +1445,6 @@ ShellRoot {
             }
         }
         lastDndActive = dndActive;
-    }
-
-    Connections {
-        target: groundControl
-        function onShowChanged() {
-            if (!groundControl.show && root.triggerDndPillOnClose) {
-                root.triggerDndPillOnClose = false;
-                root.safeSavePrev();
-                root.islandState = root.stateDnd;
-                dndPillTimer.restart();
-            }
-        }
     }
 
     Timer {
@@ -515,56 +1458,438 @@ ShellRoot {
         }
     }
 
-    // Health reminder configurations
+    // Shell Nudge Suite
+    property string nudgeTitle: "Action Detected"
+    property string nudgeSubtitle: ""
+    property string nudgeIcon: "󰐊"
+    property string nudgeActionCmd: ""
+    property string nudgeActionLabel: "Open"
+    property string nudgeAccentColor: "#89B4FA"
+    property string nudgeCategory: "NOW NUDGE"
+    property real nudgeProgress: 1.0
+    property bool nudgePaused: false
+    property int nudgeTotalMs: 8000
+    property int nudgeElapsedMs: 0
+
+    Timer {
+        id: nudgeProgressTimer
+        interval: 50
+        repeat: true
+        running: (root.islandState === root.stateNudge) && !root.nudgePaused
+        onTriggered: {
+            root.nudgeElapsedMs += 50;
+            root.nudgeProgress = Math.max(0.0, 1.0 - (root.nudgeElapsedMs / Math.max(1, root.nudgeTotalMs)));
+            if (root.nudgeElapsedMs >= root.nudgeTotalMs) {
+                nudgeProgressTimer.stop();
+                if (root.islandState === root.stateNudge) {
+                    root.islandState = root.prevIslandState;
+                }
+            }
+        }
+    }
+
+    function triggerNudgeAlert(title, subtitle, icon, actionCmd, actionLabel, accentColor, timeoutMs, category) {
+        root.nudgeTitle = title || "Action Detected";
+        root.nudgeSubtitle = subtitle || "";
+        root.nudgeIcon = icon || "󰐊";
+        root.nudgeActionCmd = actionCmd || "";
+        root.nudgeActionLabel = actionLabel || "Open";
+        root.nudgeAccentColor = accentColor || "#89B4FA";
+        root.nudgeCategory = category || "NOW NUDGE";
+        root.safeSavePrev();
+        root.islandState = root.stateNudge;
+        root.nudgeTotalMs = timeoutMs || 8000;
+        root.nudgeElapsedMs = 0;
+        root.nudgeProgress = 1.0;
+        root.nudgePaused = false;
+        nudgeProgressTimer.restart();
+    }
+
+    function pauseNudgeTimer() {
+        root.nudgePaused = true;
+    }
+
+    function resumeNudgeTimer() {
+        root.nudgePaused = false;
+    }
+
+    function dismissNudgeAlert() {
+        nudgeProgressTimer.stop();
+        if (root.islandState === root.stateNudge) {
+            root.islandState = root.prevIslandState;
+        }
+    }
+
+    function executeNudgeAction() {
+        var cmd = root.nudgeActionCmd;
+        dismissNudgeAlert();
+        if (cmd) {
+            pNudgeExec.command = ["sh", "-c", cmd];
+            pNudgeExec.running = true;
+        }
+    }
+
+    Process {
+        id: pNudgeExec
+        command: []
+    }
+
+    // Health & Activity Rings Suite
     property bool healthRemindersActive: true
     property int waterInterval: 2700000 // 45 minutes
     property int stretchInterval: 3000000 // 50 minutes
 
-    function resetWaterTimer() {
-        waterReminderTimer.restart();
+    property int healthWaterToday: 0
+    property int healthWaterGoal: 2500
+    property real healthWaterPct: healthWaterGoal > 0 ? Math.min(2.0, healthWaterToday / healthWaterGoal) : 0.0
+
+    property int healthStretchToday: 0
+    property int healthStretchGoal: 10
+    property real healthStretchPct: healthStretchGoal > 0 ? Math.min(2.0, healthStretchToday / healthStretchGoal) : 0.0
+
+    property real healthOverallPct: (healthWaterPct + healthStretchPct) / 2.0
+    property int healthStreak: 0
+    property var healthHistory: []
+
+    // Health Monitoring Suite disabled (safe no-op stubs to prevent breakage)
+    function refreshHealthData() {}
+    function logWater(ml) {}
+    function logStretch(cnt) {}
+    function resetWaterTimer() {}
+    function snoozeWaterTimer() {}
+    function resetStretchTimer() {}
+    function snoozeStretchTimer() {}
+
+    // =========================================================================
+    // 🍅 POMODORO DEEP-WORK ENGINE
+    // =========================================================================
+    property bool pomodoroActive: false
+    property bool pomodoroRunning: false
+    property int pomodoroSeconds: 1500
+    property int pomodoroTotalSeconds: 1500
+    property string pomodoroMode: "focus" // "focus" | "short_break" | "long_break"
+    property int pomodoroSession: 1
+    property int pomodoroTotalCompleted: 0
+    readonly property real pomodoroProgress: pomodoroTotalSeconds > 0 ? ((pomodoroTotalSeconds - pomodoroSeconds) / pomodoroTotalSeconds) : 0.0
+    readonly property string pomodoroTimeStr: {
+        var m = Math.floor(root.pomodoroSeconds / 60);
+        var s = root.pomodoroSeconds % 60;
+        return (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
+    }
+    readonly property string pomodoroTitle: {
+        if (root.pomodoroMode === "focus") return "Focus Session #" + root.pomodoroSession;
+        if (root.pomodoroMode === "short_break") return "Short Break";
+        if (root.pomodoroMode === "long_break") return "Long Rest";
+        return "Pomodoro";
     }
 
-    function resetStretchTimer() {
-        stretchReminderTimer.restart();
+    function startPomodoro(mode) {
+        if (mode) root.pomodoroMode = mode;
+        if (root.pomodoroSeconds <= 0) {
+            if (root.pomodoroMode === "focus") {
+                root.pomodoroTotalSeconds = 1500;
+                root.pomodoroSeconds = 1500;
+            } else if (root.pomodoroMode === "short_break") {
+                root.pomodoroTotalSeconds = 300;
+                root.pomodoroSeconds = 300;
+            } else if (root.pomodoroMode === "long_break") {
+                root.pomodoroTotalSeconds = 900;
+                root.pomodoroSeconds = 900;
+            }
+        }
+        root.pomodoroActive = true;
+        root.pomodoroRunning = true;
+    }
+
+    function pausePomodoro() {
+        root.pomodoroRunning = false;
+    }
+
+    function togglePomodoro() {
+        if (!root.pomodoroActive) {
+            startPomodoro();
+        } else {
+            root.pomodoroRunning = !root.pomodoroRunning;
+        }
+    }
+
+    function resetPomodoro() {
+        root.pomodoroRunning = false;
+        if (root.pomodoroMode === "focus") {
+            root.pomodoroTotalSeconds = 1500;
+            root.pomodoroSeconds = 1500;
+        } else if (root.pomodoroMode === "short_break") {
+            root.pomodoroTotalSeconds = 300;
+            root.pomodoroSeconds = 300;
+        } else if (root.pomodoroMode === "long_break") {
+            root.pomodoroTotalSeconds = 900;
+            root.pomodoroSeconds = 900;
+        }
+    }
+
+    function exitPomodoro() {
+        root.pomodoroActive = false;
+        root.pomodoroRunning = false;
+        resetPomodoro();
+        if (root.islandState === root.statePomodoro) {
+            root.islandState = root.stateCompact;
+        }
+    }
+
+    function skipPomodoro() {
+        root.pomodoroRunning = false;
+        if (root.pomodoroMode === "focus") {
+            root.pomodoroTotalCompleted++;
+            if (root.pomodoroSession >= 4) {
+                root.pomodoroSession = 1;
+                root.pomodoroMode = "long_break";
+                root.pomodoroTotalSeconds = 900;
+                root.pomodoroSeconds = 900;
+            } else {
+                root.pomodoroSession++;
+                root.pomodoroMode = "short_break";
+                root.pomodoroTotalSeconds = 300;
+                root.pomodoroSeconds = 300;
+            }
+        } else {
+            root.pomodoroMode = "focus";
+            root.pomodoroTotalSeconds = 1500;
+            root.pomodoroSeconds = 1500;
+        }
     }
 
     Timer {
-        id: waterReminderTimer
-        interval: root.waterInterval
-        running: root.healthRemindersActive
+        id: pomodoroTimer
+        interval: 1000
+        running: root.pomodoroRunning
         repeat: true
         onTriggered: {
-            root.safeSavePrev();
-            root.islandState = root.stateWaterAlert;
-            healthAlertTimer.restart();
-            queueNotification(["notify-send", "-u", "normal", "-i", "water", "Hydration Reminder", "Time to drink some water!"]);
-            playSoundSafely(pPlaySound);
+            if (root.pomodoroSeconds > 1) {
+                root.pomodoroSeconds--;
+            } else {
+                root.pomodoroSeconds = 0;
+                root.playSoundSafely(pPlaySound);
+                root.skipPomodoro();
+            }
         }
+    }
+
+    // =========================================================================
+    // 📋 TODOIST & LOCAL TASKS & ALARMS ENGINE
+    // =========================================================================
+    property var tasksList: []
+    property var alarmsList: []
+    property string tasksSource: "todoist"
+    property bool tasksLoading: false
+
+    Process {
+        id: pGetTasks
+        command: ["python3", (Quickshell.env("HOME") || "/home/krishna") + "/dotfiles/scripts/tasks_manager.py", "--get"]
+        stdout: SplitParser {
+            onRead: data => {
+                try {
+                    var parsed = JSON.parse(data);
+                    if (parsed.tasks && Array.isArray(parsed.tasks)) root.tasksList = parsed.tasks;
+                    if (parsed.source) root.tasksSource = parsed.source;
+                } catch(e) {}
+                root.tasksLoading = false;
+            }
+        }
+    }
+
+    Process {
+        id: pCheckDue
+        command: ["python3", (Quickshell.env("HOME") || "/home/krishna") + "/dotfiles/scripts/tasks_manager.py", "--check-due"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    var parsed = JSON.parse(text.trim());
+                    if (parsed.alarms && Array.isArray(parsed.alarms)) root.alarmsList = parsed.alarms;
+                    if (parsed.alerts && Array.isArray(parsed.alerts) && parsed.alerts.length > 0) {
+                        for (var i = 0; i < parsed.alerts.length; i++) {
+                            alarmReminderPill.triggerAlert(parsed.alerts[i]);
+                        }
+                    }
+                } catch(e) {}
+            }
+        }
+    }
+
+    Process {
+        id: pActionTasks
+        stdout: SplitParser {
+            onRead: data => {
+                try {
+                    var parsed = JSON.parse(data);
+                    if (parsed.tasks && Array.isArray(parsed.tasks)) root.tasksList = parsed.tasks;
+                    if (parsed.alarms && Array.isArray(parsed.alarms)) root.alarmsList = parsed.alarms;
+                    if (parsed.source) root.tasksSource = parsed.source;
+                } catch(e) {}
+                root.tasksLoading = false;
+            }
+        }
+    }
+
+    function refreshTasks() {
+        root.tasksLoading = true;
+        if (!pGetTasks.running) pGetTasks.running = true;
+        if (!pCheckDue.running) pCheckDue.running = true;
+    }
+
+    function addTask(content) {
+        if (!content || content.trim() === "") return;
+        root.tasksLoading = true;
+        pActionTasks.command = ["python3", (Quickshell.env("HOME") || "/home/krishna") + "/dotfiles/scripts/tasks_manager.py", "--add", content.trim()];
+        if (pActionTasks.running) pActionTasks.running = false;
+        pActionTasks.running = true;
+    }
+
+    function toggleTask(taskId) {
+        root.tasksLoading = true;
+        pActionTasks.command = ["python3", (Quickshell.env("HOME") || "/home/krishna") + "/dotfiles/scripts/tasks_manager.py", "--toggle", taskId.toString()];
+        if (pActionTasks.running) pActionTasks.running = false;
+        pActionTasks.running = true;
+    }
+
+    function deleteTask(taskId) {
+        root.tasksLoading = true;
+        pActionTasks.command = ["python3", (Quickshell.env("HOME") || "/home/krishna") + "/dotfiles/scripts/tasks_manager.py", "--delete", taskId.toString()];
+        if (pActionTasks.running) pActionTasks.running = false;
+        pActionTasks.running = true;
+    }
+
+    function snoozeAlert(alertId, minutes) {
+        pActionTasks.command = ["python3", (Quickshell.env("HOME") || "/home/krishna") + "/dotfiles/scripts/tasks_manager.py", "--snooze", alertId.toString(), (minutes || 10).toString()];
+        if (pActionTasks.running) pActionTasks.running = false;
+        pActionTasks.running = true;
+    }
+
+    function dismissAlert(alertId) {
+        pActionTasks.command = ["python3", (Quickshell.env("HOME") || "/home/krishna") + "/dotfiles/scripts/tasks_manager.py", "--dismiss", alertId.toString()];
+        if (pActionTasks.running) pActionTasks.running = false;
+        pActionTasks.running = true;
+    }
+
+    function addAlarm(timeStr, label) {
+        pActionTasks.command = ["python3", (Quickshell.env("HOME") || "/home/krishna") + "/dotfiles/scripts/tasks_manager.py", "--add-alarm", timeStr, label || "Alarm"];
+        if (pActionTasks.running) pActionTasks.running = false;
+        pActionTasks.running = true;
+    }
+
+    function toggleAlarm(alarmId) {
+        pActionTasks.command = ["python3", (Quickshell.env("HOME") || "/home/krishna") + "/dotfiles/scripts/tasks_manager.py", "--toggle-alarm", alarmId.toString()];
+        if (pActionTasks.running) pActionTasks.running = false;
+        pActionTasks.running = true;
+    }
+
+    function deleteAlarm(alarmId) {
+        pActionTasks.command = ["python3", (Quickshell.env("HOME") || "/home/krishna") + "/dotfiles/scripts/tasks_manager.py", "--delete-alarm", alarmId.toString()];
+        if (pActionTasks.running) pActionTasks.running = false;
+        pActionTasks.running = true;
+    }
+
+    Timer {
+        id: tasksPollTimer
+        interval: 30000
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: root.refreshTasks()
+    }
+
+    Timer {
+        id: duePollTimer
+        interval: 15000
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: {
+            if (!pCheckDue.running && !root.isLocked) {
+                pCheckDue.running = true;
+            }
+        }
+    }
+
+    // =========================================================================
+    // 📝 SCRATCHPAD & CLIPBOARD HELPER
+    // =========================================================================
+    property string scratchpadText: ""
+
+    Process {
+        id: pGetScratchpad
+        command: ["python3", (Quickshell.env("HOME") || "/home/krishna") + "/dotfiles/scripts/scratchpad_manager.py", "--get"]
+        running: true
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.scratchpadText = text;
+            }
+        }
+    }
+
+    Process {
+        id: pSetScratchpad
+    }
+
+    // Debounce timer: waits 1.5s after last keystroke before actually writing to disk
+    property string _pendingScratchText: ""
+    Timer {
+        id: scratchSaveDebounce
+        interval: 1500
+        repeat: false
+        onTriggered: {
+            if (pSetScratchpad.running) pSetScratchpad.running = false;
+            // Base64 encode the utf-8 text safely so no newlines, quotes, or markdown syntax are mangled
+            var b64 = Qt.btoa(unescape(encodeURIComponent(root._pendingScratchText)));
+            pSetScratchpad.command = [
+                "python3",
+                (Quickshell.env("HOME") || "/home/krishna") + "/dotfiles/scripts/scratchpad_manager.py",
+                "--set-b64",
+                b64
+            ];
+            pSetScratchpad.running = true;
+        }
+    }
+
+    function loadScratchpad() {
+        if (!pGetScratchpad.running) pGetScratchpad.running = true;
+    }
+
+    function saveScratchpad(text) {
+        root.scratchpadText = text;
+        root._pendingScratchText = text;
+        scratchSaveDebounce.restart();   // debounce: resets the 1.5s window on every keystroke
+    }
+
+    Process {
+        id: pWlCopy
+    }
+
+    function copyToClipboard(text) {
+        if (!text) return;
+        pWlCopy.command = ["wl-copy", text];
+        if (pWlCopy.running) pWlCopy.running = false;
+        pWlCopy.running = true;
+    }
+
+
+    Timer {
+        id: waterReminderTimer
+        running: false
     }
 
     Timer {
         id: stretchReminderTimer
-        interval: root.stretchInterval
-        running: root.healthRemindersActive
-        repeat: true
-        onTriggered: {
-            root.safeSavePrev();
-            root.islandState = root.stateStretchAlert;
-            healthAlertTimer.restart();
-            queueNotification(["notify-send", "-u", "normal", "-i", "stretch", "Sedentary Reminder", "Time to stand up and stretch!"]);
-            playSoundSafely(pPlaySound);
-        }
+        running: false
     }
 
     Timer {
-        id: healthAlertTimer
-        interval: 12000 // Display alert for 12 seconds
-        repeat: false
-        onTriggered: {
-            if (root.islandState === root.stateWaterAlert || root.islandState === root.stateStretchAlert) {
-                root.islandState = root.prevIslandState;
-            }
-        }
+        id: waterAlertTimer
+        running: false
+    }
+
+    Timer {
+        id: stretchAlertTimer
+        running: false
     }
 
     // Non-visual background helpers and single-shot process managers
@@ -579,7 +1904,7 @@ ShellRoot {
     }
     Process {
         id: pVolMute
-        command: ["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "toggle"]
+        command: ["/home/krishna/dotfiles/scripts/set_volume.sh", "toggle"]
         onExited: pVolumeOut.running = true
     }
     Process {
@@ -599,11 +1924,17 @@ ShellRoot {
     ListModel {
         id: sinkModel
     }
-    ListModel {
-        id: notifList
-    }
     Process {
         id: pSetSink
+        property int sinkId: -1
+        command: ["wpctl", "set-default", sinkId.toString()]
+        onRunningChanged: {
+            if (!running) {
+                pListSinks.running = true;
+                pVolumeOut.running = true;
+                pVolumeMic.running = true;
+            }
+        }
     }
     Process {
         id: pListSinks
@@ -683,9 +2014,16 @@ ShellRoot {
     // Optimized Single-shot battery checker via helper script
     property bool firstBatteryPoll: true  // suppress spurious charging alert on startup
 
-    Process {
+    QtObject {
         id: pSpotPrev
-        command: ["playerctl", "-p", "spotify,Brave,brave,Chromium,chromium,Firefox,firefox,mpd", "previous"]
+        property bool running: false
+        onRunningChanged: {
+            if (running) {
+                if (Players.has && Players.active.canGoPrevious)
+                    Players.active.previous();
+                running = false;
+            }
+        }
     }
 
     // pBright and timer removed; stats daemon handles periodic brightness polling.
@@ -754,19 +2092,19 @@ ShellRoot {
     }
     Process {
         id: pPlaySound
-        command: ["mpv", "--no-video", "--load-scripts=no", "--af=lavfi=[adelay=800|800]", "/usr/share/sounds/freedesktop/stereo/message.oga"]
+        command: ["paplay", "/usr/share/sounds/freedesktop/stereo/message.oga"]
     }
     Process {
         id: pPlayTimerSound
-        command: ["mpv", "--no-video", "--load-scripts=no", "--af=lavfi=[adelay=800|800]", "/usr/share/sounds/freedesktop/stereo/complete.oga"]
+        command: ["paplay", "/usr/share/sounds/freedesktop/stereo/complete.oga"]
     }
     Process {
         id: pPlayPowerPlug
-        command: ["mpv", "--no-video", "--load-scripts=no", "--af=lavfi=[adelay=800|800]", "/usr/share/sounds/ocean/stereo/power-plug.oga"]
+        command: ["paplay", "/usr/share/sounds/ocean/stereo/power-plug.oga"]
     }
     Process {
         id: pPlayPowerUnplug
-        command: ["mpv", "--no-video", "--load-scripts=no", "--af=lavfi=[adelay=800|800]", "/usr/share/sounds/ocean/stereo/power-unplug.oga"]
+        command: ["paplay", "/usr/share/sounds/ocean/stereo/power-unplug.oga"]
     }
 
     Process {
@@ -774,13 +2112,27 @@ ShellRoot {
         command: [] // command is always set dynamically before running
     }
 
-    Process {
+    QtObject {
         id: pSpotPlay
-        command: ["playerctl", "-p", "spotify,Brave,brave,Chromium,chromium,Firefox,firefox,mpd", "play-pause"]
+        property bool running: false
+        onRunningChanged: {
+            if (running) {
+                if (Players.has && Players.active.canTogglePlaying)
+                    Players.active.togglePlaying();
+                running = false;
+            }
+        }
     }
-    Process {
+    QtObject {
         id: pSpotNext
-        command: ["playerctl", "-p", "spotify,Brave,brave,Chromium,chromium,Firefox,firefox,mpd", "next"]
+        property bool running: false
+        onRunningChanged: {
+            if (running) {
+                if (Players.has && Players.active.canGoNext)
+                    Players.active.next();
+                running = false;
+            }
+        }
     }
 
     Process {
@@ -790,27 +2142,27 @@ ShellRoot {
 
     Process {
         id: pScreenshotSel
-        command: ["hyprctl", "dispatch", "hl.dsp.exec_cmd(\"" + root.scriptsDir + "/screenshot.sh --sel\")"]
+        command: [root.scriptsDir + "/screenshot.sh", "--sel"]
     }
     Process {
         id: pScreenshotNow
-        command: ["hyprctl", "dispatch", "hl.dsp.exec_cmd(\"" + root.scriptsDir + "/screenshot.sh --now\")"]
+        command: [root.scriptsDir + "/screenshot.sh", "--now"]
     }
     Process {
         id: pOcrShot
-        command: ["hyprctl", "dispatch", "hl.dsp.exec_cmd(\"" + root.scriptsDir + "/screenshot.sh --ocr\")"]
+        command: [root.scriptsDir + "/screenshot.sh", "--ocr"]
     }
     Process {
         id: pColorPicker
-        command: ["hyprctl", "dispatch", "hl.dsp.exec_cmd(\"hyprpicker -a\")"]
+        command: ["hyprpicker", "-a"]
     }
     Process {
         id: pRecordSel
-        command: ["hyprctl", "dispatch", "hl.dsp.exec_cmd(\"" + root.scriptsDir + "/screenshot.sh --record-sel\")"]
+        command: [root.scriptsDir + "/screenshot.sh", "--record-sel"]
     }
     Process {
         id: pRecordFull
-        command: ["hyprctl", "dispatch", "hl.dsp.exec_cmd(\"" + root.scriptsDir + "/screenshot.sh --record\")"]
+        command: [root.scriptsDir + "/screenshot.sh", "--record"]
     }
     Process {
         id: pStopRecord
@@ -903,6 +2255,8 @@ ShellRoot {
                         root.diskAlertTitle = parts[1];
                         root.diskAlertSubtitle = parts[2];
                         root.diskAlertMounted = isAdd;
+                        root.diskAlertDev = parts.length >= 4 ? parts[3] : "";
+                        root.diskAlertType = parts.length >= 5 ? parts[4] : "usb";
                         root.safeSavePrev();
                         root.islandState = root.stateDiskAlert;
                         diskAlertTimer.restart();
@@ -911,6 +2265,29 @@ ShellRoot {
                 } catch(e) {}
             }
         }
+    }
+
+    Process {
+        id: pOmniNudge
+        command: ["python3", root.scriptsDir + "/omni_nudge.py"]
+        running: true
+        stdout: SplitParser {
+            onRead: function(data) {
+                try {
+                    var line = data.trim();
+                    if (!line) return;
+                    var d = JSON.parse(line);
+                    root.triggerNudgeAlert(d.title, d.subtitle, d.icon, d.action_cmd, d.action_label, d.color, d.timeout_ms);
+                } catch(e) {}
+            }
+        }
+    }
+
+    // 📋 Persistent Clipboard History Watcher
+    Process {
+        id: pClipboardWatcher
+        command: ["python3", root.scriptsDir + "/clipboard_manager.py", "--ensure-daemon"]
+        running: true
     }
 
 
@@ -926,6 +2303,10 @@ ShellRoot {
 
     Process {
         id: pLocalSend
+    }
+
+    Process {
+        id: pMountAndOpen
     }
 
     // F1 Calendar telemetry checkers
@@ -1003,11 +2384,21 @@ ShellRoot {
                         root.f1AlertName = parts[1];
                         root.f1AlertMins = parts[2];
                         root.f1AlertTime = parts[3];
-                        root.safeSavePrev();
-                        root.islandState = root.stateF1Alert;
-                        f1AlertTimer.restart();
-
-                        queueNotification(["notify-send", "-u", "normal", "-i", "f1", "F1 Session Starting", root.f1AlertName + " starts in " + root.f1AlertMins + "m (at " + root.f1AlertTime + ")"]);
+                        if (alarmReminderPill) {
+                            alarmReminderPill.triggerAlert({
+                                id: "f1_" + Date.now(),
+                                type: "f1",
+                                title: "Formula 1",
+                                subtitle: root.f1AlertName + " in " + root.f1AlertMins + "m (" + root.f1AlertTime + ")",
+                                icon: "󰿠",
+                                timeout_ms: 15000
+                            });
+                        } else {
+                            root.safeSavePrev();
+                            root.islandState = root.stateF1Alert;
+                            f1AlertTimer.restart();
+                            queueNotification(["notify-send", "-u", "normal", "-i", "f1", "F1 Session Starting", root.f1AlertName + " starts in " + root.f1AlertMins + "m (at " + root.f1AlertTime + ")"]);
+                        }
                         playSoundSafely(pPlaySound);
                     }
                 }
@@ -1061,14 +2452,18 @@ ShellRoot {
     Process {
         id: pPrivacyMonitor
         running: true
-        command: ["bash", "-c", "while true; do mic=$(pactl list source-outputs short 2>/dev/null); cam=$(fuser /dev/video* 2>/dev/null); echo \"$mic|$cam\"; sleep 2; done"]
+        command: ["bash", "-c", "while true; do mic=$(pactl list source-outputs | grep 'application.name' | grep -vi 'cava' 2>/dev/null); cam=$(fuser /dev/video* 2>/dev/null); echo \"$mic|$cam\"; sleep 2; done"]
         stdout: SplitParser {
             onRead: data => {
                 var line = data.trim();
                 if (line === "") return;
                 var parts = line.split('|');
-                root.isMicActive = (parts[0].trim().length > 0);
-                root.isCamActive = (parts[1].trim().length > 0);
+                if (parts.length >= 2) {
+                    var micPart = parts[0] ? parts[0].trim() : "";
+                    var camPart = parts[1] ? parts[1].trim() : "";
+                    root.isMicActive = (micPart.length > 0);
+                    root.isCamActive = (camPart.length > 0);
+                }
             }
         }
     }
@@ -1077,7 +2472,7 @@ ShellRoot {
     Process {
         id: pStats
         running: true
-        command: [Quickshell.shellDir + "/scripts/quickshell_stats.sh"]
+        command: ["bash", Quickshell.shellDir + "/scripts/quickshell_stats.sh"]
         stdout: SplitParser {
             onRead: data => {
                 var d = data.trim();
@@ -1086,23 +2481,8 @@ ShellRoot {
                 try {
                     var stats = JSON.parse(d);
 
-                    // Assign CPU / RAM properties and update charts
-                    var cpu = stats.cpu;
-                    var ram = stats.ram;
-                    if (root.cpuUsage !== cpu.toString()) root.cpuUsage = cpu.toString();
-                    if (root.ramUsage !== ram.toString()) root.ramUsage = ram.toString();
-
-                    var cHistory = root.cpuHistory.slice();
-                    cHistory.shift();
-                    cHistory.push(cpu);
-                    root.cpuHistory = cHistory;
-
-                    var rHistory = root.ramHistory.slice();
-                    rHistory.shift();
-                    rHistory.push(ram);
-                    root.ramHistory = rHistory;
-
                     // Assign battery properties
+                    root.hasBattery = stats.has_battery;
                     var newCharging = stats.battery_charging;
                     if (root.firstBatteryPoll) {
                         root.lastBatteryCharging = newCharging;
@@ -1117,11 +2497,14 @@ ShellRoot {
 
                     // Assign power draw & temperature
                     if (root.powerDraw !== stats.power_draw) root.powerDraw = stats.power_draw;
-                    if (root.temperature !== stats.temperature.toString()) root.temperature = stats.temperature.toString();
 
                     // Assign bluetooth
+                    root.bluetoothPresent = stats.bluetooth_present;
                     if (root.bluetoothStatus !== stats.bluetooth_status) root.bluetoothStatus = stats.bluetooth_status;
                     if (root.bluetoothDevice !== stats.bluetooth_device) root.bluetoothDevice = stats.bluetooth_device;
+
+                    // Assign ethernet
+                    root.ethernetConnected = stats.ethernet_connected;
 
                     // Assign wifi
                     root.wifiEnabled = stats.wifi_enabled;
@@ -1155,16 +2538,17 @@ ShellRoot {
                     // Assign redshift & caffeine
                     root.redshiftActive = stats.redshift_active;
                     root.caffeineActive = stats.caffeine_active;
+                    root.audiophileActive = stats.audiophile_active;
 
                     // Assign power profile
                     root.powerProfile = stats.power_profile;
-                    root.batteryMode = (stats.power_profile === "power-saver");
 
                     // Assign emails if present
                     if (stats.emails) {
                         root.todayEmailsCount = stats.emails.today_count;
                         root.hourEmailsCount = stats.emails.hour_count || 0;
-                        root.latestEmails = stats.emails.latest;
+                        root.latestEmails = stats.emails.latest ? [].concat(stats.emails.latest) : [];
+                        root.emailLastSynced = stats.emails.last_sync || "";
                     }
                 } catch (e) {
                     console.log("Error parsing quickshell_stats JSON: " + e + " | Data: " + d);
@@ -1198,7 +2582,7 @@ ShellRoot {
     // Optimized volume query (runs single-shot on timer and is manual triggered)
     Process {
         id: pVolumeOut
-        command: ["wpctl", "get-volume", "@DEFAULT_AUDIO_SINK@"]
+        command: ["/home/krishna/dotfiles/scripts/get_volume.sh"]
         stdout: SplitParser {
             onRead: data => {
                 var d = data.trim();
@@ -1222,16 +2606,23 @@ ShellRoot {
             }
         }
     }
-    // Volume polling Timer removed; stats daemon handles periodic volume polling.
+
 
     Process {
-        id: pRedshiftToggle
-        command: ["sh", "-c", "~/dotfiles/scripts/Redshift.sh --toggle >/dev/null 2>&1"]
-        onExited: {
-            pTriggerStatsUpdate.running = false;
-            pTriggerStatsUpdate.running = true;
+        id: pVolumeSubscriber
+        running: true
+        command: ["pactl", "subscribe"]
+        stdout: SplitParser {
+            onRead: data => {
+                if (data.includes("sink") || data.includes("source")) {
+                    pVolumeOut.running = true;
+                    pVolumeMic.running = true;
+                }
+            }
         }
     }
+
+
 
     Process {
         id: pCaffeineToggle
@@ -1242,201 +2633,41 @@ ShellRoot {
         }
     }
 
+    function toggleCaffeine() {
+        pCaffeineToggle.running = false;
+        pCaffeineToggle.running = true;
+    }
+
+    Process {
+        id: pAudiophileToggle
+        command: ["/home/krishna/dotfiles/scripts/audiophile_toggle.sh", "off"]
+        onExited: {
+            pTriggerStatsUpdate.running = false;
+            pTriggerStatsUpdate.running = true;
+        }
+    }
+
+    function toggleAudiophile() {
+        pAudiophileToggle.command = ["/home/krishna/dotfiles/scripts/audiophile_toggle.sh", root.audiophileActive ? "off" : "on"];
+        pAudiophileToggle.running = true;
+    }
+
     // Keybindings menu launcher
     Process {
         id: pKeybindings
         command: ["python3", root.scriptsDir + "/keybindings.py"]
     }
 
-    property bool hasPlayerctl: false
-    Process {
-        id: pCleanupPlayerctl
-        command: ["pkill", "-f", "playerctl -F -p spotify,Brave,brave,Chromium,chromium,Firefox,firefox,mpd"]
-        onExited: {
-            pCheckPlayerctl.running = true;
-        }
-        Component.onCompleted: running = true
-    }
 
-    Process {
-        id: pCheckPlayerctl
-        running: false
-        command: ["which", "playerctl"]
-        onExited: code => {
-            if (code === 0) {
-                root.hasPlayerctl = true;
-                pSpotify.running = true;
-            }
-        }
-    }
-
-    Timer {
-        id: pSpotifyRestartTimer
-        interval: 10000 // Retry every 10 seconds if players are closed/inactive
-        repeat: false
-        onTriggered: {
-            if (root.hasPlayerctl && !pSpotify.running) {
-                pSpotify.running = true;
-            }
-        }
-    }
-
-    // Persistent media status tracker using playerctl follow mode
-    Process {
-        id: pSpotify
-        running: false
-        command: ["playerctl", "-F", "-p", "spotify,Brave,brave,Chromium,chromium,Firefox,firefox,mpd", "metadata", "--format", "{{status}}|@|{{title}} - {{artist}}|@|{{mpris:artUrl}}|@|{{mpris:length}}"]
-        stdout: SplitParser {
-            onRead: data => {
-                var d = data.trim();
-                if (d === "")
-                    return;
-                var parts = d.split("|@|");
-                if (parts.length >= 2) {
-                    root.spotifyStatus = parts[0].trim().toLowerCase();
-                    root.spotifyText = parts[1].trim();
-                    if (parts.length >= 3) {
-                        root.spotifyArtUrl = parts[2].trim();
-                    } else {
-                        root.spotifyArtUrl = "";
-                    }
-                    if (parts.length >= 4) {
-                        var lenUsec = parseInt(parts[3].trim());
-                        if (!isNaN(lenUsec)) {
-                            root.spotifyLength = lenUsec / 1000000.0;
-                            root.spotifyLengthStr = root.formatTime(root.spotifyLength);
-                        } else {
-                            root.spotifyLength = 0;
-                            root.spotifyLengthStr = "0:00";
-                        }
-                    } else {
-                        root.spotifyLength = 0;
-                        root.spotifyLengthStr = "0:00";
-                    }
-                }
-            }
-        }
-        onRunningChanged: {
-            if (!running) {
-                root.spotifyStatus = "offline";
-                root.spotifyText = "";
-                root.spotifyArtUrl = "";
-                root.spotifyLength = 0;
-                root.spotifyLengthStr = "0:00";
-                root.spotifyPosition = 0;
-                root.spotifyPositionStr = "0:00";
-                if (root.hasPlayerctl && !root.isDestroying) {
-                    pSpotifyRestartTimer.restart();
-                }
-            }
-        }
-        Component.onDestruction: pSpotify.running = false
-    }
-
-
-
-    Timer {
-        id: spotifyPositionTimer
-        interval: 1000
-        running: root.spotifyStatus === "playing"
-        repeat: true
-        onTriggered: pGetPosition.running = true
-    }
-
-    Process {
-        id: pGetPosition
-        command: ["playerctl", "-p", "spotify,Brave,brave,Chromium,chromium,Firefox,firefox,mpd", "position"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                var p = parseFloat(text.trim());
-                if (!isNaN(p)) {
-                    root.spotifyPosition = p;
-                    root.spotifyPositionStr = root.formatTime(p);
-                }
-            }
-        }
-    }
-
-    Process {
-        id: pSpotSeek
-        property double pos: 0
-        command: ["playerctl", "-p", "spotify,Brave,brave,Chromium,chromium,Firefox,firefox,mpd", "position", pos.toFixed(0)]
-    }
 
     function seekTrack(seconds) {
-        pSpotSeek.pos = seconds;
-        pSpotSeek.running = true;
-        root.spotifyPosition = seconds;
-        root.spotifyPositionStr = root.formatTime(seconds);
-    }
-
-    function getLuminance(c) {
-        var colorObj = Qt.color(c);
-        var r = colorObj.r;
-        var g = colorObj.g;
-        var b = colorObj.b;
-        
-        var rL = (r <= 0.04045) ? (r / 12.92) : Math.pow((r + 0.055) / 1.055, 2.4);
-        var gL = (g <= 0.04045) ? (g / 12.92) : Math.pow((g + 0.055) / 1.055, 2.4);
-        var bL = (b <= 0.04045) ? (b / 12.92) : Math.pow((b + 0.055) / 1.055, 2.4);
-        
-        return 0.2126 * rL + 0.7152 * gL + 0.0722 * bL;
-    }
-
-    function ensureContrast(accentColor, minRatio) {
-        var c = Qt.color(accentColor);
-        var bgL = 0.008; // Luminance of dark card background
-        
-        var ratio = 0;
-        var maxIter = 10;
-        var iter = 0;
-        
-        var h = c.hslHue;
-        var s = c.hslSaturation;
-        var l = c.hslLightness;
-        
-        if (h === -1) h = 0;
-        
-        var currentL = l;
-        var resultColor = c;
-        
-        while (iter < maxIter) {
-            var accentL = getLuminance(resultColor);
-            ratio = (accentL + 0.05) / (bgL + 0.05);
-            if (ratio >= minRatio) {
-                break;
-            }
-            currentL = currentL + (1.0 - currentL) * 0.25;
-            resultColor = Qt.hsla(h, s, currentL, c.a);
-            iter++;
-        }
-        
-        return resultColor;
-    }
-
-    Process {
-        id: pGetWalColors
-        command: ["cat", "/home/lumi/.cache/wal/colors.json"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                try {
-                    var data = JSON.parse(text.trim());
-                    if (data && data.colors) {
-                        var rawAccent1 = data.colors.color1;
-                        var rawAccent2 = data.colors.color2;
-                        root.colAccent = root.ensureContrast(rawAccent1, 3.2);
-                        root.colAccentSecondary = root.ensureContrast(rawAccent2, 3.2);
-                    }
-                } catch (e) {
-                    console.warn("Failed to parse pywal colors:", e);
-                }
-            }
+        if (Players.has) {
+            Players.active.position = seconds;
+            root.spotifyPosition = seconds;
+            root.spotifyPositionStr = root.formatTime(seconds);
         }
     }
 
-    function reloadWalColors() {
-        pGetWalColors.running = true;
-    }
 
     Process {
         id: pWeather
@@ -1449,10 +2680,65 @@ ShellRoot {
         }
     }
     Timer {
+        id: weatherPollTimer
         interval: 600000
         running: true
         repeat: true
         onTriggered: pWeather.running = true
+    }
+
+    property bool isWindowFullscreen: false
+
+    // Live Hyprland active window tracking
+    Process {
+        id: pActiveWinSock
+        command: ["sh", "-c",
+            "socat - UNIX-CONNECT:/tmp/hypr/${HYPRLAND_INSTANCE_SIGNATURE}/.socket2.sock 2>/dev/null"]
+        running: true
+        stdout: SplitParser {
+            onRead: function(data) {
+                var parts = data.trim().split(">>");
+                var ev = parts[0];
+                if (ev === "fullscreen") {
+                    root.isWindowFullscreen = (parts.length > 1 && parts[1] === "1");
+                }
+                if (ev === "activewindow" || ev === "activewindowv2" || ev === "closewindow" || ev === "openwindow" || ev === "windowtitle" || ev === "fullscreen") {
+                    root.runProcessSafely(pGetActiveWin);
+                }
+            }
+        }
+        onExited: winSockRestartTimer.restart()
+    }
+    Timer {
+        id: winSockRestartTimer
+        interval: 1000
+        repeat: false
+        onTriggered: { pActiveWinSock.running = true; pGetActiveWin.running = true; }
+    }
+    Process {
+        id: pGetActiveWin
+        command: ["hyprctl", "activewindow", "-j"]
+        running: true
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    var obj = JSON.parse(text.trim());
+                    if (obj && obj.title && obj.mapped) {
+                        root.activeWindowTitle = obj.title;
+                        root.activeWindowClass = obj.class ? obj.class : "";
+                        root.isWindowFullscreen = obj.fullscreen ? true : false;
+                    } else {
+                        root.activeWindowTitle = "";
+                        root.activeWindowClass = "";
+                        root.isWindowFullscreen = false;
+                    }
+                } catch(e) {
+                    root.activeWindowTitle = "";
+                    root.activeWindowClass = "";
+                    root.isWindowFullscreen = false;
+                }
+            }
+        }
     }
 
     PanelWindow {
@@ -1462,11 +2748,106 @@ ShellRoot {
         anchors.right: true
         // Fixed height: never resize the Wayland surface (eliminates compositor jitter).
         // The notch springs inside this fixed viewport; extra space is transparent.
+        implicitWidth: Screen.width
         implicitHeight: Math.round(76 * scaleFactor)
         color: "transparent"
 
         WlrLayershell.namespace: "quickshell_bar"
-        WlrLayershell.exclusiveZone: Math.round(44 * scaleFactor)
+        WlrLayershell.exclusiveZone: Math.round(36 * scaleFactor)
+
+        mask: Region {
+            Region { item: leftCapsule }
+            Region { item: windowTitleCapsule.visible ? windowTitleCapsule : null }
+            Region { item: notchRect.visible ? notchRect : null }
+            Region { item: bubbleRow.visible ? bubbleRow : null }
+            Region { item: rightCapsule }
+        }
+
+        // RAM Optimization: No full-screen wallpaper texture buffer on the bar
+        readonly property Item wallpaperBackdrop: null
+
+        LeftCapsule {
+            id: leftCapsule
+            root: root
+        }
+
+        // Active Window Title Pill (Positioned beside the left capsule to the right)
+        Rectangle {
+            id: windowTitleCapsule
+            color: "transparent"
+            z: 1
+            anchors.left: leftCapsule.right
+            anchors.leftMargin: Math.round(8 * scaleFactor)
+            anchors.top: parent.top
+            anchors.topMargin: root.topHuggingStyle ? 0 : Math.round(6 * scaleFactor)
+            height: root.topHuggingStyle ? Math.round(36 * scaleFactor) : Math.round(34 * scaleFactor)
+            radius: root.topHuggingStyle ? 2 : Math.round(4 * scaleFactor)
+
+            // Dynamic width calculation with max cap of 220px so it truncates long titles cleanly
+            readonly property real maxAvailableW: Math.min(Math.round(220 * scaleFactor), Math.max(0, notchRect.x - (leftCapsule.x + leftCapsule.width + Math.round(20 * scaleFactor))))
+            width: Math.min(titleRow.implicitWidth + Math.round(20 * scaleFactor), maxAvailableW)
+            clip: true
+
+            visible: opacity > 0.001
+            opacity: (root.activeWindowTitle !== "" && width > Math.round(50 * scaleFactor)) ? 1.0 : 0.0
+
+            Behavior on opacity { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+            Behavior on width { NumberAnimation { duration: 240; easing.type: Easing.OutBack; easing.overshoot: 1.12 } }
+
+            SurfaceCard {
+                anchors.fill: parent
+                useShader: false
+                cornerRadius: root.topHuggingStyle ? 2 : Math.round(4 * scaleFactor)
+                zRadius: root.topHuggingStyle ? 2 : Math.round(4 * scaleFactor)
+                contentPadding: 0
+                clip: true
+                RowLayout {
+                    id: titleRow
+                    anchors.fill: parent
+                    anchors.leftMargin: Math.round(10 * scaleFactor)
+                    anchors.rightMargin: Math.round(10 * scaleFactor)
+                    spacing: Math.round(6 * scaleFactor)
+
+                    Text {
+                        text: "󰅍"
+                        color: root.colAccentSecondary
+                        font { family: root.iconFontFamily; pixelSize: Math.round(11 * fontScale) }
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+
+                    Text {
+                        text: root.activeWindowTitle
+                        color: root.colFg
+                        font {
+                            family: root.monoFontFamily
+                            pixelSize: Math.round(10 * fontScale)
+                            weight: Font.Medium
+                        }
+                        elide: Text.ElideRight
+                        Layout.fillWidth: true
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+                }
+
+            // Floating tooltip showing full un-truncated title & class
+            QSTooltip {
+                show: titleMouse.containsMouse && root.activeWindowTitle !== ""
+                placement: "below"
+                text: root.activeWindowTitle
+                subtitle: root.activeWindowClass
+                fontScale: root.fontScale
+                fontFamily: root.fontFamily
+            }
+
+            MouseArea {
+                id: titleMouse
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: qsIpc.toggleOverview()
+            }
+        }
+    }
 
         DropArea {
             id: localSendDropArea
@@ -1501,9 +2882,9 @@ ShellRoot {
                     }
                     
                     if (paths.length > 0) {
-                        pLocalSend.command = ["localsend"].concat(paths);
+                        pLocalSend.command = [root.scriptsDir + "/kdeconnect_share.sh", "--files"].concat(paths);
                         pLocalSend.running = true;
-                        
+
                         root.islandState = root.stateLocalSendSuccess;
                         localSendTimer.restart();
                     } else {
@@ -1511,7 +2892,7 @@ ShellRoot {
                     }
                 } else if (drop.hasText) {
                     drop.accept(Qt.CopyAction);
-                    pLocalSend.command = ["sh", "-c", "echo -n \"$1\" > /tmp/shared_text.txt && localsend /tmp/shared_text.txt", "--", drop.text];
+                    pLocalSend.command = [root.scriptsDir + "/kdeconnect_share.sh", "--text", drop.text];
                     pLocalSend.running = true;
                     
                     root.islandState = root.stateLocalSendSuccess;
@@ -1522,2660 +2903,140 @@ ShellRoot {
             }
         }
 
-        Rectangle {
+        Process {
+            id: pMindSpaceDrop
+            command: []
+        }
+
+        CenterNotch {
             id: notchRect
-            opacity: root.isAnyPopupOpen ? 0.0 : 1.0
-            visible: opacity > 0.0
-
-            anchors.top: parent.top
-            anchors.topMargin: root.topHuggingStyle ? 0 : 4 * scaleFactor
-            anchors.horizontalCenter: parent.horizontalCenter
-
-            // Dark glassmorphic background with gradient
-            color: Qt.rgba(0.05, 0.05, 0.05, 0.95)
-
-            // Dynamic heights and widths matching Apple Dynamic Island transitions
-            clip: true
-            // LocalSend expands taller for a dramatic dock-style pop
-            height: (root.islandState === root.stateDragLocalSend || root.islandState === root.stateLocalSendSuccess)
-                    ? 70 * scaleFactor
-                    : 40 * scaleFactor
-            width: root.isAnyPopupOpen ? (36 * scaleFactor) : root.closedNotchWidth
-            radius: (root.islandState === root.stateDragLocalSend || root.islandState === root.stateLocalSendSuccess)
-                    ? 24 * scaleFactor
-                    : 20 * scaleFactor
-
-            // flareSize: smoothly tracks radius so the flare shapes don't jump
-            // when the spring reverses direction during close animation.
-            property real flareSize: radius
-            Behavior on flareSize {
-                enabled: true
-                SmoothedAnimation {
-                    velocity: 140
-                    easing.type: Easing.InOutQuad
-                }
-            }
-            onRadiusChanged: flareSize = radius
-
-            // Pill pop: suppressed for LocalSend — the spring overshoot IS the pop.
-            property real popScale: 1.0
-            scale: popScale
-            transformOrigin: Item.Center
-            onPopScaleChanged: {}
-
-            // GPU texture cache: prevents clip:true from re-rendering all children every frame.
-            layer.enabled: !root.batteryMode
-
-            Connections {
-                target: root
-                function onIslandStateChanged() {
-                    if (root.batteryMode) return;
-                    // Skip scale-pop for LocalSend — the springy height expansion handles it
-                    var s = root.islandState;
-                    if (s === root.stateDragLocalSend || s === root.stateLocalSendSuccess) return;
-                    popSequence.restart();
-                }
-            }
-            SequentialAnimation {
-                id: popSequence
-                NumberAnimation { target: notchRect; property: "popScale"; to: 1.055; duration: 120; easing.type: Easing.OutQuad }
-                NumberAnimation { target: notchRect; property: "popScale"; to: 0.975; duration: 90; easing.type: Easing.InOutQuad }
-                NumberAnimation { target: notchRect; property: "popScale"; to: 1.00; duration: 130; easing.type: Easing.OutElastic }
-            }
-
-            // DOCK-STYLE: low damping gives visible overshoot so the pill "pops" open
-            // like a macOS dock expanding — no separate scale bounce needed.
-            Behavior on width {
-                enabled: true
-                SpringAnimation {
-                    spring: root.notchSpringStiffness
-                    damping: root.notchSpringDamping
-                    mass: root.notchSpringMass
-                }
-            }
-            Behavior on height {
-                enabled: true
-                SpringAnimation {
-                    spring: root.notchSpringStiffness
-                    damping: root.notchSpringDamping
-                    mass: root.notchSpringMass
-                }
-            }
-            Behavior on radius {
-                enabled: true
-                SpringAnimation {
-                    spring: root.notchSpringStiffness
-                    damping: root.notchSpringDamping
-                    mass: root.notchSpringMass
-                }
-            }
-            Behavior on anchors.topMargin {
-                NumberAnimation {
-                    duration: root.batteryMode ? 250 : 400
-                    easing.type: Easing.OutExpo
-                }
-            }
-            Behavior on opacity {
-                NumberAnimation {
-                    // For top hugging style, opening and closing should be smooth to match GroundControl
-                    duration: root.batteryMode ? 150 : (root.topHuggingStyle ? 150 : (root.isAnyPopupOpen ? 150 : 50))
-                    easing.type: Easing.OutQuad
-                }
-            }
-
-            border.color: Qt.rgba(1, 1, 1, 0.08) // Sleek premium glass border
-            border.width: 1
-
-            MouseArea {
-                anchors.fill: parent
-                enabled: root.islandState !== root.stateCompact
-                onClicked: {
-                    root.islandState = root.stateCompact; // normal body clicks revert to main pill
-                }
-            }
-
-            RowLayout {
-                id: notchLayout
-                // Width check removed: clip:true on notchRect already prevents overflow;
-                // the old threshold caused flicker whenever closedNotchWidth changed slightly.
-                opacity: (root.islandState === root.stateCompact && !root.isAnyPopupOpen) ? 1.0 : 0.0
-                visible: opacity > 0.0
-                enabled: root.islandState === root.stateCompact && !root.isAnyPopupOpen
-                scale: opacity > 0 ? 1.0 : 0.9
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: root.batteryMode ? 150 : 250
-                        easing.type: Easing.OutQuad
-                    }
-                }
-                Behavior on scale {
-                    enabled: true
-                    SpringAnimation {
-                        spring: 4.8
-                        damping: 0.8
-                        mass: 0.6
-                    }
-                }
-                layer.enabled: (opacity > 0.0 && opacity < 1.0) && !root.batteryMode
-                anchors.centerIn: parent
-                height: 32
-                spacing: Math.round(12 * scaleFactor)
-
-                Repeater {
-                    model: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-                    NotchMod {
-                    shellRoot: root
-                        hoverColor: "transparent"
-                        activeColor: "transparent"
-                        property var ws: Hyprland.workspaces.values.find(w => w.id === modelData)
-                        property bool isActive: Hyprland.focusedWorkspace != null && Hyprland.focusedWorkspace.id === modelData
-                        show: (ws !== undefined || isActive)
-                        customWidth: isActive ? 16 : (containsMouse ? 12 : 8)
-                        onClicked: Hyprland.dispatch("hl.dsp.focus({ workspace = \"" + modelData + "\" })")
-
-                        Rectangle {
-                            id: wsDot
-                            anchors.centerIn: parent
-                            width: isActive ? 14 : (containsMouse ? 10 : 6)
-                            height: 6
-                            radius: 3
-                            color: isActive ? "#ffffff" : root.colMuted
-                            // Target opacity — the Behavior below smoothly drives toward this.
-                            // On hover: dot fades out after a short delay so the number leads.
-                            // On exit:  dot fades back in immediately so there's no gap.
-                            opacity: containsMouse ? 0.0 : (isActive ? 1.0 : 0.4)
-                            Behavior on width {
-                                enabled: true
-                                SpringAnimation {
-                                    spring: 3.0
-                                    damping: 0.6
-                                    mass: 0.8
-                                }
-                            }
-                                           Behavior on color {
-                                ColorAnimation {
-                                     duration: root.batteryMode ? 150 : 200
-                                }
-                            }
-                            // Crossfade: when hiding (going to 0) delay 60 ms so the number
-                            // has already started appearing before the dot begins to leave.
-                            // When showing (going to non-zero) animate instantly so there is
-                            // never a moment where both are invisible on mouse-exit.
-                            Behavior on opacity {
-                                SequentialAnimation {
-                                    PauseAnimation {
-                                        // Only pause when fading OUT (dot hides on hover).
-                                        // wsDot.opacity hasn't updated yet here, so we check
-                                        // the mouse state directly.
-                                        duration: (!root.batteryMode && containsMouse) ? 60 : 0
-                                    }
-                                    NumberAnimation {
-                                        duration: root.batteryMode ? 100 : 130
-                                        easing.type: Easing.OutQuad
-                                    }
-                                }
-                            }
-                        }
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: modelData.toString()
-                            color: isActive ? "#ffffff" : root.colFg
-                            font {
-                                family: root.fontFamily
-                                pixelSize: 9
-                                bold: true
-                            }
-                            // Number leads: fades in fast, fades out slightly slower so
-                            // the dot is already reappearing before the number is gone.
-                            opacity: containsMouse ? 1.0 : 0.0
-                            scale: containsMouse ? 1.0 : 0.5
-                            Behavior on opacity {
-                                NumberAnimation {
-                                    duration: root.batteryMode ? 100 : (containsMouse ? 100 : 160)
-                                    easing.type: Easing.OutQuad
-                                }
-                            }
-                            Behavior on scale {
-                                enabled: true
-                                SpringAnimation {
-                                    spring: 3.0
-                                    damping: 0.6
-                                    mass: 0.8
-                                }
-                            }
-                        }
-                    }
-                }
-
-                NotchMod {
-                    shellRoot: root
-                    hoverColor: "transparent"
-                    activeColor: "transparent"
-                    show: root.dndActive
-                    onClicked: {
-                        root.islandState = root.stateDnd;
-                        dndPillTimer.restart();
-                    }
-                    Text {
-                        text: "󰂛"
-                        color: "#FF3B30"
-                        font {
-                            family: root.iconFontFamily
-                            pixelSize: 12
-                            bold: true
-                        }
-                    }
-                }
-
-                NotchMod {
-                    shellRoot: root
-                    id: batteryMod
-                    hoverColor: "transparent"
-                    activeColor: "transparent"
-                    property int cap: parseInt(root.batteryCap)
-                    property bool isCrit: cap <= 15 && !root.batteryCharging
-                    property bool isWarn: cap <= 30 && cap > 15 && !root.batteryCharging
-                    show: true
-                    onClicked: groundControl.show = true
-
-                    RowLayout {
-                        spacing: 6
-                        Text {
-                            text: root.batteryCap + "%"
-                            color: batteryMod.isCrit ? root.colCrit : (batteryMod.isWarn ? root.colWarn : (root.batteryCharging ? root.colSuccess : root.colFg))
-                            font {
-                                family: root.fontFamily
-                                pixelSize: Math.round(11 * root.scaleFactor)
-                                bold: true
-                            }
-                            Behavior on color {
-                                ColorAnimation {
-                                    duration: root.batteryMode ? 150 : 200
-                                }
-                            }
-                        }
-                        ModernBatteryIcon {
-                            level: batteryMod.cap / 100.0
-                            charging: root.batteryCharging
-                            colFg: batteryMod.isCrit ? root.colCrit : (batteryMod.isWarn ? root.colWarn : (root.batteryCharging ? root.colSuccess : root.colFg))
-                            Layout.alignment: Qt.AlignVCenter
-                        }
-                    }
-                }
-
-                NotchMod {
-                    shellRoot: root
-                    id: spotifyMod
-                    hoverColor: "transparent"
-                    activeColor: "transparent"
-                    show: root.spotifyStatus === "playing"
-                    onClicked: root.islandState = root.stateMedia
-
-                    RowLayout {
-                        spacing: 6
-                        Text {
-                            text: "󰝚"
-                            color: root.colSpotify
-                            font {
-                                family: root.iconFontFamily
-                                pixelSize: 11
-                                bold: true
-                            }
-                            transformOrigin: Item.Center
-
-                            SequentialAnimation on scale {
-                                loops: Animation.Infinite
-                                running: root.spotifyStatus === "playing"
-                                NumberAnimation {
-                                    to: 1.2
-                                    duration: 600
-                                    easing.type: Easing.InOutQuad
-                                }
-                                NumberAnimation {
-                                    to: 0.9
-                                    duration: 600
-                                    easing.type: Easing.InOutQuad
-                                }
-                            }
-                        }
-                        Text {
-                            text: "Music"
-                            color: root.colFg
-                            font {
-                                family: root.fontFamily
-                                pixelSize: 10
-                                bold: true
-                            }
-                        }
-                        Row {
-                            spacing: 1.5 * root.scaleFactor
-                            Layout.alignment: Qt.AlignVCenter
-                            height: Math.round(10 * root.scaleFactor)
-                            visible: root.spotifyStatus === "playing"
-                            Repeater {
-                                model: [400, 650, 500, 750]
-                                delegate: Rectangle {
-                                    width: 1.5 * root.scaleFactor
-                                    height: Math.round(3 * root.scaleFactor)
-                                    radius: (1.5 * root.scaleFactor) / 2
-                                    color: root.colSpotify
-                                    anchors.bottom: parent.bottom
-
-                                    SequentialAnimation on height {
-                                        loops: Animation.Infinite
-                                        running: root.spotifyStatus === "playing" && !root.batteryMode
-                                        NumberAnimation {
-                                            to: Math.round(9 * root.scaleFactor)
-                                            duration: modelData
-                                            easing.type: Easing.InOutQuad
-                                        }
-                                        NumberAnimation {
-                                            to: Math.round(3 * root.scaleFactor)
-                                            duration: modelData
-                                            easing.type: Easing.InOutQuad
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                NotchMod {
-                    shellRoot: root
-                    id: stopwatchMod
-                    hoverColor: "transparent"
-                    activeColor: "transparent"
-                    property bool isActive: root.stopwatchRunning || root.stopwatchSeconds > 0
-                    show: isActive
-                    onClicked: root.islandState = root.stateStopwatch
-
-                    RowLayout {
-                        spacing: 6
-                        Text {
-                            text: "󱎫"
-                            color: root.stopwatchRunning ? root.colWarn : root.colFg
-                            font {
-                                family: root.iconFontFamily
-                                pixelSize: 11
-                            }
-                            transformOrigin: Item.Center
-
-                            NumberAnimation on rotation {
-                                loops: Animation.Infinite
-                                running: root.stopwatchRunning
-                                from: 0
-                                to: 360
-                                duration: 4000
-                            }
-                        }
-                        Text {
-                            text: root.stopwatchText
-                            color: root.colFg
-                            font {
-                                family: root.fontFamily
-                                pixelSize: 10
-                                bold: true
-                            }
-                        }
-                    }
-                }
-
-                NotchMod {
-                    shellRoot: root
-                    id: timerMod
-                    hoverColor: "transparent"
-                    activeColor: "transparent"
-                    property bool isActive: root.timerRunning || (root.timerSeconds > 0 && root.timerSeconds < root.timerTotal)
-                    show: isActive
-                    onClicked: root.islandState = root.stateTimer
-
-                    RowLayout {
-                        spacing: 6
-                        Text {
-                            text: "󰔛"
-                            color: root.timerRunning ? root.colWarn : root.colFg
-                            font {
-                                family: root.iconFontFamily
-                                pixelSize: 11
-                            }
-                            transformOrigin: Item.Center
-
-                            SequentialAnimation on rotation {
-                                loops: Animation.Infinite
-                                running: root.timerRunning && !root.batteryMode
-                                NumberAnimation {
-                                    from: 0
-                                    to: -15
-                                    duration: 150
-                                    easing.type: Easing.InOutQuad
-                                }
-                                NumberAnimation {
-                                    from: -15
-                                    to: 15
-                                    duration: 300
-                                    easing.type: Easing.InOutQuad
-                                }
-                                NumberAnimation {
-                                    from: 15
-                                    to: 0
-                                    duration: 150
-                                    easing.type: Easing.InOutQuad
-                                }
-                                PauseAnimation {
-                                    duration: 400
-                                }
-                            }
-                        }
-                        Text {
-                            text: root.timerText
-                            color: root.colFg
-                            font {
-                                family: root.fontFamily
-                                pixelSize: 10
-                                bold: true
-                            }
-                        }
-                    }
-                }
-
-                NotchMod {
-                    shellRoot: root
-                    id: modeMod
-                    hoverColor: "transparent"
-                    activeColor: "transparent"
-                    show: root.showBatteryModeIndicator
-
-                    RowLayout {
-                        spacing: 6
-                        Text {
-                            // N-17 FIX: glyphs were empty strings — restored correct Nerd Font codepoints
-                            text: root.batteryMode ? "󰌪" : "󱐋"
-                            color: root.batteryMode ? "#FFCC00" : "#76B900"
-                            font {
-                                family: root.iconFontFamily
-                                pixelSize: 11
-                            }
-                        }
-                        Text {
-                            text: root.batteryMode ? "Saver" : "Performance"
-                            color: root.colFg
-                            font {
-                                family: root.fontFamily
-                                pixelSize: 10
-                                bold: true
-                            }
-                        }
-                    }
-                }
-
-                NotchMod {
-                    shellRoot: root
-                    id: micMod
-                    hoverColor: "transparent"
-                    activeColor: "transparent"
-                    show: root.showMicIndicator
-
-                    RowLayout {
-                        spacing: 6
-                        Text {
-                            text: root.micMuted ? "󰍭" : "󰍬"
-                            color: root.micMuted ? root.colMuted : root.colWarn
-                            font {
-                                family: root.iconFontFamily
-                                pixelSize: 11
-                            }
-                        }
-                        Text {
-                            text: root.micMuted ? "Muted" : "Active"
-                            color: root.colFg
-                            font {
-                                family: root.fontFamily
-                                pixelSize: 10
-                                bold: true
-                            }
-                        }
-                    }
-                }
-
-                NotchMod {
-                    shellRoot: root
-                    id: emailMod
-                    hoverColor: "transparent"
-                    activeColor: "transparent"
-                    show: root.showEmailPill && root.hourEmailsCount > 0
-                    onClicked: {
-                        emailsPopup.show = !emailsPopup.show;
-                    }
-
-                    RowLayout {
-                        spacing: 6
-                        Text {
-                            text: "󰇮"
-                            color: "#007AFF"
-                            font {
-                                family: root.iconFontFamily
-                                pixelSize: 11
-                            }
-                        }
-                        Text {
-                            text: root.hourEmailsCount + " New"
-                            color: root.colFg
-                            font {
-                                family: root.fontFamily
-                                pixelSize: 10
-                                bold: true
-                            }
-                        }
-                    }
-                }
-            }
-
-            MouseArea {
-                anchors.fill: mediaLayout
-                visible: mediaLayout.visible
-                z: -1
-                onClicked: root.islandState = root.stateCompact
-            }
-
-            // Compact Media Layout
-            RowLayout {
-                id: mediaLayout
-                opacity: (root.islandState === 1 && !root.isAnyPopupOpen && notchRect.width >= 272) ? 1.0 : 0.0
-                visible: opacity > 0
-                scale: opacity > 0 ? 1.0 : 0.9
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: root.batteryMode ? 150 : 250
-                        easing.type: Easing.OutQuad
-                    }
-                }
-                Behavior on scale {
-                    enabled: true
-                    SpringAnimation {
-                        spring: 4.8
-                        damping: 0.8
-                        mass: 0.6
-                    }
-                }
-                layer.enabled: (opacity > 0.0 && opacity < 1.0) && !root.batteryMode
-                anchors.fill: parent
-                anchors.leftMargin: 14
-                anchors.rightMargin: 14
-                spacing: 10
-
-                MouseArea {
-                    width: 20
-                    height: 20
-                    Layout.alignment: Qt.AlignVCenter
-                    onClicked: {
-                        mediaPopup.show = true;
-                    }
-                    Text {
-                        anchors.centerIn: parent
-                        text: "󰝚"
-                        color: root.spotifyStatus === "playing" ? root.colSpotify : root.colFg
-                        font {
-                            family: root.iconFontFamily
-                            pixelSize: 14
-                        }
-                    }
-                }
-
-                // ── MARQUEE TICKER ─────────────────────────────────────────
-                Item {
-                    id: tickerClip
-                    Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignVCenter
-                    height: 18
-                    clip: true
-
-                    property real textW: tickerText.implicitWidth
-                    property real clipW: tickerClip.width
-                    property bool needsScroll: textW > clipW
-                    property int loopsRemaining: 0
-                    property bool hoverActive: false
-                    property bool isScrolling: false
-
-                    function triggerChangeScroll() {
-                        tickerAnim.stop();
-                        tickerContainer.x = 0;
-                        tickerClip.isScrolling = false;
-                        if (needsScroll && root.spotifyStatus === "playing" && !root.batteryMode) {
-                            loopsRemaining = 3;
-                            tickerAnim.start();
-                        } else {
-                            loopsRemaining = 0;
-                        }
-                    }
-
-                    Connections {
-                        target: root
-                        function onSpotifyStatusChanged() {
-                            if (root.spotifyStatus !== "playing") {
-                                tickerAnim.stop();
-                                tickerContainer.x = 0;
-                                tickerClip.loopsRemaining = 0;
-                                tickerClip.isScrolling = false;
-                            } else {
-                                tickerClip.triggerChangeScroll();
-                            }
-                        }
-                        function onBatteryModeChanged() {
-                            if (root.batteryMode) {
-                                tickerAnim.stop();
-                                tickerContainer.x = 0;
-                                tickerClip.loopsRemaining = 0;
-                                tickerClip.isScrolling = false;
-                            } else {
-                                tickerClip.triggerChangeScroll();
-                            }
-                        }
-                    }
-
-                    // Scrolling Container
-                    Item {
-                        id: tickerContainer
-                        width: tickerText.implicitWidth * 2 + 40
-                        height: parent.height
-                        x: 0
-
-                        Row {
-                            spacing: 40
-                            anchors.verticalCenter: parent.verticalCenter
-
-                            Text {
-                                id: tickerText
-                                text: root.spotifyText ? root.spotifyText : "No Title"
-                                color: root.colFg
-                                font {
-                                    family: root.fontFamily
-                                    pixelSize: 11
-                                    bold: true
-                                }
-                                onTextChanged: {
-                                    tickerClip.triggerChangeScroll();
-                                }
-                            }
-
-                            Text {
-                                text: tickerText.text
-                                color: tickerText.color
-                                font: tickerText.font
-                                visible: tickerClip.needsScroll
-                            }
-                        }
-                    }
-
-                    SequentialAnimation {
-                        id: tickerAnim
-                        loops: 1
-
-                        ScriptAction {
-                            script: tickerClip.isScrolling = false
-                        }
-
-                        PauseAnimation {
-                            duration: 2200
-                        }
-
-                        ScriptAction {
-                            script: tickerClip.isScrolling = true
-                        }
-
-                        NumberAnimation {
-                            target: tickerContainer
-                            property: "x"
-                            from: 0
-                            to: -(tickerText.implicitWidth + 40)
-                            duration: Math.max(3000, tickerText.implicitWidth * 24)
-                            easing.type: Easing.Linear
-                        }
-
-                        ScriptAction {
-                            script: tickerClip.isScrolling = false
-                        }
-
-                        onFinished: {
-                            tickerContainer.x = 0;
-                            tickerClip.isScrolling = false;
-                            if (tickerClip.loopsRemaining > 0) {
-                                tickerClip.loopsRemaining--;
-                            }
-                            if (tickerClip.loopsRemaining > 0 || tickerClip.hoverActive) {
-                                tickerAnim.start();
-                            }
-                        }
-                    }
-
-                    onWidthChanged: {
-                        triggerChangeScroll();
-                    }
-
-                    // Faded Edge Overlays (Left & Right) for premium visual cutoff
-                    Rectangle {
-                        anchors.left: parent.left
-                        anchors.top: parent.top
-                        anchors.bottom: parent.bottom
-                        width: 12
-                        opacity: (tickerClip.needsScroll && tickerClip.isScrolling) ? 1.0 : 0.0
-                        visible: opacity > 0.01
-                        z: 10
-                        gradient: Gradient {
-                            orientation: Gradient.Horizontal
-                            GradientStop {
-                                position: 0.0
-                                color: Qt.rgba(0.05, 0.05, 0.05, 1.0)
-                            }
-                            GradientStop {
-                                position: 1.0
-                                color: Qt.rgba(0.05, 0.05, 0.05, 0.0)
-                            }
-                        }
-                        Behavior on opacity {
-                            NumberAnimation {
-                                duration: 300
-                                easing.type: Easing.InOutQuad
-                            }
-                        }
-                    }
-
-                    Rectangle {
-                        anchors.right: parent.right
-                        anchors.top: parent.top
-                        anchors.bottom: parent.bottom
-                        width: 12
-                        opacity: (tickerClip.needsScroll && tickerClip.isScrolling) ? 1.0 : 0.0
-                        visible: opacity > 0.01
-                        z: 10
-                        gradient: Gradient {
-                            orientation: Gradient.Horizontal
-                            GradientStop {
-                                position: 0.0
-                                color: Qt.rgba(0.05, 0.05, 0.05, 0.0)
-                            }
-                            GradientStop {
-                                position: 1.0
-                                color: Qt.rgba(0.05, 0.05, 0.05, 1.0)
-                            }
-                        }
-                        Behavior on opacity {
-                            NumberAnimation {
-                                duration: 300
-                                easing.type: Easing.InOutQuad
-                            }
-                        }
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onEntered: {
-                            if (tickerClip.needsScroll && root.spotifyStatus === "playing" && !root.batteryMode) {
-                                tickerClip.hoverActive = true;
-                                if (!tickerAnim.running) {
-                                    tickerAnim.start();
-                                }
-                            }
-                        }
-                        onExited: {
-                            tickerClip.hoverActive = false;
-                        }
-                        onClicked: {
-                            root.islandState = root.stateCompact;
-                        }
-                    }
-                }
-                // ───────────────────────────────────────────────────────────
-
-                RowLayout {
-                    spacing: 6
-                    Layout.alignment: Qt.AlignVCenter
-
-                    MouseArea {
-                        id: compactPrevBtn
-                        width: 22
-                        height: 22
-                        hoverEnabled: true
-                        onClicked: pSpotPrev.running = true
-
-                        scale: containsPress ? 0.85 : (containsMouse ? 1.15 : 1.0)
-                        Behavior on scale {
-                            SpringAnimation {
-                                spring: 4.5
-                                damping: 0.65
-                                mass: 0.6
-                            }
-                        }
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: "󰒮"
-                            color: parent.containsMouse ? root.colFg : root.colMuted
-                            font {
-                                family: root.iconFontFamily
-                                pixelSize: 13
-                            }
-                        }
-                    }
-
-                    MouseArea {
-                        id: compactPlayBtn
-                        width: 24
-                        height: 24
-                        hoverEnabled: true
-                        onClicked: pSpotPlay.running = true
-
-                        scale: containsPress ? 0.85 : (containsMouse ? 1.15 : 1.0)
-                        Behavior on scale {
-                            SpringAnimation {
-                                spring: 4.5
-                                damping: 0.65
-                                mass: 0.6
-                            }
-                        }
-
-                        Rectangle {
-                            anchors.fill: parent
-                            radius: 12
-                            color: parent.containsMouse ? Qt.rgba(1, 1, 1, 0.1) : "transparent"
-                        }
-                        Text {
-                            anchors.centerIn: parent
-                            text: root.spotifyStatus === "playing" ? "󰏤" : "󰐊"
-                            color: root.colFg
-                            font {
-                                family: root.iconFontFamily
-                                pixelSize: 14
-                            }
-                        }
-                    }
-
-                    MouseArea {
-                        id: compactNextBtn
-                        width: 22
-                        height: 22
-                        hoverEnabled: true
-                        onClicked: pSpotNext.running = true
-
-                        scale: containsPress ? 0.85 : (containsMouse ? 1.15 : 1.0)
-                        Behavior on scale {
-                            SpringAnimation {
-                                spring: 4.5
-                                damping: 0.65
-                                mass: 0.6
-                            }
-                        }
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: "󰒭"
-                            color: parent.containsMouse ? root.colFg : root.colMuted
-                            font {
-                                family: root.iconFontFamily
-                                pixelSize: 13
-                            }
-                        }
-                    }
-                }
-            }
-
-            MouseArea {
-                anchors.fill: timerLayout
-                visible: timerLayout.visible
-                z: -1
-                onClicked: root.islandState = root.stateCompact
-            }
-
-            // Timer Layout
-            RowLayout {
-                id: timerLayout
-                opacity: (root.islandState === 4 && !root.isAnyPopupOpen && notchRect.width >= 232) ? 1.0 : 0.0
-                visible: opacity > 0
-                scale: opacity > 0 ? 1.0 : 0.9
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: root.batteryMode ? 150 : 250
-                        easing.type: Easing.OutQuad
-                    }
-                }
-                Behavior on scale {
-                    enabled: true
-                    SpringAnimation {
-                        spring: 4.8
-                        damping: 0.8
-                        mass: 0.6
-                    }
-                }
-                anchors.fill: parent
-                anchors.leftMargin: 16
-                anchors.rightMargin: 16
-                spacing: 12
-
-                Text {
-                    text: "󰔛"
-                    color: root.timerRunning ? root.colWarn : root.colFg
-                    font {
-                        family: root.iconFontFamily
-                        pixelSize: 18
-                    }
-                    Layout.alignment: Qt.AlignVCenter
-                    transformOrigin: Item.Center
-
-                    SequentialAnimation on rotation {
-                        loops: Animation.Infinite
-                        running: root.timerRunning && !root.batteryMode
-                        NumberAnimation {
-                            from: 0
-                            to: -15
-                            duration: 150
-                            easing.type: Easing.InOutQuad
-                        }
-                        NumberAnimation {
-                            from: -15
-                            to: 15
-                            duration: 300
-                            easing.type: Easing.InOutQuad
-                        }
-                        NumberAnimation {
-                            from: 15
-                            to: 0
-                            duration: 150
-                            easing.type: Easing.InOutQuad
-                        }
-                        PauseAnimation {
-                            duration: 400
-                        }
-                    }
-                }
-
-                Text {
-                    text: root.timerText
-                    color: root.colFg
-                    font {
-                        family: root.fontFamily
-                        pixelSize: 14
-                        bold: true
-                    }
-                    horizontalAlignment: Text.AlignHCenter
-                    Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignVCenter
-                }
-
-                RowLayout {
-                    spacing: 8
-                    Layout.alignment: Qt.AlignVCenter
-
-                    MouseArea {
-                        width: 24
-                        height: 24
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        scale: containsPress ? 0.85 : (containsMouse ? 1.15 : 1.0)
-                        Behavior on scale { SpringAnimation { spring: 4.5; damping: 0.65; mass: 0.6 } }
-                        onClicked: root.timerRunning = !root.timerRunning
-                        Text {
-                            anchors.centerIn: parent
-                            text: root.timerRunning ? "󰏤" : "󰐊"
-                            color: root.colFg
-                            font {
-                                family: root.iconFontFamily
-                                pixelSize: 16
-                            }
-                        }
-                    }
-
-                    MouseArea {
-                        width: 24
-                        height: 24
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        scale: containsPress ? 0.85 : (containsMouse ? 1.15 : 1.0)
-                        Behavior on scale { SpringAnimation { spring: 4.5; damping: 0.65; mass: 0.6 } }
-                        onClicked: {
-                            root.timerRunning = false;
-                            root.timerSeconds = root.timerTotal;
-                            root.timerText = root.formatTime(root.timerTotal);
-                            root.islandState = root.stateCompact;
-                        }
-                        Text {
-                            anchors.centerIn: parent
-                            text: "󰜎"
-                            color: root.colMuted
-                            font {
-                                family: root.iconFontFamily
-                                pixelSize: 16
-                            }
-                        }
-                    }
-                }
-            }
-
-            MouseArea {
-                anchors.fill: stopwatchLayout
-                visible: stopwatchLayout.visible
-                z: -1
-                onClicked: root.islandState = root.stateCompact
-            }
-
-            // Stopwatch Layout
-            RowLayout {
-                id: stopwatchLayout
-                opacity: (root.islandState === 5 && !root.isAnyPopupOpen && notchRect.width >= 232) ? 1.0 : 0.0
-                visible: opacity > 0
-                scale: opacity > 0 ? 1.0 : 0.9
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: root.batteryMode ? 150 : 250
-                        easing.type: Easing.OutQuad
-                    }
-                }
-                Behavior on scale {
-                    enabled: true
-                    SpringAnimation {
-                        spring: 4.8
-                        damping: 0.8
-                        mass: 0.6
-                    }
-                }
-                anchors.fill: parent
-                anchors.leftMargin: 16
-                anchors.rightMargin: 16
-                spacing: 12
-
-                Text {
-                    text: "󱎫"
-                    color: root.stopwatchRunning ? root.colWarn : root.colFg
-                    font {
-                        family: root.iconFontFamily
-                        pixelSize: 18
-                    }
-                    Layout.alignment: Qt.AlignVCenter
-                }
-
-                Text {
-                    text: root.stopwatchText
-                    color: root.colFg
-                    font {
-                        family: root.fontFamily
-                        pixelSize: 14
-                        bold: true
-                    }
-                    horizontalAlignment: Text.AlignHCenter
-                    Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignVCenter
-                }
-
-                RowLayout {
-                    spacing: 8
-                    Layout.alignment: Qt.AlignVCenter
-
-                    MouseArea {
-                        width: 24
-                        height: 24
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        scale: containsPress ? 0.85 : (containsMouse ? 1.15 : 1.0)
-                        Behavior on scale { SpringAnimation { spring: 4.5; damping: 0.65; mass: 0.6 } }
-                        onClicked: root.stopwatchRunning = !root.stopwatchRunning
-                        Text {
-                            anchors.centerIn: parent
-                            text: root.stopwatchRunning ? "󰏤" : "󰐊"
-                            color: root.colFg
-                            font {
-                                family: root.iconFontFamily
-                                pixelSize: 16
-                            }
-                        }
-                    }
-
-                    MouseArea {
-                        width: 24
-                        height: 24
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        scale: containsPress ? 0.85 : (containsMouse ? 1.15 : 1.0)
-                        Behavior on scale { SpringAnimation { spring: 4.5; damping: 0.65; mass: 0.6 } }
-                        onClicked: {
-                            root.stopwatchRunning = false;
-                            root.stopwatchSeconds = 0;
-                            root.stopwatchText = "00:00";
-                        }
-                        Text {
-                            anchors.centerIn: parent
-                            text: "󰜎"
-                            color: root.colMuted
-                            font {
-                                family: root.iconFontFamily
-                                pixelSize: 16
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Recording Layout
-            RowLayout {
-                id: recordingLayout
-                opacity: (root.islandState === 6 && !root.isAnyPopupOpen && notchRect.width >= 192) ? 1.0 : 0.0
-                visible: opacity > 0
-                scale: opacity > 0 ? 1.0 : 0.9
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: root.batteryMode ? 150 : 250
-                        easing.type: Easing.OutQuad
-                    }
-                }
-                Behavior on scale {
-                    enabled: true
-                    SpringAnimation {
-                        spring: 4.8
-                        damping: 0.8
-                        mass: 0.6
-                    }
-                }
-                anchors.fill: parent
-                anchors.leftMargin: 16
-                anchors.rightMargin: 16
-                spacing: 12
-
-                RowLayout {
-                    spacing: 6
-                    Layout.alignment: Qt.AlignVCenter
-                    Item {
-                        width: 10
-                        height: 10
-                        Layout.alignment: Qt.AlignVCenter
-
-                        // Pulsing outer ring (sonar radar)
-                        Rectangle {
-                            anchors.centerIn: parent
-                            width: 10
-                            height: 10
-                            radius: 5
-                            color: "transparent"
-                            border.color: "#EF4444"
-                            border.width: 1
-                            transformOrigin: Item.Center
-
-                            ParallelAnimation on scale {
-                                loops: Animation.Infinite
-                                running: root.islandState === 6 && !root.batteryMode
-                                NumberAnimation {
-                                    from: 1.0
-                                    to: 2.4
-                                    duration: 1600
-                                    easing.type: Easing.OutQuad
-                                }
-                            }
-                            ParallelAnimation on opacity {
-                                loops: Animation.Infinite
-                                running: root.islandState === 6 && !root.batteryMode
-                                NumberAnimation {
-                                    from: 0.8
-                                    to: 0.0
-                                    duration: 1600
-                                    easing.type: Easing.OutQuad
-                                }
-                            }
-                        }
-
-                        // Core red dot
-                        Rectangle {
-                            anchors.fill: parent
-                            radius: 5
-                            color: "#EF4444"
-                            SequentialAnimation on opacity {
-                                loops: Animation.Infinite
-                                running: root.islandState === 6
-                                NumberAnimation {
-                                    from: 1.0
-                                    to: 0.4
-                                    duration: 800
-                                    easing.type: Easing.InOutQuad
-                                }
-                                NumberAnimation {
-                                    from: 0.4
-                                    to: 1.0
-                                    duration: 800
-                                    easing.type: Easing.InOutQuad
-                                }
-                            }
-                        }
-                    }
-                    Text {
-                        text: "REC"
-                        color: "#EF4444"
-                        font {
-                            family: root.fontFamily
-                            pixelSize: 12
-                            bold: true
-                        }
-                        Layout.alignment: Qt.AlignVCenter
-                    }
-                }
-
-                Text {
-                    text: root.recordingTime
-                    color: root.colFg
-                    font {
-                        family: root.fontFamily
-                        pixelSize: 14
-                        bold: true
-                    }
-                    Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignVCenter
-                }
-
-                MouseArea {
-                    width: 24
-                    height: 24
-                    Layout.alignment: Qt.AlignVCenter
-                    onClicked: {
-                        // N-5 FIX: also stop the timer and reset state when clicking stop from the notch
-                        pStopRecord.running = true;
-                        root.isRecording = false;
-                        recordingTimer.stop();
-                        root.recordingSeconds = 0;
-                        root.recordingTime = "0:00";
-                        root.islandState = root.stateCompact;
-                    }
-                    Text {
-                        anchors.centerIn: parent
-                        text: "󰓛"
-                        color: "#EF4444"
-                        font {
-                            family: root.iconFontFamily
-                            pixelSize: 16
-                        }
-                    }
-                }
-            }
-
-            // ── LIQUID-FILL OSD BACKGROUND ──────────────────────────────
-            Canvas {
-                id: osdLiquidCanvas
-                anchors.fill: parent
-                clip: true
-                visible: root.islandState === root.stateOsd && !root.isAnyPopupOpen
-
-                property real fillRatio: root.osdValue / 100
-                property real wavePhase: 0.0
-                property real waveAmp: 3.0   // wave amplitude in px
-
-                onFillRatioChanged: requestPaint()
-                onWavePhaseChanged: requestPaint()
-
-                Behavior on fillRatio {
-                    NumberAnimation {
-                        duration: 300
-                        easing.type: Easing.OutCubic
-                    }
-                }
-
-                // Continuous wave ticker
-                NumberAnimation on wavePhase {
-                    running: root.islandState === root.stateOsd && !root.batteryMode
-                    loops: Animation.Infinite
-                    from: 0
-                    to: Math.PI * 2
-                    duration: 1400
-                    easing.type: Easing.Linear
-                }
-
-                onPaint: {
-                    var ctx = getContext("2d");
-                    ctx.reset();
-
-                    var w = width;
-                    var h = height;
-                    var fillX = w * fillRatio;
-                    var amp = waveAmp;
-                    var r = notchRect.radius;
-
-                    // Clipping rounded rect path (matches notchRect)
-                    ctx.beginPath();
-                    ctx.moveTo(r, 0);
-                    ctx.lineTo(w - r, 0);
-                    ctx.quadraticCurveTo(w, 0, w, r);
-                    ctx.lineTo(w, h - r);
-                    ctx.quadraticCurveTo(w, h, w - r, h);
-                    ctx.lineTo(r, h);
-                    ctx.quadraticCurveTo(0, h, 0, h - r);
-                    ctx.lineTo(0, r);
-                    ctx.quadraticCurveTo(0, 0, r, 0);
-                    ctx.closePath();
-                    ctx.clip();
-
-                    // Fill from x = 0 to x = fillX with vertical meniscus wave
-                    ctx.beginPath();
-                    ctx.moveTo(0, 0);
-
-                    var steps = Math.ceil(h);
-                    for (var i = 0; i <= steps; i++) {
-                        var py = i;
-                        var wave = Math.sin(wavePhase + (py / h) * Math.PI * 2) * amp;
-                        var px = fillX + wave;
-                        ctx.lineTo(px, py);
-                    }
-                    ctx.lineTo(0, h);
-                    ctx.closePath();
-
-                    // Glassmorphic translucent gradient fill
-                    var grad = ctx.createLinearGradient(0, 0, fillX, 0);
-                    grad.addColorStop(0, Qt.rgba(1, 1, 1, 0.18).toString());
-                    grad.addColorStop(1.0, Qt.rgba(1, 1, 1, 0.32).toString());
-                    ctx.fillStyle = grad;
-                    ctx.fill();
-
-                    // Bright sheen line at wave crest
-                    ctx.beginPath();
-                    for (var j = 0; j <= steps; j++) {
-                        var qy = j;
-                        var qwave = Math.sin(wavePhase + (qy / h) * Math.PI * 2) * amp;
-                        var qx = fillX + qwave;
-                        if (j === 0)
-                            ctx.moveTo(qx, qy);
-                        else
-                            ctx.lineTo(qx, qy);
-                    }
-                    ctx.strokeStyle = Qt.rgba(1, 1, 1, 0.75).toString();
-                    ctx.lineWidth = 1.8;
-                    ctx.stroke();
-                }
-            }
-
-            // OSD Layout
-            RowLayout {
-                id: osdLayout
-                opacity: (root.islandState === 3 && !root.isAnyPopupOpen && notchRect.width >= 192) ? 1.0 : 0.0
-                visible: opacity > 0
-                scale: opacity > 0 ? 1.0 : 0.9
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: root.batteryMode ? 150 : 250
-                        easing.type: Easing.OutQuad
-                    }
-                }
-                Behavior on scale {
-                    enabled: true
-                    SpringAnimation {
-                        spring: 4.8
-                        damping: 0.8
-                        mass: 0.6
-                    }
-                }
-                anchors.fill: parent
-                anchors.leftMargin: 16
-                anchors.rightMargin: 16
-                spacing: 10
-
-                Text {
-                    text: root.osdIcon
-                    color: root.colFg
-                    font {
-                        family: root.iconFontFamily
-                        pixelSize: 15
-                    }
-                    Layout.alignment: Qt.AlignVCenter
-                }
-
-                // Spacer filling the middle area so icon/text float at left/right edges
-                Item {
-                    Layout.fillWidth: true
-                    height: 1
-                }
-
-                Text {
-                    text: root.osdText
-                    color: root.colFg
-                    font {
-                        family: root.fontFamily
-                        pixelSize: 11
-                        bold: true
-                    }
-                    Layout.alignment: Qt.AlignVCenter
-                    Layout.minimumWidth: 28
-                    horizontalAlignment: Text.AlignRight
-                }
-            }
-
-            // Battery Low alert pill
-            RowLayout {
-                id: lowBatLayout
-                opacity: (root.islandState === 7 && !root.isAnyPopupOpen && notchRect.width >= 192) ? 1.0 : 0.0
-                visible: opacity > 0
-                scale: opacity > 0 ? 1.0 : 0.9
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: root.batteryMode ? 150 : 250
-                        easing.type: Easing.OutQuad
-                    }
-                }
-                Behavior on scale {
-                    enabled: true
-                    SpringAnimation {
-                        spring: 4.8
-                        damping: 0.8
-                        mass: 0.6
-                    }
-                }
-                anchors.fill: parent
-                anchors.leftMargin: 16
-                anchors.rightMargin: 16
-                spacing: 0
-
-                Text {
-                    text: "󰂃"
-                    color: root.colCrit
-                    font {
-                        family: root.iconFontFamily
-                        pixelSize: 15
-                    }
-                    Layout.alignment: Qt.AlignVCenter
-                }
-                Item {
-                    Layout.fillWidth: true
-                }
-                Text {
-                    text: "Battery Low (" + root.batteryCap + "%)"
-                    color: root.colFg
-                    font {
-                        family: root.fontFamily
-                        pixelSize: 12
-                        bold: true
-                    }
-                    Layout.alignment: Qt.AlignVCenter
-                }
-            }
-
-            // Charging alert pill
-            RowLayout {
-                id: chargingLayout
-                opacity: (root.islandState === 8 && !root.isAnyPopupOpen && notchRect.width >= 192) ? 1.0 : 0.0
-                visible: opacity > 0
-                scale: opacity > 0 ? 1.0 : 0.9
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: root.batteryMode ? 150 : 250
-                        easing.type: Easing.OutQuad
-                    }
-                }
-                Behavior on scale {
-                    enabled: true
-                    SpringAnimation {
-                        spring: 4.8
-                        damping: 0.8
-                        mass: 0.6
-                    }
-                }
-                anchors.fill: parent
-                anchors.leftMargin: 16
-                anchors.rightMargin: 16
-                spacing: 0
-
-                Text {
-                    text: ""
-                    color: "#76B900"
-                    font {
-                        family: root.iconFontFamily
-                        pixelSize: 15
-                    }
-                    Layout.alignment: Qt.AlignVCenter
-                }
-                Item {
-                    Layout.fillWidth: true
-                }
-                Text {
-                    text: "Charging (" + root.batteryCap + "%)"
-                    color: root.colFg
-                    font {
-                        family: root.fontFamily
-                        pixelSize: 12
-                        bold: true
-                    }
-                    Layout.alignment: Qt.AlignVCenter
-                }
-            }
-
-            // DND Alert Pill
-            RowLayout {
-                id: dndLayout
-                opacity: (root.islandState === 9 && !root.isAnyPopupOpen && notchRect.width >= 192) ? 1.0 : 0.0
-                visible: opacity > 0
-                scale: opacity > 0 ? 1.0 : 0.9
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: root.batteryMode ? 150 : 250
-                        easing.type: Easing.OutQuad
-                    }
-                }
-                Behavior on scale {
-                    enabled: true
-                    SpringAnimation {
-                        spring: 4.8
-                        damping: 0.8
-                        mass: 0.6
-                    }
-                }
-                anchors.fill: parent
-                anchors.leftMargin: 16
-                anchors.rightMargin: 16
-                spacing: 0
-
-                Item {
-                    id: dndIconContainer
-                    Layout.preferredWidth: Math.round(16 * root.scaleFactor)
-                    Layout.preferredHeight: Math.round(16 * root.scaleFactor)
-                    Layout.alignment: Qt.AlignVCenter
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: root.dndActive ? "󰂛" : "󰂚"
-                        color: root.dndActive ? "#E02424" : root.colFg
-                        font {
-                            family: root.iconFontFamily
-                            pixelSize: Math.round(15 * root.scaleFactor)
-                        }
-                    }
-
-                    // Sleepy "Zzz" floating particles
-                    Repeater {
-                        model: (root.dndActive && !root.batteryMode && root.islandState === root.stateDnd) ? 3 : 0
-                        delegate: Text {
-                            id: zParticle
-                            text: index === 0 ? "z" : (index === 1 ? "Z" : "z")
-                            font {
-                                family: root.fontFamily
-                                pixelSize: Math.round((index === 1 ? 8 : 6) * root.scaleFactor)
-                                bold: index === 1
-                            }
-                            color: "#FFCC00"
-                            opacity: 0.0
-                            x: Math.round((8 + (index - 1) * 6) * root.scaleFactor)
-                            y: Math.round(8 * root.scaleFactor)
-
-                            SequentialAnimation on y {
-                                loops: Animation.Infinite
-                                running: root.dndActive && !root.batteryMode && root.islandState === root.stateDnd
-
-                                PauseAnimation {
-                                    duration: index * 600
-                                }
-                                ParallelAnimation {
-                                    NumberAnimation {
-                                        from: Math.round(8 * root.scaleFactor)
-                                        to: Math.round(-16 * root.scaleFactor)
-                                        duration: 1500
-                                        easing.type: Easing.OutQuad
-                                    }
-                                    NumberAnimation {
-                                        from: zParticle.x
-                                        to: zParticle.x + Math.round((index === 0 ? -6 : (index === 2 ? 6 : 0)) * root.scaleFactor)
-                                        duration: 1500
-                                        target: zParticle
-                                        property: "x"
-                                    }
-                                    NumberAnimation {
-                                        target: zParticle
-                                        property: "opacity"
-                                        from: 0.7
-                                        to: 0.0
-                                        duration: 1500
-                                    }
-                                }
-                                PropertyAction {
-                                    target: zParticle
-                                    property: "opacity"
-                                    value: 0.0
-                                }
-                            }
-                        }
-                    }
-                }
-                Item {
-                    Layout.fillWidth: true
-                }
-                Text {
-                    text: root.dndActive ? "Do Not Disturb" : "Notifications Enabled"
-                    color: root.colFg
-                    font {
-                        family: root.fontFamily
-                        pixelSize: 12
-                        bold: true
-                    }
-                    Layout.alignment: Qt.AlignVCenter
-                }
-            }
-
-            // Water Alert Pill
-            RowLayout {
-                id: waterLayout
-                opacity: (root.islandState === 10 && !root.isAnyPopupOpen && notchRect.width >= 192) ? 1.0 : 0.0
-                visible: opacity > 0
-                scale: opacity > 0 ? 1.0 : 0.9
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: root.batteryMode ? 150 : 250
-                        easing.type: Easing.OutQuad
-                    }
-                }
-                Behavior on scale {
-                    enabled: true
-                    SpringAnimation {
-                        spring: 4.8
-                        damping: 0.8
-                        mass: 0.6
-                    }
-                }
-                anchors.fill: parent
-                anchors.leftMargin: 16
-                anchors.rightMargin: 16
-                spacing: 8
-
-                Item {
-                    id: waterIconContainer
-                    Layout.preferredWidth: 16
-                    Layout.preferredHeight: 16
-                    Layout.alignment: Qt.AlignVCenter
-
-                    Text {
-                        id: waterIcon
-                        anchors.centerIn: parent
-                        text: "󰖞"
-                        color: "#3B82F6"
-                        font {
-                            family: root.iconFontFamily
-                            pixelSize: 15
-                        }
-                        transformOrigin: Item.Center
-
-                        transform: Scale {
-                            id: waterScale
-                            origin.x: 8
-                            origin.y: 8
-                        }
-
-                        SequentialAnimation {
-                            running: (root.islandState === 10 && !root.batteryMode)
-                            loops: Animation.Infinite
-
-                            // Wobble & Float Up
-                            ParallelAnimation {
-                                NumberAnimation {
-                                    target: waterIcon
-                                    property: "y"
-                                    from: 0
-                                    to: -4
-                                    duration: 600
-                                    easing.type: Easing.InOutQuad
-                                }
-                                NumberAnimation {
-                                    target: waterScale
-                                    property: "xScale"
-                                    from: 1.0
-                                    to: 0.85
-                                    duration: 600
-                                    easing.type: Easing.InOutQuad
-                                }
-                                NumberAnimation {
-                                    target: waterScale
-                                    property: "yScale"
-                                    from: 1.0
-                                    to: 1.2
-                                    duration: 600
-                                    easing.type: Easing.InOutQuad
-                                }
-                            }
-
-                            // Wobble & Fall Down
-                            ParallelAnimation {
-                                NumberAnimation {
-                                    target: waterIcon
-                                    property: "y"
-                                    to: 0
-                                    duration: 500
-                                    easing.type: Easing.InOutQuad
-                                }
-                                NumberAnimation {
-                                    target: waterScale
-                                    property: "xScale"
-                                    to: 1.2
-                                    duration: 500
-                                    easing.type: Easing.InOutQuad
-                                }
-                                NumberAnimation {
-                                    target: waterScale
-                                    property: "yScale"
-                                    to: 0.8
-                                    duration: 500
-                                    easing.type: Easing.InOutQuad
-                                }
-                            }
-
-                            // Return to normal
-                            ParallelAnimation {
-                                NumberAnimation {
-                                    target: waterScale
-                                    property: "xScale"
-                                    to: 1.0
-                                    duration: 250
-                                    easing.type: Easing.InOutQuad
-                                }
-                                NumberAnimation {
-                                    target: waterScale
-                                    property: "yScale"
-                                    to: 1.0
-                                    duration: 250
-                                    easing.type: Easing.InOutQuad
-                                }
-                            }
-
-                            PauseAnimation {
-                                duration: 150
-                            }
-                        }
-                    }
-                }
-
-                Text {
-                    text: "Time to Drink Water!"
-                    color: "#3B82F6"
-                    font {
-                        family: root.fontFamily
-                        pixelSize: 11
-                        bold: true
-                    }
-                    Layout.alignment: Qt.AlignVCenter
-                    Layout.fillWidth: true
-                }
-                MouseArea {
-                    width: 50
-                    height: 24
-                    Layout.alignment: Qt.AlignVCenter
-                    hoverEnabled: true
-                    Rectangle {
-                        anchors.fill: parent
-                        color: parent.containsMouse ? Qt.rgba(0.23, 0.51, 0.96, 0.2) : Qt.rgba(0.23, 0.51, 0.96, 0.1)
-                        radius: 12
-                        border.color: Qt.rgba(0.23, 0.51, 0.96, 0.3)
-                        border.width: 1
-                    }
-                    Text {
-                        anchors.centerIn: parent
-                        text: "Done"
-                        color: "#3B82F6"
-                        font {
-                            family: root.fontFamily
-                            pixelSize: 10
-                            bold: true
-                        }
-                    }
-                    onClicked: {
-                        root.resetWaterTimer();
-                        root.islandState = root.prevIslandState;
-                    }
-                }
-            }
-
-            // Sedentary Alert Pill
-            RowLayout {
-                id: stretchLayout
-                opacity: (root.islandState === 11 && !root.isAnyPopupOpen && notchRect.width >= 192) ? 1.0 : 0.0
-                visible: opacity > 0
-                scale: opacity > 0 ? 1.0 : 0.9
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: root.batteryMode ? 150 : 250
-                        easing.type: Easing.OutQuad
-                    }
-                }
-                Behavior on scale {
-                    enabled: true
-                    SpringAnimation {
-                        spring: 4.8
-                        damping: 0.8
-                        mass: 0.6
-                    }
-                }
-                anchors.fill: parent
-                anchors.leftMargin: 16
-                anchors.rightMargin: 16
-                spacing: 8
-
-                Text {
-                    text: "󱗝"
-                    color: "#8B5CF6"
-                    font {
-                        family: root.iconFontFamily
-                        pixelSize: 15
-                    }
-                    Layout.alignment: Qt.AlignVCenter
-                }
-                Text {
-                    text: "Time to Stretch!"
-                    color: "#8B5CF6"
-                    font {
-                        family: root.fontFamily
-                        pixelSize: 11
-                        bold: true
-                    }
-                    Layout.alignment: Qt.AlignVCenter
-                    Layout.fillWidth: true
-                }
-                MouseArea {
-                    width: 50
-                    height: 24
-                    Layout.alignment: Qt.AlignVCenter
-                    hoverEnabled: true
-                    Rectangle {
-                        anchors.fill: parent
-                        color: parent.containsMouse ? Qt.rgba(0.55, 0.36, 0.96, 0.2) : Qt.rgba(0.55, 0.36, 0.96, 0.1)
-                        radius: 12
-                        border.color: Qt.rgba(0.55, 0.36, 0.96, 0.3)
-                        border.width: 1
-                    }
-                    Text {
-                        anchors.centerIn: parent
-                        text: "Done"
-                        color: "#8B5CF6"
-                        font {
-                            family: root.fontFamily
-                            pixelSize: 10
-                            bold: true
-                        }
-                    }
-                    onClicked: {
-                        root.resetStretchTimer();
-                        root.islandState = root.prevIslandState;
-                    }
-                }
-            }
-
-            // F1 Alert Pill
-            RowLayout {
-                id: f1Layout
-                opacity: (root.islandState === 12 && !root.isAnyPopupOpen && notchRect.width >= 192) ? 1.0 : 0.0
-                visible: opacity > 0
-                scale: opacity > 0 ? 1.0 : 0.9
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: root.batteryMode ? 150 : 250
-                        easing.type: Easing.OutQuad
-                    }
-                }
-                Behavior on scale {
-                    enabled: true
-                    SpringAnimation {
-                        spring: 4.8
-                        damping: 0.8
-                        mass: 0.6
-                    }
-                }
-                anchors.fill: parent
-                anchors.leftMargin: 16
-                anchors.rightMargin: 16
-                spacing: 8
-
-                Item {
-                    id: f1IconContainer
-                    Layout.preferredWidth: 16
-                    Layout.preferredHeight: 16
-                    Layout.alignment: Qt.AlignVCenter
-
-                    Text {
-                        id: f1Icon
-                        anchors.centerIn: parent
-                        text: "󰛄"
-                        color: "#E10600"
-                        font {
-                            family: root.iconFontFamily
-                            pixelSize: 15
-                        }
-
-                        transform: Translate {
-                            id: f1Translate
-                        }
-
-                        SequentialAnimation {
-                            running: (root.islandState === 12 && !root.batteryMode)
-                            loops: Animation.Infinite
-
-                            NumberAnimation {
-                                target: f1Translate
-                                property: "x"
-                                from: 0
-                                to: -2
-                                duration: 40
-                                easing.type: Easing.Linear
-                            }
-                            NumberAnimation {
-                                target: f1Translate
-                                property: "x"
-                                from: -2
-                                to: 2
-                                duration: 80
-                                easing.type: Easing.Linear
-                            }
-                            NumberAnimation {
-                                target: f1Translate
-                                property: "x"
-                                from: 2
-                                to: 0
-                                duration: 40
-                                easing.type: Easing.Linear
-                            }
-                            PauseAnimation {
-                                duration: 100
-                            }
-
-                            NumberAnimation {
-                                target: f1Translate
-                                property: "x"
-                                from: 0
-                                to: -1
-                                duration: 30
-                                easing.type: Easing.Linear
-                            }
-                            NumberAnimation {
-                                target: f1Translate
-                                property: "x"
-                                from: -1
-                                to: 1
-                                duration: 60
-                                easing.type: Easing.Linear
-                            }
-                            NumberAnimation {
-                                target: f1Translate
-                                property: "x"
-                                from: 1
-                                to: 0
-                                duration: 30
-                                easing.type: Easing.Linear
-                            }
-                            PauseAnimation {
-                                duration: 800
-                            }
-                        }
-                    }
-                }
-                Text {
-                    text: root.f1AlertName !== "" ? root.f1AlertName + " in " + root.f1AlertMins + "m!" : "F1 Session Starting!"
-                    color: "#E10600"
-                    font {
-                        family: root.fontFamily
-                        pixelSize: 11
-                        bold: true
-                    }
-                    Layout.alignment: Qt.AlignVCenter
-                    Layout.fillWidth: true
-                    elide: Text.ElideRight
-                }
-                MouseArea {
-                    width: 50
-                    height: 24
-                    Layout.alignment: Qt.AlignVCenter
-                    hoverEnabled: true
-                    Rectangle {
-                        anchors.fill: parent
-                        color: parent.containsMouse ? Qt.rgba(0.88, 0.02, 0.0, 0.2) : Qt.rgba(0.88, 0.02, 0.0, 0.1)
-                        radius: 12
-                        border.color: Qt.rgba(0.88, 0.02, 0.0, 0.3)
-                        border.width: 1
-                    }
-                    Text {
-                        anchors.centerIn: parent
-                        text: "Dismiss"
-                        color: "#E10600"
-                        font {
-                            family: root.fontFamily
-                            pixelSize: 10
-                            bold: true
-                        }
-                    }
-                    onClicked: {
-                        root.islandState = root.prevIslandState;
-                    }
-                }
-            }
-
-            // CPU Hot Alert Pill
-            RowLayout {
-                id: cpuLayout
-                opacity: (root.islandState === 13 && !root.isAnyPopupOpen && notchRect.width >= 192) ? 1.0 : 0.0
-                visible: opacity > 0
-                scale: opacity > 0 ? 1.0 : 0.9
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: root.batteryMode ? 150 : 250
-                        easing.type: Easing.OutQuad
-                    }
-                }
-                Behavior on scale {
-                    enabled: true
-                    SpringAnimation {
-                        spring: 4.8
-                        damping: 0.8
-                        mass: 0.6
-                    }
-                }
-                anchors.fill: parent
-                anchors.leftMargin: 16
-                anchors.rightMargin: 16
-                spacing: 8
-
-                Text {
-                    text: "󰈸"
-                    color: "#FFA500"
-                    font {
-                        family: root.iconFontFamily
-                        pixelSize: 15
-                    }
-                    Layout.alignment: Qt.AlignVCenter
-                }
-                Text {
-                    text: root.temperature + "°C | Top: " + (root.topCpuProcess !== "" ? root.topCpuProcess : "Loading...")
-                    color: "#FFA500"
-                    font {
-                        family: root.fontFamily
-                        pixelSize: 10
-                        bold: true
-                    }
-                    Layout.alignment: Qt.AlignVCenter
-                    Layout.fillWidth: true
-                    elide: Text.ElideRight
-                }
-                MouseArea {
-                    width: 50
-                    height: 24
-                    Layout.alignment: Qt.AlignVCenter
-                    hoverEnabled: true
-                    Rectangle {
-                        anchors.fill: parent
-                        color: parent.containsMouse ? Qt.rgba(1.0, 0.65, 0.0, 0.2) : Qt.rgba(1.0, 0.65, 0.0, 0.1)
-                        radius: 12
-                        border.color: Qt.rgba(1.0, 0.65, 0.0, 0.3)
-                        border.width: 1
-                    }
-                    Text {
-                        anchors.centerIn: parent
-                        text: "Dismiss"
-                        color: "#FFA500"
-                        font {
-                            family: root.fontFamily
-                            pixelSize: 10
-                            bold: true
-                        }
-                    }
-                    onClicked: {
-                        root.islandState = root.prevIslandState;
-                    }
-                }
-            }
-
-            // Disk / USB Plugged Alert Pill (stateDiskAlert: 17) — single line
-            RowLayout {
-                id: diskAlertLayout
-                opacity: (root.islandState === root.stateDiskAlert && !root.isAnyPopupOpen && notchRect.width >= 192) ? 1.0 : 0.0
-                visible: opacity > 0
-                scale: opacity > 0 ? 1.0 : 0.9
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: root.batteryMode ? 150 : 250
-                        easing.type: Easing.OutQuad
-                    }
-                }
-                Behavior on scale {
-                    enabled: true
-                    SpringAnimation {
-                        spring: 4.8
-                        damping: 0.8
-                        mass: 0.6
-                    }
-                }
-                anchors.fill: parent
-                anchors.leftMargin: 14
-                anchors.rightMargin: 14
-                spacing: 7
-
-                // Drive icon
-                Text {
-                    text: root.diskAlertMounted ? "󰋊" : "󱊞"
-                    color: root.diskAlertMounted ? "#76B900" : "#FFA500"
-                    font {
-                        family: root.iconFontFamily
-                        pixelSize: 13
-                    }
-                    Layout.alignment: Qt.AlignVCenter
-                }
-
-                // Drive name — fills remaining space, truncates with ellipsis
-                Text {
-                    text: root.diskAlertTitle !== "" ? root.diskAlertTitle : "USB Drive"
-                    color: root.colFg
-                    font {
-                        family: root.fontFamily
-                        pixelSize: 10
-                        bold: true
-                    }
-                    elide: Text.ElideRight
-                    Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignVCenter
-                }
-
-                // Separator dot
-                Text {
-                    text: "·"
-                    color: root.colMuted
-                    font {
-                        family: root.fontFamily
-                        pixelSize: 10
-                    }
-                    Layout.alignment: Qt.AlignVCenter
-                }
-
-                // Status label — fixed width, never truncated
-                Text {
-                    text: root.diskAlertMounted ? "Connected" : "Disconnected"
-                    color: root.diskAlertMounted ? "#76B900" : "#FFA500"
-                    font {
-                        family: root.fontFamily
-                        pixelSize: 10
-                        bold: true
-                    }
-                    Layout.alignment: Qt.AlignVCenter
-                }
-            }
+            root: root
         }
-
-
-        // LocalSend Drag & Drop Layout
-        Item {
-            id: localSendDragLayout
-            // Stays visible whenever in a LocalSend state — avoids layout destroy/create during transition
-            visible: root.islandState === root.stateDragLocalSend || root.islandState === root.stateLocalSendSuccess
-            anchors.centerIn: parent
-            implicitWidth: lsDragRow.implicitWidth
-            implicitHeight: lsDragRow.implicitHeight
-            layer.enabled: true
-
-            property real slideY: 10 * scaleFactor
-            property real contentOpacity: 0.0
-
-            transform: Translate { y: localSendDragLayout.slideY }
-            opacity: localSendDragLayout.contentOpacity
-
-            Behavior on slideY {
-                NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
-            }
-            Behavior on contentOpacity {
-                NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
-            }
-
-            Connections {
-                target: root
-                function onIslandStateChanged() {
-                    if (root.islandState === root.stateDragLocalSend) {
-                        // Reset to below-position, then slide up after the pill opens
-                        localSendDragLayout.slideY = 10 * scaleFactor;
-                        localSendDragLayout.contentOpacity = 0.0;
-                        lsDragShowTimer.restart();
-                    } else {
-                        lsDragShowTimer.stop();
-                        localSendDragLayout.contentOpacity = 0.0;
-                        localSendDragLayout.slideY = 10 * scaleFactor;
-                    }
-                }
-            }
-            Timer {
-                id: lsDragShowTimer
-                interval: root.localSendRevealDelay
-                repeat: false
-                onTriggered: {
-                    localSendDragLayout.slideY = 0;
-                    localSendDragLayout.contentOpacity = 1.0;
-                }
-            }
-
-            RowLayout {
-                id: lsDragRow
-                spacing: 12 * scaleFactor
-
-                Text {
-                    text: "󱇧"
-                    color: root.colAccent
-                    font { family: root.iconFontFamily; pixelSize: 20 * scaleFactor; bold: true }
-                    Layout.alignment: Qt.AlignVCenter
-                }
-                ColumnLayout {
-                    spacing: 2 * scaleFactor
-                    Layout.alignment: Qt.AlignVCenter
-                    Text {
-                        text: "Send to LocalSend"
-                        color: root.colFg
-                        font { family: root.fontFamily; pixelSize: 12 * scaleFactor; bold: true }
-                    }
-                    Text {
-                        text: "Drop files here to share"
-                        color: root.colMuted
-                        font { family: root.fontFamily; pixelSize: 10 * scaleFactor }
-                    }
-                }
-            }
-        }
-
-        // LocalSend Success Layout
-        Item {
-            id: localSendSuccessLayout
-            visible: root.islandState === root.stateLocalSendSuccess
-            anchors.centerIn: parent
-            implicitWidth: lsSuccessRow.implicitWidth
-            implicitHeight: lsSuccessRow.implicitHeight
-            layer.enabled: true
-
-            property real slideY: 10 * scaleFactor
-            property real contentOpacity: 0.0
-
-            transform: Translate { y: localSendSuccessLayout.slideY }
-            opacity: localSendSuccessLayout.contentOpacity
-
-            Behavior on slideY {
-                NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
-            }
-            Behavior on contentOpacity {
-                NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
-            }
-
-            Connections {
-                target: root
-                function onIslandStateChanged() {
-                    if (root.islandState === root.stateLocalSendSuccess) {
-                        localSendSuccessLayout.slideY = 10 * scaleFactor;
-                        localSendSuccessLayout.contentOpacity = 0.0;
-                        lsSuccessShowTimer.restart();
-                    } else {
-                        lsSuccessShowTimer.stop();
-                        localSendSuccessLayout.contentOpacity = 0.0;
-                        localSendSuccessLayout.slideY = 10 * scaleFactor;
-                    }
-                }
-            }
-            Timer {
-                id: lsSuccessShowTimer
-                interval: root.localSendRevealDelay
-                repeat: false
-                onTriggered: {
-                    localSendSuccessLayout.slideY = 0;
-                    localSendSuccessLayout.contentOpacity = 1.0;
-                }
-            }
-
-            RowLayout {
-                id: lsSuccessRow
-                spacing: 12 * scaleFactor
-
-                Text {
-                    text: "󰗡"
-                    color: root.colSuccess
-                    font { family: root.iconFontFamily; pixelSize: 20 * scaleFactor; bold: true }
-                    Layout.alignment: Qt.AlignVCenter
-                }
-                ColumnLayout {
-                    spacing: 2 * scaleFactor
-                    Layout.alignment: Qt.AlignVCenter
-                    Text {
-                        text: "Files Sent!"
-                        color: root.colSuccess
-                        font { family: root.fontFamily; pixelSize: 12 * scaleFactor; bold: true }
-                    }
-                    Text {
-                        text: "Opening LocalSend..."
-                        color: root.colMuted
-                        font { family: root.fontFamily; pixelSize: 10 * scaleFactor }
-                    }
-                }
-            }
-        }
-
-        // Siri Visualizer Layout inside Notch
-        RowLayout {
-            id: commsLayout
-            opacity: (root.islandState === root.stateComms && !root.isAnyPopupOpen) ? 1.0 : 0.0
-            visible: opacity > 0
-            scale: opacity > 0 ? 1.0 : 0.9
-            Behavior on opacity {
-                NumberAnimation {
-                    duration: root.batteryMode ? 150 : 250
-                    easing.type: Easing.OutQuad
-                }
-            }
-            Behavior on scale {
-                enabled: true
-                SpringAnimation {
-                    spring: 4.8
-                    damping: 0.8
-                    mass: 0.6
-                }
-            }
-            anchors.centerIn: parent
-            spacing: 8 * scaleFactor
-
-            Text {
-                text: "󰍬"
-                color: "#FF2D55"
-                font {
-                    family: root.iconFontFamily
-                    pixelSize: 13 * scaleFactor
-                }
-                Layout.alignment: Qt.AlignVCenter
-            }
-
-            CommsVisualizer {
-                id: commsWaves
-                width: 140 * scaleFactor
-                height: 28 * scaleFactor
-                active: root.islandState === root.stateComms && !root.isAnyPopupOpen
-                Layout.alignment: Qt.AlignVCenter
-            }
-        }
-
 
         Row {
             id: bubbleRow
 
             visible: opacity > 0
-            opacity: (root.islandState === 1 || root.islandState === 4 || root.islandState === 5 || root.islandState === 6) && !root.isAnyPopupOpen ? 1.0 : 0.0
+            opacity: (root.islandState === 1 || root.islandState === 4 || root.islandState === 5 || root.islandState === 6 || root.islandState === root.stateComms || root.islandState === root.statePomodoro) && !root.isCenterPopupOpen ? 1.0 : 0.0
             Behavior on opacity {
                 NumberAnimation {
-                    duration: root.batteryMode ? 150 : 200
+                    duration: root.batteryMode ? 80 : 120
                     easing.type: Easing.OutQuad
                 }
             }
 
-            // Fixed vertical center relative to the bar, not notchRect, to avoid
-            // jitter during spring overshoot when the pill height changes.
+            // Fixed vertical center matching notchRect vertical center (20px when bar height is 40px)
             anchors.verticalCenter: parent.top
-            anchors.verticalCenterOffset: root.topHuggingStyle ? Math.round(20 * scaleFactor) : Math.round(24 * scaleFactor)
+            anchors.verticalCenterOffset: root.topHuggingStyle ? Math.round(16 * scaleFactor) : Math.round(20 * scaleFactor)
             y: 0  // suppressed; verticalCenter handles vertical placement
-            x: notchRect.x + notchRect.width + 8
-            spacing: 6
+            x: Math.round(notchRect.x + notchRect.width + 8 * scaleFactor)
+            spacing: Math.round(6 * scaleFactor)
 
             Repeater {
                 model: root.activeActivities
-                delegate: Rectangle {
+                delegate: Item {
                     id: bubble
                     property string act: modelData
-                    property bool isCurrent: (act === "media" && root.islandState === 1) || (act === "timer" && root.islandState === 4) || (act === "stopwatch" && root.islandState === 5) || (act === "recording" && root.islandState === 6)
+                    property bool isCurrent: (act === "media" && root.islandState === 1) || (act === "timer" && root.islandState === 4) || (act === "stopwatch" && root.islandState === 5) || (act === "recording" && root.islandState === 6) || (act === "comms" && root.islandState === root.stateComms) || (act === "pomodoro" && root.islandState === root.statePomodoro)
 
                     opacity: isCurrent ? 0.0 : 1.0
-                    scale: isCurrent ? 0.0 : (bubbleMouse.containsPress ? 0.9 : (bubbleMouse.containsMouse ? 1.1 : 1.0))
-                    width: isCurrent ? 0 : 32
+                    scale: isCurrent ? 0.0 : (bubbleMouse.containsPress ? 0.92 : (bubbleMouse.containsMouse ? 1.04 : 1.0))
+                    width: isCurrent ? 0 : Math.round(32 * scaleFactor)
                     visible: opacity > 0
 
-                    height: 32
-                    radius: 16
-                    color: Qt.rgba(0.02, 0.02, 0.02, 0.95)
-                    border.color: Qt.rgba(1, 1, 1, 0.1)
-                    border.width: act === "timer" ? 0 : 1
+                    height: Math.round(32 * scaleFactor)
 
                     Behavior on opacity {
                         NumberAnimation {
-                            duration: 200
-                            easing.type: Easing.OutQuad
+                            duration: 220
+                            easing.type: Easing.OutCubic
                         }
                     }
                     Behavior on scale {
-                        enabled: true
-                        SpringAnimation {
-                            spring: 3.5
-                            damping: 0.60
-                            mass: 0.8
+                        NumberAnimation {
+                            duration: 240
+                            easing.type: Easing.OutBack
+                            easing.overshoot: 1.15
                         }
                     }
                     Behavior on width {
-                        enabled: true
-                        SpringAnimation {
-                            spring: 3.5
-                            damping: 0.70
-                            mass: 0.8
+                        NumberAnimation {
+                            duration: 240
+                            easing.type: Easing.OutBack
+                            easing.overshoot: 1.10
                         }
                     }
 
-                    Canvas {
-                        id: bubbleTimerProgress
-                        visible: bubble.act === "timer"
+                    // Option B / Teenage Engineering Tactile Channel Switch Key
+                    Rectangle {
+                        id: bubbleTile
                         anchors.fill: parent
-                        property real progress: root.timerTotal > 0 ? (root.timerSeconds / root.timerTotal) : 0
-                        onProgressChanged: requestPaint()
-                        onPaint: {
-                            var ctx = getContext("2d");
-                            ctx.reset();
+                        radius: 4
+                        color: bubbleMouse.containsPress ? Qt.rgba(1, 1, 1, 0.16) : (bubbleMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.10) : Qt.rgba(0.047, 0.051, 0.063, 0.94))
+                        border.color: bubbleMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.25) : Qt.rgba(1, 1, 1, 0.10)
+                        border.width: 1
+                        clip: true
 
-                            var r = width / 2 - 1.5;
-                            if (r <= 0) return;
+                        Behavior on color { ColorAnimation { duration: 80 } }
+                        Behavior on border.color { ColorAnimation { duration: 80 } }
 
-                            // Draw background circle (muted border)
-                            ctx.beginPath();
-                            ctx.arc(width / 2, height / 2, r, 0, 2 * Math.PI);
-                            ctx.lineWidth = 1.5;
-                            ctx.strokeStyle = Qt.rgba(1, 1, 1, 0.15);
-                            ctx.stroke();
-
-                            // Draw active progress arc (drains clockwise)
-                            ctx.beginPath();
-                            ctx.arc(width / 2, height / 2, r, -Math.PI / 2, -Math.PI / 2 + (2 * Math.PI * progress));
-                            ctx.lineWidth = 1.5;
-                            ctx.strokeStyle = root.timerRunning ? root.colWarn : root.colFg;
-                            ctx.stroke();
-                        }
-                    }
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: act === "media" ? "󰝚" : (act === "timer" ? "󰔛" : (act === "stopwatch" ? "󱎫" : "󰑊"))
-                        color: act === "media" && root.spotifyStatus === "playing" ? root.colSpotify : (act === "recording" ? root.colCrit : root.colFg)
-                        font.family: root.iconFontFamily
-                        font.pixelSize: 13
-                    }
-
-                    MouseArea {
-                        id: bubbleMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onClicked: {
-                            if (act === "media")
-                                root.islandState = root.stateMedia;
-                            else if (act === "timer")
-                                root.islandState = root.stateTimer;
-                            else if (act === "stopwatch")
-                                root.islandState = root.stateStopwatch;
-                            else if (act === "recording")
-                                root.islandState = root.stateRecording;
-                        }
-                    }
-                }
-            }
-        }
-
-        // ── System Tray Pill ─────────────────────────────────────────────────
-        // macOS-style frosted glass pill containing privacy dots and tray icons.
-        Rectangle {
-            id: trayPillBg
-            anchors.right:              parent.right
-            anchors.rightMargin:        Math.round(12 * scaleFactor)
-            anchors.verticalCenter:     parent.top
-            anchors.verticalCenterOffset: root.topHuggingStyle
-                                          ? Math.round(20 * scaleFactor)
-                                          : Math.round(24 * scaleFactor)
-
-            height: Math.round(32 * scaleFactor)
-
-            // Width tracks content + padding
-            width: contentRow.implicitWidth + Math.round(16 * scaleFactor)
-            Behavior on width {
-                SpringAnimation { spring: 4.0; damping: 0.75; mass: 0.5 }
-            }
-
-            radius: height / 2
-
-            // Visible whenever there are tray items or privacy dots are active
-            visible: opacity > 0
-            opacity: (sysTray.count > 0 || root.isMicActive || root.isCamActive) ? 1.0 : 0.0
-            Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutQuad } }
-
-            // macOS frosted dark glass
-            color: Qt.rgba(0.05, 0.05, 0.07, 0.92)
-            border.color: Qt.rgba(1, 1, 1, 0.11)
-            border.width: 1
-
-            // 1px top-highlight shimmer
-            Rectangle {
-                anchors {
-                    top:         parent.top
-                    topMargin:   1
-                    left:        parent.left
-                    leftMargin:  Math.round(parent.radius * 0.55)
-                    right:       parent.right
-                    rightMargin: Math.round(parent.radius * 0.55)
-                }
-                height: 1
-                radius: 1
-                color:  Qt.rgba(1, 1, 1, 0.09)
-            }
-
-            Row {
-                id: contentRow
-                anchors.centerIn: parent
-                spacing: Math.round(8 * scaleFactor)
-
-                // ── Privacy indicator chip (mic / cam dots) ─────────────────
-                Item {
-                    id: privacyChip
-                    anchors.verticalCenter: parent.verticalCenter
-
-                    readonly property real chipWidth: (root.isMicActive || root.isCamActive)
-                        ? ((root.isMicActive && root.isCamActive)
-                           ? Math.round(20 * scaleFactor)
-                           : Math.round(12 * scaleFactor))
-                        : 0
-                    width:  chipWidth
-                    height: Math.round(16 * scaleFactor)
-                    visible: chipWidth > 0
-                    clip: true
-                    Behavior on width { SpringAnimation { spring: 4.0; damping: 0.72; mass: 0.5 } }
-
-                    Row {
-                        anchors.verticalCenter: parent.verticalCenter
-                        spacing: Math.round(4 * scaleFactor)
-
+                        // Teenage Engineering amber status LED indicator for active timer
                         Rectangle {
-                            id: micDot
-                            width: Math.round(6 * scaleFactor); height: width; radius: width / 2
-                            color: "#FF9500"
-                            visible: root.isMicActive
-                            opacity: root.isMicActive ? 1.0 : 0.0
-                            scale:   root.isMicActive ? 1.0 : 0.0
-                            antialiasing: true
-                            Behavior on scale   { SpringAnimation { spring: 3.5; damping: 0.7; mass: 0.8 } }
-                            Behavior on opacity { NumberAnimation { duration: 150 } }
+                            visible: bubble.act === "timer" && (root.timerRunning || root.timerSeconds > 0)
+                            anchors.top: parent.top
+                            anchors.right: parent.right
+                            anchors.margins: 4
+                            width: 4
+                            height: 4
+                            radius: 1
+                            color: root.timerRunning ? root.colWarn : Qt.rgba(1, 0.69, 0, 0.4)
+                            Behavior on color { ColorAnimation { duration: 80 } }
                         }
 
+                        // Recording live indicator dot (blinking red square)
                         Rectangle {
-                            id: camDot
-                            width: Math.round(6 * scaleFactor); height: width; radius: width / 2
-                            color: "#34C759"
-                            visible: root.isCamActive
-                            opacity: root.isCamActive ? 1.0 : 0.0
-                            scale:   root.isCamActive ? 1.0 : 0.0
-                            antialiasing: true
-                            Behavior on scale   { SpringAnimation { spring: 3.5; damping: 0.7; mass: 0.8 } }
-                            Behavior on opacity { NumberAnimation { duration: 150 } }
-                        }
-                    }
-                }
-
-                // ── Tray icons ───────────────────────────────────────────────
-                Repeater {
-                    id: sysTray
-                    model: SystemTray.items
-                    delegate: Item {
-                        id: trayItemRoot
-                        width:  Math.round(18 * scaleFactor)
-                        height: Math.round(18 * scaleFactor)
-
-                        scale: sysTrayMouse.containsMouse ? 1.18 : 1.0
-                        Behavior on scale {
-                            SpringAnimation { spring: 4.5; damping: 0.65; mass: 0.6 }
-                        }
-
-                        QsMenuAnchor {
-                            id: menuAnchor
-                            menu: modelData.menu
-                            anchor {
-                                window: barWindow
-                                rect: Qt.rect(0, 0, trayItemRoot.width, trayItemRoot.height)
+                            visible: bubble.act === "recording"
+                            anchors.top: parent.top
+                            anchors.right: parent.right
+                            anchors.margins: 4
+                            width: 5
+                            height: 5
+                            radius: 1
+                            color: root.colCrit
+                            SequentialAnimation on opacity {
+                                loops: Animation.Infinite
+                                running: bubble.act === "recording"
+                                NumberAnimation { from: 1.0; to: 0.2; duration: 500 }
+                                NumberAnimation { from: 0.2; to: 1.0; duration: 500 }
                             }
                         }
 
-                        IconImage {
-                            anchors.fill: parent
-                            source: modelData.icon
-                        }
-
-                        // Floating tooltip above icon
-                        Rectangle {
-                            id: trayTooltip
-                            visible: sysTrayMouse.containsMouse &&
-                                     (modelData.tooltip.title !== "" || modelData.title !== "")
-                            anchors.bottom:           parent.top
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            anchors.bottomMargin:     Math.round(8 * scaleFactor)
-                            width:  ttLabel.implicitWidth + Math.round(14 * scaleFactor)
-                            height: ttLabel.implicitHeight + Math.round(8 * scaleFactor)
-                            radius: Math.round(7 * scaleFactor)
-                            color:  Qt.rgba(0.05, 0.05, 0.10, 0.96)
-                            border.color: Qt.rgba(1, 1, 1, 0.14)
-                            border.width: 1
-                            z: 200
-
-                            opacity: sysTrayMouse.containsMouse ? 1.0 : 0.0
-                            Behavior on opacity {
-                                NumberAnimation { duration: 130; easing.type: Easing.OutQuad }
-                            }
-
-                            Rectangle {
-                                anchors { top: parent.top; topMargin: 1; left: parent.left; leftMargin: 4; right: parent.right; rightMargin: 4 }
-                                height: 1; radius: 1
-                                color: Qt.rgba(1, 1, 1, 0.08)
-                            }
-
-                            Text {
-                                id: ttLabel
-                                anchors.centerIn: parent
-                                text: modelData.tooltip.title !== "" ? modelData.tooltip.title : modelData.title
-                                color: "#ffffff"
-                                font {
-                                    family:    root.fontFamily
-                                    pixelSize: Math.round(11 * root.scaleFactor)
-                                    weight:    Font.Medium
-                                }
-                            }
+                        Text {
+                            anchors.centerIn: parent
+                            text: act === "media" ? "󰝚" : (act === "timer" ? "󰔛" : (act === "stopwatch" ? "󱎫" : (act === "pomodoro" ? "🍅" : (act === "recording" ? "󰑊" : "󰍬"))))
+                            color: act === "media" && root.spotifyStatus === "playing" ? root.colSpotify : (act === "recording" ? root.colCrit : (act === "timer" && root.timerRunning ? root.colWarn : (act === "stopwatch" && root.stopwatchRunning ? root.colWarn : (act === "pomodoro" ? "#EF4444" : (act === "comms" ? "#FF2D55" : root.colFg)))))
+                            font.family: root.nerdFontFamily || root.iconFontFamily
+                            font.pixelSize: Math.round(13 * fontScale)
                         }
 
                         MouseArea {
-                            id: sysTrayMouse
-                            anchors.fill:    parent
-                            hoverEnabled:    true
-                            acceptedButtons: Qt.LeftButton | Qt.RightButton
-                            onClicked: mouse => {
-                                if (mouse.button === Qt.RightButton && modelData.hasMenu) {
-                                    var pos = trayItemRoot.mapToItem(barWindow.contentItem, 0, 0);
-                                    menuAnchor.anchor.rect = Qt.rect(pos.x, pos.y, trayItemRoot.width, trayItemRoot.height);
-                                    menuAnchor.open();
-                                } else {
-                                    modelData.activate();
-                                }
+                            id: bubbleMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                if (act === "media")
+                                    root.islandState = root.stateMedia;
+                                else if (act === "timer")
+                                    root.islandState = root.stateTimer;
+                                else if (act === "stopwatch")
+                                    root.islandState = root.stateStopwatch;
+                                else if (act === "recording")
+                                    root.islandState = root.stateRecording;
+                                else if (act === "comms")
+                                    root.islandState = root.stateComms;
+                                else if (act === "pomodoro")
+                                    root.islandState = root.statePomodoro;
                             }
                         }
                     }
@@ -4183,8 +3044,13 @@ ShellRoot {
             }
         }
 
+        RightCapsule {
+            id: rightCapsule
+            root: root
+        }
+}
         // ── Privacy dots now live inside trayPillBg ──────────────────────────
-    }
+
 
 
 
@@ -4193,7 +3059,7 @@ ShellRoot {
         interval: root.notifDismissDelay
         repeat: false
         onTriggered: {
-            root.notifActive = false;
+            root.dismissFrontNotification();
         }
     }
 
@@ -4210,23 +3076,172 @@ ShellRoot {
     IpcHandler {
         id: qsIpc
         target: "qsIpc"
-        function toggleAirspace() {
-            if (groundControl.show) {
+        function onLock() {
+            root.isLocked = true;
+            root.closeAllPopupsExcept(null);
+        }
+        function onUnlock() {
+            root.isLocked = false;
+        }
+        function toggleScreenshotMenu() {
+            if (groundControl && groundControl.show) {
                 groundControl.show = false;
                 groundControl.closeAllSubPopups();
             }
-            airspace.toggle();
+            screenshotMenuPopup.show = !screenshotMenuPopup.show;
         }
-        function toggleOverview() { toggleAirspace(); }
+        function openScreenshotSelector() {
+            root.closeAllPopupsExcept(null);
+            screenSelector.open("sel");
+        }
+        function openScreenshotEdit() {
+            root.closeAllPopupsExcept(null);
+            screenSelector.open("edit");
+        }
+        function openScreenshotOcr() {
+            root.closeAllPopupsExcept(null);
+            screenSelector.open("ocr");
+        }
+        function openScreenshotRecord() {
+            root.closeAllPopupsExcept(null);
+            screenSelector.open("record");
+        }
+        function dismissAlarmPill() {
+            alarmReminderPill.dismissPill();
+        }
+        function showNudge(dataJson: string) {
+            try {
+                var d = JSON.parse(dataJson);
+                root.triggerNudgeAlert(d.title, d.subtitle, d.icon, d.action_cmd, d.action_label, d.color, d.timeout_ms, d.category);
+            } catch (e) {
+                root.triggerNudgeAlert("Action Detected", dataJson, "󰐊", "", "OK", "#89B4FA", 8000, "NOW NUDGE");
+            }
+        }
+        function dismissNudge() {
+            root.dismissNudgeAlert();
+        }
+        function reactGrokbot(animName: string) {
+            CharacterBus.react(animName);
+        }
+        function petGrokbot() {
+            CharacterBus.pet();
+        }
+        function setMinimoBotMode(mode: string) {
+            root.setMinimoBotMode(mode);
+        }
+        function toggleMinimoBotMode() {
+            root.setMinimoBotMode(root.minimoBotMode === "light" ? "dark" : "light");
+        }
+        function testAlarmPill() {
+            alarmReminderPill.triggerAlert({
+                id: "test_task",
+                type: "task",
+                task_id: "test_1",
+                title: "Forward Flight BEMT Graphs",
+                subtitle: "Due in 5 mins • Todoist (P4)",
+                is_warning: true,
+                priority: 4
+            });
+        }
+        function testAlarmRinging() {
+            alarmReminderPill.triggerAlert({
+                id: "test_alarm",
+                type: "alarm",
+                title: "Morning Flight Briefing",
+                subtitle: "Alarm Ringing",
+                is_warning: false,
+                is_alarm: true,
+                priority: 4
+            });
+        }
+        function testWaterAlert() {
+            alarmReminderPill.triggerAlert({
+                id: "test_water",
+                type: "water",
+                title: "Drink Water",
+                subtitle: (root.healthWaterToday || 0) + " / " + (root.healthWaterGoal || 2500) + " ml",
+                icon: "󰖞",
+                timeout_ms: 25000
+            });
+        }
+        function testStretchAlert() {
+            alarmReminderPill.triggerAlert({
+                id: "test_stretch",
+                type: "stretch",
+                title: "Stretch Break",
+                subtitle: "Time to stand up and stretch!",
+                icon: "󰚥",
+                timeout_ms: 25000
+            });
+        }
+        function testStartPomodoro() {
+            root.startPomodoro();
+        }
+        function testStartTimer() {
+            root.timerTotal = 300;
+            root.timerSeconds = 300;
+            root.timerText = "05:00";
+            root.timerRunning = true;
+        }
+        function testStopAllActivities() {
+            root.exitPomodoro();
+            root.timerRunning = false;
+            root.timerSeconds = 0;
+            root.stopwatchRunning = false;
+            root.stopwatchSeconds = 0;
+            root.isRecording = false;
+            root.islandState = root.stateCompact;
+        }
+        function testExpandState(stateName) {
+            if (stateName === "pomodoro") root.islandState = root.statePomodoro;
+            else if (stateName === "timer") root.islandState = root.stateTimer;
+            else if (stateName === "stopwatch") root.islandState = root.stateStopwatch;
+            else if (stateName === "media") root.islandState = root.stateMedia;
+            else if (stateName === "recording") root.islandState = root.stateRecording;
+            else if (stateName === "compact") root.islandState = root.stateCompact;
+        }
+        function testToggleMaximized() {
+            if (notchRect) notchRect.isMaximized = !notchRect.isMaximized;
+        }
+        function toggleAirspace() {
+            // Airspace removed - no-op
+        }
+        function toggleOverview() { }
+        function toggleAudiophilePlayer() {
+            if (audiophilePlayer) {
+                audiophilePlayer.visible = !audiophilePlayer.visible;
+                if (audiophilePlayer.visible && audiophileMiniPlayer) {
+                    audiophileMiniPlayer.visible = false;
+                }
+            }
+        }
+        function toggleAudiophileMiniPlayer() {
+            if (audiophileMiniPlayer) {
+                audiophileMiniPlayer.visible = !audiophileMiniPlayer.visible;
+                if (audiophileMiniPlayer.visible && audiophilePlayer) {
+                    audiophilePlayer.visible = false;
+                }
+            }
+        }
         function triggerF1Alert() {
-            // DEBUG: hardcoded test values — replace with real F1 calendar data from the script
             root.f1AlertName = "Austrian GP: First Free Practice";
             root.f1AlertMins = "15";
             root.f1AlertTime = "17:00";
-            root.safeSavePrev();
-            root.islandState = root.stateF1Alert;
-            f1AlertTimer.restart();
-            queueNotification(["notify-send", "-u", "normal", "-i", "f1", "F1 Session Starting", root.f1AlertName + " starts in 15m (at " + root.f1AlertTime + ")"]);
+            if (alarmReminderPill) {
+                alarmReminderPill.triggerAlert({
+                    id: "f1_" + Date.now(),
+                    type: "f1",
+                    title: "Formula 1",
+                    subtitle: root.f1AlertName + " in 15m (17:00)",
+                    icon: "󰿠",
+                    timeout_ms: 15000
+                });
+            } else {
+                root.safeSavePrev();
+                root.islandState = root.stateF1Alert;
+                f1AlertTimer.restart();
+                queueNotification(["notify-send", "-u", "normal", "-i", "f1", "F1 Session Starting", root.f1AlertName + " starts in 15m (at " + root.f1AlertTime + ")"]);
+            }
             playSoundSafely(pPlaySound);
         }
         function triggerCpuAlert() {
@@ -4243,6 +3258,8 @@ ShellRoot {
             root.diskAlertTitle = "SanDisk Ultra USB";
             root.diskAlertSubtitle = "Connected (64 GB)";
             root.diskAlertMounted = true;
+            root.diskAlertDev = "/dev/sdb1";
+            root.diskAlertType = "usb";
             root.safeSavePrev();
             root.islandState = root.stateDiskAlert;
             diskAlertTimer.restart();
@@ -4250,20 +3267,29 @@ ShellRoot {
             playSoundSafely(pPlaySound);
         }
 
-        function triggerWaterAlert() {
+        function triggerPhoneAlert() {
+            root.diskAlertTitle = "OnePlus 13R";
+            root.diskAlertSubtitle = "Connected (KDE Connect)";
+            root.diskAlertMounted = true;
+            root.diskAlertDev = "";
+            root.diskAlertType = "phone";
             root.safeSavePrev();
-            root.islandState = root.stateWaterAlert;
-            healthAlertTimer.restart();
-            queueNotification(["notify-send", "-u", "normal", "-i", "water", "Hydration Reminder", "Time to drink some water!"]);
+            root.islandState = root.stateDiskAlert;
+            diskAlertTimer.restart();
+            queueNotification(["notify-send", "-u", "normal", "-i", "phone", "Mobile Connected", root.diskAlertTitle + " (" + root.diskAlertSubtitle + ")"]);
             playSoundSafely(pPlaySound);
         }
-        function triggerStretchAlert() {
-            root.safeSavePrev();
-            root.islandState = root.stateStretchAlert;
-            healthAlertTimer.restart();
-            queueNotification(["notify-send", "-u", "normal", "-i", "stretch", "Sedentary Reminder", "Time to stand up and stretch!"]);
-            playSoundSafely(pPlaySound);
-        }
+
+        function triggerWaterAlert() {}
+        function triggerStretchAlert() {}
+        function startPomodoro() { root.startPomodoro(); }
+        function pausePomodoro() { root.pausePomodoro(); }
+        function togglePomodoro() { root.togglePomodoro(); }
+        function resetPomodoro() { root.resetPomodoro(); }
+        function skipPomodoro() { root.skipPomodoro(); }
+        function exitPomodoro() { root.exitPomodoro(); }
+        function stopPomodoro() { root.exitPomodoro(); }
+        function refreshTasks() { root.refreshTasks(); }
         function showOsd(type: string, val: string) {
             var valNum = parseFloat(val);
             if (type === "V") {
@@ -4284,39 +3310,99 @@ ShellRoot {
         function showNotification(summary: string, body: string, icon: string) {
             console.warn("showNotification: Not implemented");
         }
+        function dismissNotification() {
+            if (root.currentNotifId !== null) {
+                root.dismissNotificationSafely(root.currentNotifId);
+                root.notifCloseTimer.stop();
+            } else {
+                root.dismissFrontNotification();
+                root.notifCloseTimer.stop();
+            }
+        }
         function toggleAppLauncher() {
-            console.warn("toggleAppLauncher: Not implemented");
+            root.togglePopup(appLauncherPopup);
+        }
+        function toggleSpotlight() {
+            root.togglePopup(spotlightPopup);
+        }
+        function toggleMindPilot() {
+            root.togglePopup(mindPilotPopup);
+        }
+        function queryMindPilot(q: string) {
+            if (!mindPilotPopup.show) root.togglePopup(mindPilotPopup);
+            mindPilotPopup.runAgentQuery(q);
+        }
+        function toggleThinkingAccordion() {
+            mindPilotPopup.isThinkingExpandedManual = !mindPilotPopup.isThinkingExpandedManual;
+        }
+        function toggleCheatsheet() {
+            root.togglePopup(cheatsheetPopup);
         }
         function togglePowerMenu() {
-            powerMenuPopup.show = !powerMenuPopup.show;
+            root.togglePopup(powerMenuPopup);
         }
         function toggleClipboard() {
-            console.warn("toggleClipboard: Not implemented");
+            root.togglePopup(clipboardPopup);
         }
         function toggleThemeSwitcher() {
-            wallpaperMenuPopup.show = !wallpaperMenuPopup.show;
+            root.togglePopup(wallpaperMenuPopup);
+        }
+        function toggleThemeMode() {
+            root.toggleThemeMode();
         }
         function toggleWifiMenu() {
-            wifiMenuPopup.show = !wifiMenuPopup.show;
+            root.togglePopup(wifiMenuPopup);
         }
         function toggleBluetoothMenu() {
-            bluetoothMenuPopup.show = !bluetoothMenuPopup.show;
+            root.togglePopup(bluetoothMenuPopup);
         }
-        function toggleGroundControl() {
-            if (airspace.show) {
-                airspace.close();
+        function toggleTimer() {
+            if (root.timerRunning) {
+                root.timerRunning = false;
+            } else if (root.timerSeconds > 0) {
+                root.timerRunning = true;
+            } else {
+                root.timerSeconds = root.timerTotal;
+                root.timerText = root.formatTime(root.timerTotal);
+                root.timerRunning = true;
             }
-            groundControl.show = !groundControl.show;
+            root.islandState = root.stateTimer;
         }
-        function toggleControlCenter() { toggleGroundControl(); }
+        function toggleStopwatch() {
+            root.stopwatchRunning = !root.stopwatchRunning;
+            root.islandState = root.stateStopwatch;
+        }
+        function toggleSettings() {
+            if (settingsWindow) {
+                settingsWindow.visible = !settingsWindow.visible;
+            }
+        }
+        function toggleGroundControl() { toggleSettings(); }
+        function toggleControlCenter() { toggleSettings(); }
         function toggleF1CalendarPopup() {
-            f1CalendarPopup.show = !f1CalendarPopup.show;
+            root.togglePopup(f1CalendarPopup);
         }
         function toggleEmailsPopup() {
-            emailsPopup.show = !emailsPopup.show;
+            root.togglePopup(emailsPopup);
         }
         function toggleMediaPopup() {
-            mediaPopup.show = !mediaPopup.show;
+            toggleAudiophilePlayer();
+        }
+        function toggleAudioPopup() {
+            root.togglePopup(audioPopup);
+        }
+        function toggleSparklinePopup() {
+            root.togglePopup(sparklinePopup);
+        }
+        function togglePowerProfilePopup() {}
+        function toggleCalendarPopup() {
+            root.togglePopup(calendarPopup);
+        }
+        function toggleHudNotifications() {
+            console.log("[Quickshell] IPC toggleHudNotifications called! terminalHud=" + terminalHud);
+            if (terminalHud) {
+                terminalHud.toggleNotificationDeck();
+            }
         }
         function refreshBatteryMode() {
             pTriggerStatsUpdate.running = true;
@@ -4333,8 +3419,6 @@ ShellRoot {
                 root.recordingSeconds = 0;
                 root.recordingTime = "0:00";
                 recordingTimer.start();
-                if (root.islandState === root.stateCompact)
-                    root.islandState = root.stateRecording;
             }
         }
         function stopRecording() {
@@ -4356,68 +3440,150 @@ ShellRoot {
         bodyMarkupSupported: true
         imageSupported: true
         onNotification: notif => {
-            console.log("onNotification received: summary=" + notif.summary + ", dndActive=" + root.dndActive);
+            if (!notif) return;
+            var nId = notif.id;
+            root.registerNotifObj(notif);
+
+            console.log("onNotification received: summary=" + (notif.summary ? notif.summary : "") + ", dndActive=" + root.dndActive);
+            var appName = notif.appName ? notif.appName : "System";
+            var appIcon = notif.appIcon ? notif.appIcon : "";
+
+            var actList = [];
+            try {
+                if (notif.actions) {
+                    for (var a = 0; a < notif.actions.length; a++) {
+                        actList.push({
+                            identifier: notif.actions[a].identifier,
+                            text: notif.actions[a].text
+                        });
+                    }
+                }
+            } catch(e) {}
+
+            var notifItem = {
+                id: nId,
+                notifId: nId,
+                summary: notif.summary ? notif.summary : "",
+                body: notif.body ? notif.body : "",
+                appName: appName,
+                appIcon: appIcon,
+                hasActions: actList.length > 0,
+                actions: actList
+            };
+
+            // Listen for notification closed signal to safely clean up pointer references
+            try {
+                if (notif.closed && typeof notif.closed.connect === "function") {
+                    notif.closed.connect(function() {
+                        root.removeNotificationById(nId);
+                        root.removeNotificationFromList(nId);
+                    });
+                }
+            } catch(e) {}
+
+            // Always add to persistent Ground Control list (even if DnD is active)
+            root.addNotificationToList(notifItem);
+
             if (!root.dndActive) {
-                root.currentNotif = notif;
-                root.notifTitle = notif.summary ? notif.summary : "";
-                root.notifBody = notif.body ? notif.body : "";
-                root.notifIcon = notif.appIcon ? notif.appIcon : "";
-                root.notifActive = true;
-                root.notifCloseTimer.restart();
+                var newQueue = root.activeNotifQueue.slice();
+                var groupFound = false;
+                
+                for (var i = 0; i < newQueue.length; i++) {
+                    if (newQueue[i].appName === appName) {
+                        var groupNotifs = newQueue[i].notifications.slice();
+                        var dupIndex = -1;
+                        for (var k = 0; k < groupNotifs.length; k++) {
+                            if (groupNotifs[k].id === nId) {
+                                dupIndex = k;
+                                break;
+                            }
+                        }
+                        if (dupIndex !== -1) {
+                            groupNotifs[dupIndex] = notifItem;
+                        } else {
+                            groupNotifs.push(notifItem);
+                        }
+                        newQueue[i] = {
+                            appName: appName,
+                            appIcon: appIcon,
+                            notifications: groupNotifs
+                        };
+                        groupFound = true;
+                        break;
+                    }
+                }
+                
+                if (!groupFound) {
+                    newQueue.push({
+                        appName: appName,
+                        appIcon: appIcon,
+                        notifications: [notifItem]
+                    });
+                }
+                
+                root.activeNotifQueue = newQueue;
                 root.notificationReceived();
                 playSoundSafely(pPlaySound);
-            }
 
-            var found = false;
-            for (var i = 0; i < notifList.count; i++) {
-                if (notifList.get(i).notifId === notif.id) {
-                    notifList.set(i, {
-                        "notifId": notif.id,
-                        "summary": notif.summary ? notif.summary : "",
-                        "body": notif.body ? notif.body : "",
-                        "appName": notif.appName ? notif.appName : "",
-                        "appIcon": notif.appIcon ? notif.appIcon : "",
-                        "notifObj": notif
-                    });
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                notifList.insert(0, {
-                    "notifId": notif.id,
-                    "summary": notif.summary ? notif.summary : "",
-                    "body": notif.body ? notif.body : "",
-                    "appName": notif.appName ? notif.appName : "",
-                    "appIcon": notif.appIcon ? notif.appIcon : "",
-                    "notifObj": notif
-                });
+                // Always restart dismiss timer on newly arrived notification
+                notifCloseTimer.interval = root.notifDismissDelay;
+                notifCloseTimer.restart();
             }
         }
-    }
-
-    GroundControl {
-        id: groundControl
-        shellRoot: root
-        notchLayoutWidth: root.notchWidth
     }
 
     TimerPopup {
         id: timerPopup
         shellRoot: root
-        groundControlWindow: groundControl
+        groundControlWindow: null
+    }
+
+    CalendarPopup {
+        id: calendarPopup
+        shellRoot: root
+    }
+
+    AppLauncherPopup {
+        id: appLauncherPopup
+        shellRoot: root
+    }
+
+    ClipboardPopup {
+        id: clipboardPopup
+        shellRoot: root
+    }
+
+    SpotlightPopup {
+        id: spotlightPopup
+        shellRoot: root
+    }
+
+    MindPilotPopup {
+        id: mindPilotPopup
+        shellRoot: root
+    }
+
+    MinimoBlob {
+        id: minimoBlob
+        shellRoot: root
+        mindPilot: mindPilotPopup
+    }
+
+    CheatsheetPopup {
+        id: cheatsheetPopup
+        shellRoot: root
     }
 
     F1CalendarPopup {
         id: f1CalendarPopup
         shellRoot: root
-        groundControlWindow: groundControl
+        groundControlWindow: null
     }
 
     EmailsPopup {
         id: emailsPopup
         shellRoot: root
-        groundControlWindow: groundControl
+        groundControlWindow: null
     }
 
     PowerMenu {
@@ -4425,8 +3591,13 @@ ShellRoot {
         shellRoot: root
     }
 
-    WifiMenu {
-        id: wifiMenuPopup
+    AlarmReminderPill {
+        id: alarmReminderPill
+        shellRoot: root
+    }
+
+    AudioPopup {
+        id: audioPopup
         shellRoot: root
     }
 
@@ -4435,8 +3606,13 @@ ShellRoot {
         shellRoot: root
     }
 
-    WallpaperMenu {
-        id: wallpaperMenuPopup
+    ScreenshotMenu {
+        id: screenshotMenuPopup
+        shellRoot: root
+    }
+
+    ScreenSelector {
+        id: screenSelector
         shellRoot: root
     }
 
@@ -4445,34 +3621,28 @@ ShellRoot {
         shellRoot: root
     }
 
-    MediaPopup {
-        id: mediaPopup
-        shellRoot: root
-    }
-
-    SonomaWidgets {
-        id: sonomaWidgets
-        shellRoot: root
-    }
-
-    Airspace {
-        id: airspace
-        shellRoot: root
-    }
-
-    FlightDeck {
-        id: flightDeck
-        shellRoot: root
-    }
-
     SettingsWindow {
         id: settingsWindow
         shellRoot: root
     }
 
+    AudiophilePlayer {
+        id: audiophilePlayer
+        shellRoot: root
+    }
+
+    AudiophileMiniPlayer {
+        id: audiophileMiniPlayer
+        shellRoot: root
+    }
+
+    TerminalHudWallpaper {
+        id: terminalHud
+        shellRoot: root
+    }
+
     Component.onDestruction: {
         isDestroying = true;
-        pSpotify.running = false;
         pStats.running = false;
     }
 }

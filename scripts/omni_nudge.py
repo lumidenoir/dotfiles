@@ -1,0 +1,1 @@
+/home/krishna/dotfiles/quickshell/scripts/omni_nudge.py

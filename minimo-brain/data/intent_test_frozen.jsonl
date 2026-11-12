@@ -1,0 +1,80 @@
+{"query": "watch downloaded film in mpv player", "expected_intent": "play_media", "is_action": true, "tag": "play_media"}
+{"query": "watch downloaded series episode", "expected_intent": "play_media", "is_action": true, "tag": "play_media"}
+{"query": "watch downloaded lecture video in vlc", "expected_intent": "play_media", "is_action": true, "tag": "play_media"}
+{"query": "create task order spare ethernet cables from amazon", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "create task to draft letter of recommendation for student", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "watch frieren episode 5", "expected_intent": "play_media", "is_action": true, "tag": "play_media"}
+{"query": "play frieren episode 20", "expected_intent": "play_media", "is_action": true, "tag": "play_media"}
+{"query": "play frieren season 1 ep 8", "expected_intent": "play_media", "is_action": true, "tag": "play_media"}
+{"query": "put a task to verify ssl cert renewal before expiry", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "create a reminder for monday morning to email advisor", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "watch local movie oppenheimer", "expected_intent": "play_media", "is_action": true, "tag": "play_media"}
+{"query": "add task clean up downloads directory and archive pdfs p3", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "add task implement websocket heartbeat ping pong", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "add task clean up dangling docker containers and free disk", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "add task renew passport before international flight", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "add task to verify md5 checksum on downloaded iso", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "stream anime opening songs", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "display active tasks", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "what items are left on my agenda", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "what is on my agenda for this afternoon", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "list tasks", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "check my todoist", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "do i have anything scheduled for today", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "what are my pending tasks", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "what are my todos for today", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "show my todo list", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "what do i need to do today", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "show all overdue tasks", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "what tasks are due this week", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "view upcoming tasks", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "show pending reminders", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "what do i have to do today", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "show my pending todos", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "list all tasks from todoist", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "what tasks are overdue", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "view my agenda for this evening", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "what items are pending on my list", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "what are my upcoming tasks this week", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "check my task list", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "display my pending actions", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "what todos are due tomorrow", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "show all tasks on my agenda", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "what items do i need to finish by tonight", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "view active todoist items", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "what is on my todo list right now", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "check pending items in todoist", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "show me what tasks are left for today", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "list uncompleted todos", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "play acoustic guitar songs", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "play acoustic guitar fingerstyle songs", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "schedule a dental checkup task for next month", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "schedule a reminder to take a break after 2 hours of coding", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "play attack on titan season 4 episode 2", "expected_intent": "play_media", "is_action": true, "tag": "play_media"}
+{"query": "watch episode 1 of attack on titan", "expected_intent": "play_media", "is_action": true, "tag": "play_media"}
+{"query": "todo: audit tailscale acl rules p2", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "explain transformer multi head attention scaling factor square root d", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "explain how a scramjet combustor achieves supersonic ignition", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "explain how bst binary search tree rebalances into avl tree", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "explain how speculative execution vulnerabilities like spectre work", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "explain how a bloom filter achieves zero false negatives", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "put on my todo list to inspect thermal paste on cpu cooler", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "put on todoist: buy cr2032 batteries for car key fob", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "stream local mp4 video", "expected_intent": "play_media", "is_action": true, "tag": "play_media"}
+{"query": "play miles davis kind of blue full album", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "set reminder to cancel subscription trial before nov 1", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "what causes aerodynamic flutter in high aspect ratio aircraft wings", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "task: fix broken hyperlink in documentation footer", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "how does rust borrow checker enforce memory safety at compile time", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "how does sourdough fermentation create carbon dioxide", "expected_intent": "rag_knowledge", "is_action": false, "tag": "ood_general"}
+{"query": "how does b-tree indexing work in relational databases", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "how does virtual memory paging translate virtual addresses to physical", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "how does a hall effect thruster accelerate xenon ions", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "how does garbage collection work in rust vs go", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "how does the mach number change across an expansion fan", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "how does zero copy networking work with io_uring in linux", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "how does raft handle split vote during leader election", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "how does an attitude determination and control system adcs work in cubesats", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "how does liquid rocket regenerative cooling nozzle jacket work", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "play some jazz music", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "play jazz classics playlist", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}

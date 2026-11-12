@@ -12,6 +12,7 @@ PanelWindow {
     property bool show: false
     property var shellRoot
     readonly property real scaleFactor: shellRoot ? shellRoot.scaleFactor : 1.0
+    readonly property real fontScale: scaleFactor * (shellRoot ? shellRoot.fontSizeMultiplier : 1.0)
     property var btItems: []
     property real animHeight: animRect.height
     property alias animWidth: animRect.width
@@ -23,7 +24,7 @@ PanelWindow {
     // Two-phase close state machine (unified dynamic island pattern)
     property bool isClosing: false
 
-    WlrLayershell.keyboardFocus: show ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    WlrLayershell.keyboardFocus: show ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
     WlrLayershell.namespace: "quickshell"
 
     anchors.top: true
@@ -197,51 +198,44 @@ PanelWindow {
         Rectangle {
             id: animRect
             anchors.top: parent.top
-            anchors.topMargin: show ? 16 * rootWindow.scaleFactor : 4 * rootWindow.scaleFactor
-            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.topMargin: show ? 46 * rootWindow.scaleFactor : 36 * rootWindow.scaleFactor
+            anchors.right: parent.right
+            anchors.rightMargin: 12 * rootWindow.scaleFactor
 
-            // Collapse to circle (width 36, height 36) or closedNotchWidth
-            width: rootWindow.show ? 360 * rootWindow.scaleFactor : (rootWindow.isClosing ? 36 * rootWindow.scaleFactor : 120 * rootWindow.scaleFactor)
-            
-            height: rootWindow.show ? 320 * rootWindow.scaleFactor : (rootWindow.isClosing ? 36 * rootWindow.scaleFactor : 36 * rootWindow.scaleFactor)
+            width: 360 * rootWindow.scaleFactor
+            height: 320 * rootWindow.scaleFactor
+            radius: Math.round(4 * rootWindow.scaleFactor)
+            clip: true
 
-            radius: rootWindow.show ? 24 * rootWindow.scaleFactor : (rootWindow.isClosing ? 18 * rootWindow.scaleFactor : 20 * rootWindow.scaleFactor)
+            opacity: show ? 1.0 : 0.0
+            scale: show ? 1.0 : 0.94
 
-            color: Qt.rgba(0.02, 0.02, 0.02, 1.0)
-            border.color: Qt.rgba(1, 1, 1, 0.08)
+            color: "transparent"
+            border.color: shellRoot ? shellRoot.colBorder : Qt.rgba(1, 1, 1, 0.08)
             border.width: 1
 
-            // Unified physics spring animations
-            Behavior on width {
-                enabled: shellRoot ? !shellRoot.batteryMode : true
-                SpringAnimation { spring: 4.8; damping: 0.8; mass: 0.6 }
-            }
-            Behavior on height {
-                enabled: shellRoot ? !shellRoot.batteryMode : true
-                SpringAnimation { spring: 4.8; damping: 0.8; mass: 0.6 }
-            }
-            Behavior on radius {
-                enabled: shellRoot ? !shellRoot.batteryMode : true
-                SpringAnimation { spring: 4.8; damping: 0.8; mass: 0.6 }
-            }
-            Behavior on anchors.topMargin {
-                enabled: shellRoot ? !shellRoot.batteryMode : true
-                SpringAnimation { spring: 4.8; damping: 0.8; mass: 0.6 }
+            // SurfaceCard Base (Option B, Zero Shader Overhead)
+            SurfaceCard {
+                id: btGlassCard
+                anchors.fill: parent
+                radius: animRect.radius
+                contentPadding: 0
             }
 
+            Behavior on height { NumberAnimation { duration: 240; easing.type: Easing.OutCubic } }
+            Behavior on anchors.topMargin {
+                NumberAnimation { duration: 260; easing.type: Easing.OutBack; easing.overshoot: 1.15 }
+            }
+            Behavior on opacity { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+            Behavior on scale { NumberAnimation { duration: 260; easing.type: Easing.OutBack; easing.overshoot: 1.15 } }
+
             function checkCloseFinished() {
-                if (!rootWindow.show && rootWindow.isClosing) {
-                    var sf = rootWindow.scaleFactor;
-                    var targetWidth = 36 * sf;
-                    var targetHeight = 36 * sf;
-                    if (Math.abs(width - targetWidth) < 1.0 && Math.abs(height - targetHeight) < 1.0) {
-                        rootWindow.isClosing = false;
-                    }
+                if (!rootWindow.show && rootWindow.isClosing && opacity < 0.01) {
+                    rootWindow.isClosing = false;
                 }
             }
 
-            onWidthChanged: checkCloseFinished()
-            onHeightChanged: checkCloseFinished()
+            onOpacityChanged: checkCloseFinished()
 
             Item {
                 anchors.fill: parent
@@ -310,7 +304,7 @@ PanelWindow {
                         delegate: Rectangle {
                             width: ListView.view.width
                             height: 40
-                            radius: 10
+                            radius: 4
                             color: listView.currentIndex === index || ma.containsMouse ? Qt.rgba(1,1,1,0.1) : "transparent"
 
                             Rectangle {

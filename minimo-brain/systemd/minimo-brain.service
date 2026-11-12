@@ -1,0 +1,15 @@
+[Unit]
+Description=Minimo Brain Suite - Headless AI Synthesis Engine & Tailscale API
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/krishna/dotfiles/minimo-brain
+ExecStart=/usr/bin/python3 /home/krishna/dotfiles/minimo-brain/server.py
+Restart=always
+RestartSec=3
+Environment=PYTHONUNBUFFERED=1
+Environment=MALLOC_ARENA_MAX=2
+
+[Install]
+WantedBy=default.target

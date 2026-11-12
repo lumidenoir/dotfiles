@@ -1,0 +1,10 @@
+singleton Theme Theme.qml
+singleton Dyn Dyn.qml
+singleton Flags Flags.qml
+singleton Cava Cava.qml
+singleton Pw Pw.qml
+singleton SysStatus SysStatus.qml
+singleton Prefs Prefs.qml
+singleton CharacterBus CharacterBus.qml
+singleton Cursor Cursor.qml
+singleton Players Players.qml

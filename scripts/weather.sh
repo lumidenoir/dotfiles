@@ -6,7 +6,7 @@ check_if_empty() {
 
 CITY="Kanpur"
 # Fetch from Open-Meteo for IIT Kanpur coordinates (26.5123, 80.2329)
-WEATHER=$(curl -sf "https://api.open-meteo.com/v1/forecast?latitude=26.5123&longitude=80.2329&current=temperature_2m,apparent_temperature,weather_code&timezone=auto")
+WEATHER=$(curl -sf "https://api.open-meteo.com/v1/forecast?latitude=26.5123&longitude=80.2329&current=temperature_2m,apparent_temperature,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=auto")
 
 if [ -z "$WEATHER" ]; then
     WEATHER_TEMP="0"

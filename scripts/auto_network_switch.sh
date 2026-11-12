@@ -11,6 +11,8 @@ PING_TIMEOUT=3      # seconds per ping attempt
 
 last_switch_time=0
 last_reassociate_time=0
+last_gateway_keepalive_time=0
+GATEWAY_KEEPALIVE_INTERVAL=$((30 * 60))
 consecutive_failures=0 # track streak of failures
 
 log() { echo "$(date '+%F %T') - $1"; }
@@ -36,7 +38,22 @@ is_traffic_flowing() {
 }
 
 check_connection() {
-	ping -c "$PING_COUNT" -W "$PING_TIMEOUT" iitk.ac.in >/dev/null 2>&1
+	# Use curl to check actual HTTP/DNS resolution instead of ping (which often bypasses portal blocks)
+	local start_time
+	start_time=$(date +%s%3N)
+	if curl -s --connect-timeout "$PING_TIMEOUT" http://connectivitycheck.gstatic.com/generate_204 >/dev/null 2>&1; then
+		local end_time
+		end_time=$(date +%s%3N)
+		local duration=$((end_time - start_time))
+		log "Connectivity check succeeded (HTTP 204 in ${duration}ms)"
+		return 0
+	else
+		local end_time
+		end_time=$(date +%s%3N)
+		local duration=$((end_time - start_time))
+		log "Connectivity check failed (timeout/error in ${duration}ms)"
+		return 1
+	fi
 }
 
 switch_network() {
@@ -81,8 +98,33 @@ reassociate_network() {
 	fi
 }
 
+is_wired_connected() {
+	for carrier in /sys/class/net/e*/carrier /sys/class/net/eth*/carrier /sys/class/net/en*/carrier; do
+		if [[ -f "$carrier" && "$(cat "$carrier" 2>/dev/null)" == "1" ]]; then
+			return 0
+		fi
+	done
+	return 1
+}
+
+handle_wired_gateway() {
+	local now=$(date +%s)
+	if is_wired_connected; then
+		((now - last_gateway_keepalive_time < GATEWAY_KEEPALIVE_INTERVAL)) && return
+		log "Proactive 30-minute gateway keepalive/login check triggered..."
+		python3 "$HOME/dotfiles/scripts/iitk_gateway.py" >/dev/null 2>&1
+		local gateway_status=$?
+		log "Proactive keepalive completed (exit status: $gateway_status)."
+		last_gateway_keepalive_time=$now
+	fi
+}
+
 monitor_loop() {
 	while true; do
+		# 1. Handle wired gateway keepalive/login if connected to Ethernet
+		handle_wired_gateway
+
+		# 2. Wi-Fi reassociation check
 		reassociate_network
 
 		if ! check_connection; then
@@ -90,8 +132,38 @@ monitor_loop() {
 			log "Ping failed (streak: $consecutive_failures/$FAILURE_THRESHOLD)"
 
 			if ((consecutive_failures >= FAILURE_THRESHOLD)); then
-				# Final guard: don't switch if data is actively flowing
-				if is_traffic_flowing; then
+				# If wired is connected, don't attempt Wi-Fi switching; retry gateway login instead
+				if is_wired_connected; then
+					log "Ping failed on wired connection. Initiating gateway recovery flow..."
+					
+					log "Step 1/3: Running gateway login script..."
+					python3 "$HOME/dotfiles/scripts/iitk_gateway.py"
+					local gateway_status=$?
+					if (( gateway_status == 0 )); then
+						log "Step 1/3 success: Gateway authentication active (exit code 0)."
+					else
+						log "Step 1/3 warning: Gateway script returned exit code $gateway_status."
+					fi
+					
+					log "Step 2/3: Querying active Ethernet connection name..."
+					local wired_conn
+					wired_conn=$(nmcli -t -f NAME,TYPE connection show --active | grep ':802-3-ethernet' | cut -d: -f1 | head -1)
+					
+					if [[ -n "$wired_conn" ]]; then
+						log "Step 3/3: Cycling wired connection '$wired_conn' to flush browser sockets..."
+						if nmcli connection up "$wired_conn" &>/dev/null; then
+							log "Step 3/3 success: Wired connection successfully cycled."
+						else
+							log "Step 3/3 error: Failed to cycle connection '$wired_conn'."
+						fi
+					else
+						log "Step 2/3 error: Active wired connection name not found. Skipping interface cycle."
+					fi
+					
+					log "Gateway recovery flow completed. Resetting failure counter."
+					consecutive_failures=0
+					last_gateway_keepalive_time=$(date +%s)
+				elif is_traffic_flowing; then
 					log "Traffic still flowing despite ping failures — skipping switch (load-induced latency?)"
 					consecutive_failures=0
 				else
@@ -115,6 +187,6 @@ monitor_loop() {
 }
 
 trap "log 'Exiting...'; exit 0" SIGINT SIGTERM
-log "Wi-Fi monitor started — checks every ${CHECK_INTERVAL}s, switches after ${FAILURE_THRESHOLD} consecutive failures, reassociates every 30m"
-notify-send -u normal "Network Monitor" "Wi-Fi monitoring service started." -t 1000
+log "Network monitor started — checks every ${CHECK_INTERVAL}s (Wired Gateway + Wi-Fi switcher)"
+notify-send -u normal "Network Monitor" "Network monitoring service started." -t 1000
 monitor_loop

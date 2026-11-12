@@ -1,6 +1,6 @@
 -- 1. MONITORS
 hl.monitor({
-    output = "eDP-1",
+    output = "DP-1",
     mode = "1920x1080@60",
     position = "auto",
     scale = "1"
@@ -12,21 +12,22 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("awww-daemon & sleep 0.1 && awww restore")
     -- hl.exec_cmd("waybar -c ~/.config/waybar/hypr/config.json -s ~/.config/waybar/hypr/style.css")
     hl.exec_cmd("quickshell -p ~/dotfiles/quickshell")
-    -- hl.exec_cmd("dunst")
+    hl.exec_cmd("quickshell -p ~/dotfiles/quickshell/lock -d")
     hl.exec_cmd("auto_network_switch.sh & mpd & mpDris2 &")
-    hl.exec_cmd("~/dotfiles/scripts/Redshift.sh --auto &")
     hl.exec_cmd("pidof -q polkit-gnome-authentication-agent-1 || { /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 & }")
-    hl.exec_cmd("clipse -listen")
+    hl.exec_cmd("wl-paste --type text --watch cliphist store")
+    hl.exec_cmd("wl-paste --type image --watch cliphist store")
     hl.exec_cmd("hypridle &")
+    hl.exec_cmd("/usr/bin/kdeconnectd &")
 -- hl.exec_cmd("kitty --class kitty-scratchpad", { workspace = "special:scratchpad silent" })
     hl.exec_cmd("gsettings set org.gnome.desktop.interface gtk-theme 'WhiteSur-Dark'")
     hl.exec_cmd("gsettings set org.gnome.desktop.interface icon-theme 'WhiteSur-dark'")
     hl.exec_cmd("gsettings set org.gnome.desktop.interface cursor-theme 'WhiteSur'")
-    hl.exec_cmd("hyprctl setcursor macOS 24")
+    hl.exec_cmd("hyprctl setcursor macOS 20")
 end)
 
 -- 3. ENVIRONMENT VARIABLES
-hl.env("XCURSOR_SIZE", "24")
+hl.env("XCURSOR_SIZE", "20")
 hl.env("XCURSOR_THEME", "WhiteSur")
 hl.env("GTK_THEME", "WhiteSur-Dark")
 
@@ -35,45 +36,44 @@ hl.config({
     input = {
         kb_layout = "us",
         follow_mouse = 1,
-        touchpad = {
-            natural_scroll = true,
-            scroll_factor = 0.5,
-        },
-        sensitivity = 0 -- -1.0 - 1.0, 0 means no modification.
+        mouse_refocus = false,
+        -- touchpad removed (desktop has no touchpad)
+        accel_profile = "flat",     -- no pointer acceleration on desktop
+        sensitivity = -0.2          -- slightly faster on desktop mouse
     },
     general = {
-        gaps_in = 4,
-        gaps_out = 8,
-        border_size = 1,
+        gaps_in = 3,
+        gaps_out = 6,
+        border_size = 0,
         col = {
-            active_border = "0xccffffff",
-            inactive_border = "0x33000000",
+            inactive_border = "0x00000000",
+            active_border = "0x00000000"
         },
         resize_on_border = false,
         allow_tearing = false,
         layout = "dwindle"
     },
 decoration = {
-    rounding = 12,
+    rounding = 4,
     rounding_power = 2.0,
 
     shadow = {
         enabled = true,
         range = 10,
         render_power = 2,
-        color = "0x55000000",
-        color_inactive = "0x18000000"
+        color = "0x33000000",
+        color_inactive = "0x14000000"
     },
 
     blur = {
         enabled = true,
-        size = 6,
-        passes = 2,
+        size = 8,
+        passes = 3,
         new_optimizations = true,
         xray = false,
-        contrast = 1.12,
-        brightness = 1.05,
-        vibrancy = 0.25,
+        contrast = 1.0,
+        brightness = 0.85,
+        vibrancy = 0.15,
         vibrancy_darkness = 0.05
     },
 
@@ -105,29 +105,29 @@ decoration = {
     }
 })
 
--- 5. GESTURES
-hl.gesture({
-    fingers = 3,
-    direction = "horizontal",
-    action = "workspace"
-})
+-- 5. GESTURES (all touchpad-only — disabled for desktop)
+-- hl.gesture({
+--     fingers = 3,
+--     direction = "horizontal",
+--     action = "workspace"
+-- })
 
 -- Swipe down (3 fingers) to toggle Control Center
-hl.gesture({
-    fingers = 3,
-    direction = "down",
-    action = function()
-        hl.exec_cmd("quickshell -p ~/dotfiles/quickshell ipc call qsIpc toggleGroundControl")
-    end
-})
+-- hl.gesture({
+--     fingers = 3,
+--     direction = "down",
+--     action = function()
+--         hl.exec_cmd("quickshell -p ~/dotfiles/quickshell ipc call qsIpc toggleGroundControl")
+--     end
+-- })
 
-hl.gesture({
-    fingers = 3,
-    direction = "up",
-    action = function()
-        hl.exec_cmd("quickshell -p ~/dotfiles/quickshell ipc call qsIpc toggleAirspace")
-    end
-})
+-- hl.gesture({
+--     fingers = 3,
+--     direction = "up",
+--     action = function()
+--         hl.exec_cmd("quickshell -p ~/dotfiles/quickshell ipc call qsIpc toggleAirspace")
+--     end
+-- })
 
 -- Pinch to zoom (2 fingers)
 -- hl.gesture({
@@ -139,6 +139,38 @@ hl.gesture({
 -- })
 
 -- 6. WINDOW RULES
+-- AudiophilePlayer rules
+hl.window_rule({
+    match = { title = "AudiophilePlayer" },
+    float = true,
+    center = true,
+    pin = true,
+    no_dim = true,
+    decorate=true,
+    size = { 820, 500 }
+})
+
+hl.window_rule({
+    match = { title = "AudiophileMiniPlayer" },
+    float = true,
+    center = true,
+    pin = true,
+    no_dim = true,
+    decorate=true,
+    size = { 320, 440 }
+})
+
+-- SettingsWindow rules
+hl.window_rule({
+    match = { title = "Ground Control Settings" },
+    float = true,
+    center = true,
+    pin = true,
+    no_dim = true,
+    decorate = false,
+    size = { 520, 720 }
+})
+
 -- Clipse rules
 hl.window_rule({
     match = { class = "clipse" },
@@ -182,20 +214,23 @@ hl.bind("ALT + Q", hl.dsp.window.close())
 hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen(0))
 hl.bind(mainMod .. " + ALT + F", hl.dsp.window.fullscreen(1))
 hl.bind(mainMod .. " + M", hl.dsp.window.move({ workspace = "special:minimized", follow = false }))
+hl.bind("ALT + M", hl.dsp.exec_cmd("quickshell -p ~/dotfiles/quickshell ipc call qsIpc toggleAudiophilePlayer"))
 hl.bind(mainMod .. " + SHIFT + M", hl.dsp.workspace.toggle_special("minimized"))
 hl.bind(mainMod .. " + P", hl.dsp.exec_cmd("powermenu.sh"))
 hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("~/dotfiles/scripts/screenlock.sh"))
 hl.bind(mainMod .. " + SHIFT + F", hl.dsp.window.float({ action = "toggle" }))
-hl.bind(mainMod .. " + SPACE", hl.dsp.exec_cmd("rofi -show drun -theme ~/.config/rofi/mac-hypr.rasi"))
-hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("quickshell -p ~/dotfiles/quickshell ipc call qsIpc toggleGroundControl"))
+hl.bind(mainMod .. " + SPACE", hl.dsp.exec_cmd("quickshell -p ~/dotfiles/quickshell ipc call qsIpc toggleAppLauncher"))
+hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("quickshell -p ~/dotfiles/quickshell ipc call qsIpc toggleSettings"))
 hl.bind(mainMod .. " + SHIFT + P", hl.dsp.window.pseudo())
-hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("kitty -c ~/.config/kitty/mac-kitty.conf --class clipse -e 'clipse'"))
-hl.bind(mainMod .. " + S", hl.dsp.exec_cmd("spotlight.sh"))
+hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("quickshell -p ~/dotfiles/quickshell ipc call qsIpc toggleClipboard"))
+hl.bind(mainMod .. " + S", hl.dsp.exec_cmd("quickshell -p ~/dotfiles/quickshell ipc call qsIpc toggleSpotlight"))
+hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("quickshell -p ~/dotfiles/quickshell ipc call qsIpc toggleHudNotifications"))
+hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("quickshell -p ~/dotfiles/quickshell ipc call qsIpc toggleMindPilot"))
 hl.bind(mainMod .. " + Tab", hl.dsp.exec_cmd("quickshell -p ~/dotfiles/quickshell ipc call qsIpc toggleAirspace"))
 hl.bind(mainMod .. " + Z", hl.dsp.exec_cmd("hyprctl getoption general:layout | grep -q dwindle && hyprctl eval \"hl.config({ general = { layout = 'master' } })\" || hyprctl eval \"hl.config({ general = { layout = 'dwindle' } })\""))
-hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("~/dotfiles/scripts/keybindings.py"))
+hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("quickshell -p ~/dotfiles/quickshell ipc call qsIpc toggleCheatsheet"))
 -- hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("waybar -c ~/.config/waybar/hypr/config.json -s ~/.config/waybar/hypr/style.css"))
-hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("pkill quickshell || quickshell -p ~/dotfiles/quickshell"))
+hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("pkill quickshell; quickshell -p ~/dotfiles/quickshell & quickshell -p ~/dotfiles/quickshell/lock -d"))
 hl.bind(mainMod .. " + I", hl.dsp.exec_cmd("(pkill -x hypridle || hypridle &) && pkill -USR1 -f quickshell_stats.sh"))
 -- Toggle persistent Quake-style scratchpad
 hl.bind(mainMod .. " + grave", hl.dsp.workspace.toggle_special("scratchpad"))
@@ -206,8 +241,8 @@ hl.bind(mainMod .. " + RIGHT", hl.dsp.focus({ direction = "r" }))
 hl.bind(mainMod .. " + UP", hl.dsp.focus({ direction = "u" }))
 hl.bind(mainMod .. " + DOWN", hl.dsp.focus({ direction = "d" }))
 
--- Workspace switching
-for i = 1, 9 do
+-- Workspace switchingw
+for i = 1, 6 do
     hl.bind(mainMod .. " + " .. i, hl.dsp.focus({ workspace = tostring(i) }))
     hl.bind(mainMod .. " + SHIFT + " .. i, hl.dsp.window.move({ workspace = tostring(i) }))
 end
@@ -232,7 +267,7 @@ hl.bind("XF86AudioNext", hl.dsp.exec_cmd("settings_control.sh play_next"))
 
 -- Screenshot
 hl.bind(mainMod .. " + Print", hl.dsp.exec_cmd("screenshot.sh --sel"))
-hl.bind("Print", hl.dsp.exec_cmd("screenshot.sh"))
+hl.bind("Print", hl.dsp.exec_cmd("quickshell -p " .. os.getenv("HOME") .. "/dotfiles/quickshell ipc call qsIpc toggleScreenshotMenu"))
 hl.bind(mainMod .. " + CTRL + Print", hl.dsp.exec_cmd("screenshot.sh --stop"))
 
 -- Resize Submap
@@ -316,7 +351,7 @@ hl.window_rule({
 hl.layer_rule({
     name  = "quickshell-widgets-blur",
     match = { namespace = "quickshell_widgets" },
-    blur  = true,
+    blur  = false,
     ignore_alpha = 0.05
 })
 
@@ -336,8 +371,16 @@ hl.layer_rule({
 })
 
 hl.layer_rule({
-    match = { namespace = "quickshell_bar" },
-    blur = false,
-    ignore_alpha = 0.2,
+    name  = "quickshell-blur",
+    match = { namespace = "quickshell" },
+    blur  = false,
+    ignore_alpha = 0.05,
     animation = "fade"
+})
+
+hl.layer_rule({
+    name  = "quickshell-bar-blur",
+    match = { namespace = "quickshell_bar" },
+    blur  = true,
+    ignore_alpha = 0.8
 })

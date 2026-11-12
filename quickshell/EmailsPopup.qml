@@ -3,13 +3,23 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import Quickshell
 import Quickshell.Io
+import Quickshell.Wayland
 
-PopupWindow {
+PanelWindow {
     id: emailsPopup
+    anchors.top: true
+    anchors.left: true
+    anchors.right: true
+    anchors.bottom: true
+    color: "transparent"
+
     property bool show: false
     property var shellRoot
+    readonly property real fontScale: scaleFactor * (shellRoot ? shellRoot.fontSizeMultiplier : 1.0)
     property var groundControlWindow
-    grabFocus: show
+
+    WlrLayershell.keyboardFocus: show ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+    WlrLayershell.namespace: "quickshell_widgets"
 
     property real savedX: 0
     property real savedY: 0
@@ -17,30 +27,20 @@ PopupWindow {
     property real savedH: 0
 
     onShowChanged: {
-        if (show && groundControlWindow && groundControlWindow.cardEmails) {
-            var pos = groundControlWindow.cardEmails.mapToItem(null, 0, 0);
-            savedX = pos.x;
-            savedY = pos.y;
-            savedW = groundControlWindow.cardEmails.width;
-            savedH = groundControlWindow.cardEmails.height;
-
+        if (show) {
+            if (groundControlWindow && groundControlWindow.cardEmails) {
+                var pos = groundControlWindow.cardEmails.mapToItem(null, 0, 0);
+                savedX = pos.x;
+                savedY = pos.y;
+                savedW = groundControlWindow.cardEmails.width;
+                savedH = groundControlWindow.cardEmails.height;
+            }
             pEmailsToday.running = false;
             pEmailsToday.running = true;
         }
     }
 
-    anchor {
-        window: groundControlWindow
-        rect: Qt.rect(savedX, savedY, savedW, savedH)
-        edges: Edges.Right | Edges.Top
-        gravity: Edges.Right | Edges.Bottom
-    }
-
     visible: show || animRectEmails.opacity > 0
-
-    implicitWidth: 280
-    implicitHeight: 320
-    color: "transparent"
 
     ListModel {
         id: emailsModel
@@ -48,7 +48,7 @@ PopupWindow {
 
     Process {
         id: pEmailsToday
-        command: [shellRoot ? shellRoot.scriptsDir + "/emails_today.py" : ""]
+        command: shellRoot ? ["python3", shellRoot.scriptsDir + "/emails_today.py"] : []
         running: false
         property var tempEmails: []
         stdout: SplitParser {
@@ -78,51 +78,41 @@ PopupWindow {
     }
 
     Item {
+        id: popupContent
         anchors.fill: parent
+        focus: show
+
+        Keys.onEscapePressed: show = false
+
+        MouseArea {
+            anchors.fill: parent
+            enabled: show
+            onClicked: show = false
+        }
 
         Rectangle {
             id: animRectEmails
-            anchors.fill: parent
-            anchors.leftMargin: 12
-
-            color: Qt.rgba(0.08, 0.08, 0.08, 0.95)
-            radius: 16
-            border.color: Qt.rgba(1, 1, 1, 0.1)
-            border.width: 1
+            color: "transparent"
+            x: (savedX > 0) ? (savedX + savedW + Math.round(8 * (shellRoot ? shellRoot.scaleFactor : 1.0))) : (groundControlWindow ? (((groundControlWindow.width - groundControlWindow.targetWidth) / 2) + groundControlWindow.targetWidth + Math.round(12 * (shellRoot ? shellRoot.scaleFactor : 1.0))) : Math.round((parent.width - width) / 2))
+            y: (savedY > 0) ? savedY : Math.round((parent.height - height) / 2)
+            width: Math.round(280 * (shellRoot ? shellRoot.scaleFactor : 1.0))
+            height: Math.round(320 * (shellRoot ? shellRoot.scaleFactor : 1.0))
+            radius: Math.round(4 * (shellRoot ? shellRoot.scaleFactor : 1.0))
 
             opacity: emailsPopup.show ? 1.0 : 0.0
-            scale: emailsPopup.show ? 1.0 : 0.95
-            x: emailsPopup.show ? 0 : 16
+            scale: emailsPopup.show ? 1.0 : 0.98
 
-            Behavior on opacity {
-                SequentialAnimation {
-                    PauseAnimation {
-                        duration: (shellRoot && shellRoot.batteryMode) ? 0 : (emailsPopup.show ? 80 : 0)
-                    }
-                    NumberAnimation {
-                        duration: (shellRoot && shellRoot.batteryMode) ? 150 : (emailsPopup.show ? 180 : 150)
-                        easing.type: emailsPopup.show ? Easing.OutQuad : Easing.InQuad
-                    }
-                }
-            }
-            Behavior on scale {
-                enabled: true
-                SpringAnimation {
-                    spring: 3.0
-                    damping: 0.75
-                    mass: 0.9
-                }
-            }
-            Behavior on x {
-                enabled: true
-                SpringAnimation {
-                    spring: 2.8
-                    damping: 0.75
-                    mass: 0.9
-                }
-            }
+            Behavior on opacity { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
+            Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
 
-            ColumnLayout {
+            // SurfaceCard Base (Option B, Zero Shader Overhead)
+            SurfaceCard {
+                id: emailsGlassCard
+                anchors.fill: parent
+                radius: animRectEmails.radius
+                contentPadding: 0
+            }
+                ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: 14
                 spacing: 10
@@ -138,7 +128,7 @@ PopupWindow {
                         font.pixelSize: 16
                     }
                     Text {
-                        text: "Today's Emails"
+                        text: "Recent Emails"
                         color: shellRoot ? shellRoot.colFg : "#ffffff"
                         font {
                             family: shellRoot ? shellRoot.fontFamily : "sans-serif"
@@ -189,6 +179,7 @@ PopupWindow {
                                 bold: true
                             }
                             elide: Text.ElideRight
+                            maximumLineCount: 1
                             Layout.fillWidth: true
                         }
                         Text {
@@ -199,6 +190,7 @@ PopupWindow {
                                 pixelSize: 10
                             }
                             elide: Text.ElideRight
+                            maximumLineCount: 1
                             Layout.fillWidth: true
                         }
 

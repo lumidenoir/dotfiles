@@ -6,9 +6,9 @@
 * {
     border: none;
     font-family: "JetBrainsMono Nerd Font";
-    font-size: 15px;
+    font-size: 13px;
     box-shadow: none;
-    min-width: 28px;
+    min-width: 24px;
 }
 
 window#waybar {
@@ -41,7 +41,7 @@ window#waybar {
     margin: 0 4px;
     /* border: solid 2px @foreground; */
     border-radius: 10px;
-    min-height: 30px;
+    min-height: 26px;
 }
 
 /* ======================= */
@@ -60,7 +60,7 @@ window#waybar {
     margin: 0 4px;
     /* border: solid 2px transparent; */
     border-radius: 10px;
-    min-height: 30px;
+    min-height: 26px;
 }
 
 #workspaces button.active {
@@ -91,7 +91,7 @@ window#waybar {
     color: @foreground;
     background: @background;
     font-weight: 500;
-    min-height: 30px;
+    min-height: 26px;
 }
 
 #mpris {
@@ -100,7 +100,7 @@ window#waybar {
     margin: 0 4px;
     border-radius: 10px;
     background: @background;
-    min-height: 30px;
+    min-height: 26px;
 }
 
 #mpris.playing {
@@ -124,7 +124,7 @@ window#waybar {
     padding: 0 12px;
     margin: 0 4px;
     border-radius: 10px;
-    min-height: 30px;
+    min-height: 26px;
 }
 
 #cpu {
@@ -133,7 +133,7 @@ window#waybar {
     padding: 0 12px;
     margin: 0 4px;
     border-radius: 10px;
-    min-height: 30px;
+    min-height: 26px;
 }
 
 #memory {
@@ -141,7 +141,30 @@ window#waybar {
     padding: 0 12px;
     border-radius: 10px;
     margin: 0 4px;
-    min-height: 30px
+    min-height: 26px
+}
+
+#temperature {
+    color: @foreground;
+    background: @background;
+    padding: 0 12px;
+    margin: 0 4px;
+    border-radius: 10px;
+    min-height: 26px;
+}
+
+#temperature.critical {
+    color: #cc241d;
+    background: rgba(255, 0, 0, 0.1);
+}
+
+#disk {
+    color: @foreground;
+    background: @background;
+    padding: 0 12px;
+    margin: 0 4px;
+    border-radius: 10px;
+    min-height: 26px;
 }
 
 /* ======================= */
@@ -153,7 +176,7 @@ window#waybar {
     margin: 0 4px;
     /* border: solid 2px @foreground; */
     border-radius: 10px;
-    min-height: 30px;
+    min-height: 26px;
 }
 
 #privacy {
@@ -162,7 +185,7 @@ window#waybar {
     margin: 0 4px;
     /* border: solid 2px #d79921; */
     border-radius: 10px;
-    min-height: 30px;
+    min-height: 26px;
 }
 
 #privacy-item {
@@ -180,7 +203,7 @@ window#waybar {
     margin: 0 4px;
     /* border: solid 2px @foreground; */
     border-radius: 10px;
-    min-height: 30px;
+    min-height: 26px;
 }
 
 tooltip class {
@@ -194,7 +217,7 @@ tooltip class {
     margin: 0 4px;
     /* border: solid 2px @textcolor; */
     border-radius: 10px;
-    min-height: 30px;
+    min-height: 26px;
 }
 
 /* Green class - no updates or low count */
@@ -222,7 +245,7 @@ tooltip class {
     margin: 0 4px;
     /* border: solid 2px @foreground; */
     border-radius: 10px;
-    min-height: 30px;
+    min-height: 26px;
 }
 
 #power-profiles-daemon.performance {
@@ -253,7 +276,7 @@ tooltip class {
     margin: 0 4px;
     /* border: solid 2px @foreground; */
     border-radius: 10px;
-    min-height: 30px;
+    min-height: 26px;
 }
 
 #bluetooth {
@@ -263,7 +286,7 @@ tooltip class {
     margin: 0 4px;
     /* border: solid 2px @foreground; */
     border-radius: 10px;
-    min-height: 30px;
+    min-height: 26px;
 }
 
 #network.disabled {
@@ -289,7 +312,7 @@ tooltip class {
     margin: 0 4px;
     /* border: solid 2px @foreground; */
     border-radius: 10px;
-    min-height: 30px;
+    min-height: 26px;
 }
 
 #pulseaudio.sink-muted {
@@ -315,7 +338,7 @@ tooltip class {
     padding: 0 12px;
     margin: 0 4px;
     border-radius: 10px;
-    min-height: 30px;
+    min-height: 26px;
 }
 
 #pulseaudio-slider slider {
@@ -349,7 +372,7 @@ tooltip class {
     margin: 0 4px;
     /* border: solid 2px @foreground; */
     border-radius: 10px;
-    min-height: 30px;
+    min-height: 26px;
 }
 
 #backlight-slider {
@@ -357,7 +380,7 @@ tooltip class {
     padding: 0 12px;
     margin: 0 4px;
     border-radius: 10px;
-    min-height: 30px;
+    min-height: 26px;
 }
 
 #backlight-slider slider {
@@ -391,7 +414,7 @@ tooltip class {
     margin: 0 4px;
     /* border: solid 2px @foreground; */
     border-radius: 10px;
-    min-height: 30px;
+    min-height: 26px;
 }
 
 #battery.plugged,
@@ -420,7 +443,7 @@ tooltip class {
     padding: 0 12px;
     margin: 0 4px;
     border-radius: 10px;
-    min-height: 30px;
+    min-height: 26px;
 }
 
 #custom-notification.notification {
@@ -444,7 +467,7 @@ tooltip class {
     padding: 0 12px;
     /* border: solid 2px @foreground; */
     border-radius: 10px;
-    min-height: 30px;
+    min-height: 26px;
 }
 
 /* ======================== */

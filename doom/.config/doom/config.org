@@ -206,7 +206,7 @@ Instead of manually swapping fonts and syncing doom, use =M-x lumi/load-ui-prese
       (lumi/apply-ui-preset preset-name))))
 
 ;; Set default on startup
-(lumi/apply-ui-preset "JBM")
+(lumi/apply-ui-preset "Metric Perfect")
 #+end_src
 
 ** Which-Key Enhancements
@@ -243,9 +243,9 @@ Basic setup for Org variables, directories, and auto-indentation behaviors.
 (after! org
   (setq org-format-latex-options
         (plist-put org-format-latex-options :scale 0.85)))
-(setq org-cite-csl-styles-dir "/home/lumi/Zotero/styles") ;; Path to CSL styles for citations
-(setq reftex-default-bibliography "/home/lumi/org/zotero.bib"
-      org-agenda-files '("/home/lumi/org/todo.org" "/home/lumi/org/todoist.org")
+(setq org-cite-csl-styles-dir "/home/krishna/Zotero/styles") ;; Path to CSL styles for citations
+(setq reftex-default-bibliography "/home/krishna/org/zotero.bib"
+      org-agenda-files '("/home/krishna/org/todo.org" "/home/lumi/org/todoist.org")
       org-fold-catch-invisible-edits 'smart)
 (setq org-export-headline-levels 5) ; I like nesting
 (setq org-ellipsis " ▾ ")
@@ -598,7 +598,7 @@ Super-agenda groups and filters items in Org-agenda views for better organizatio
 (use-package! org-heatmap
   :after (org)
   :custom
-  (org-heatmap-db-location "/home/lumi/org/org-heatmap.db")
+  (org-heatmap-db-location "/home/krishna/org/org-heatmap.db")
   :config
   (org-heatmap-mode))
 
@@ -770,7 +770,7 @@ Mu4e is an email client for Emacs. This configuration sets up multiple email acc
                       (mu4e-trash-folder            . "/iitk/Trash")
                       (mu4e-refile-folder           . "/iitk/All Mail")
                       (user-mail-address            . "viveksk21@iitk.ac.in")
-                      (user-full-name               . "Lumi Dantu")
+                      (user-full-name               . "Krishna Dantu")
                       (smtpmail-smtp-user           . "viveksk21@iitk.ac.in")
                       (smtpmail-default-smtp-server . "mmtp.iitk.ac.in")
                       (smtpmail-smtp-server         . "smtp.cc.iitk.ac.in")
@@ -922,7 +922,6 @@ A custom workflow built for solving Codeforces (CF) programming puzzles natively
 #+end_src
 
 * 7. Miscellany (EPUBs, Scripts, Spells)
-
 ** nov.el (EPUB Reader)
 #+begin_src emacs-lisp :tangle no
 (use-package! nov

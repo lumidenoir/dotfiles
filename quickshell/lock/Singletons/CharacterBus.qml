@@ -1,0 +1,1 @@
+../../Singletons/CharacterBus.qml

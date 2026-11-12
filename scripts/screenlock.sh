@@ -1,10 +1,30 @@
 #!/usr/bin/env bash
-pkill rofi
-# playerctl pause
-# mpc pause-if-playing
+pkill -x rofi
+qs ipc call qsIpc onLock >/dev/null 2>&1 || true
 
 if [ "$WAYLAND_DISPLAY" ]; then
-        hyprlock
+        # Start the lock daemon if not already running
+        if ! qs -p "$HOME/dotfiles/quickshell/lock" ipc show >/dev/null 2>&1; then
+             qs -p "$HOME/dotfiles/quickshell/lock" -d
+             sleep 0.1
+        fi
+        
+        # Wait for the main bar's 'onLock' animations (like hiding the notch) to fully finish 
+        # so they don't get captured in the background snapshot
+        sleep 0.25
+        
+        # Capture monitor screenshots for seamless blur morphing
+        umask 077
+        dir="${XDG_RUNTIME_DIR:-/tmp}"
+        for out in $(hyprctl monitors -j | jq -r '.[].name'); do
+            [ -n "$out" ] || continue
+            rm -f "$dir/ricelin-lock-$out.png"
+            grim -o "$out" "$dir/ricelin-lock-$out.png" 2>/dev/null &
+        done
+        wait
+        
+        # Trigger lock via file write
+        date +%s%N > "$dir/ricelin-lock-trigger"
 else
         fg="#D9E0EE"
         unlocker="#00000000"

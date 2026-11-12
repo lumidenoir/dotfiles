@@ -2,322 +2,222 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
+import "Character"
 
 Window {
     id: settingsWin
     title: "Ground Control Settings"
-    width: Math.round(480 * scaleFactor)
-    height: Math.round(620 * scaleFactor)
-    color: "#0a0a0c"
+    width: Math.round(420 * scaleFactor)
+    height: Math.round(440 * scaleFactor)
+    color: "transparent"
+    flags: Qt.FramelessWindowHint | Qt.Window
     visible: false
 
     property var shellRoot: null
     readonly property real scaleFactor: shellRoot ? shellRoot.scaleFactor : 1.0
-    readonly property string fontFamily: shellRoot ? shellRoot.fontFamily : "sans-serif"
-    readonly property string iconFontFamily: shellRoot ? shellRoot.iconFontFamily : "sans-serif"
+    readonly property real fontScale: scaleFactor * (shellRoot ? shellRoot.fontSizeMultiplier : 1.0)
+    readonly property string monoFont: "Ioskeley Mono"
+    readonly property string iconFontFamily: "Symbols Nerd Font"
 
-    // Background gradient for a premium look
+    // ── TE / INDUSTRIAL TERMINAL CASING ──
+    // Pure razor-sharp 0px radius, pitch black OLED (#000000), double hairline borders
     Rectangle {
+        id: casing
         anchors.fill: parent
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: "#0d0d11" }
-            GradientStop { position: 1.0; color: "#060608" }
-        }
-    }
+        color: "#000000"
+        border.color: "#212836"
+        border.width: 1
+        radius: 0
 
-    // Scrollable container for settings
-    Flickable {
-        anchors.fill: parent
-        contentHeight: mainCol.implicitHeight + 40 * scaleFactor
-        anchors.margins: 20 * scaleFactor
-        clip: true
+        // Inner secondary wireframe border (Teenage Engineering instrument chassis)
+        Rectangle {
+            anchors.fill: parent
+            anchors.margins: 2
+            color: "transparent"
+            border.color: "#101622"
+            border.width: 1
+            radius: 0
+        }
 
         ColumnLayout {
-            id: mainCol
-            anchors.left: parent.left
-            anchors.right: parent.right
-            spacing: 16 * scaleFactor
+            anchors.fill: parent
+            anchors.margins: 4
+            spacing: 0
 
-            // Header Section
-            RowLayout {
+            // ── TOP TELEMETRY RAIL & TITLE BAR (DRAGGABLE) ──────────────────
+            Item {
                 Layout.fillWidth: true
-                spacing: 12 * scaleFactor
+                Layout.preferredHeight: Math.round(36 * scaleFactor)
 
-                Text {
-                    text: "󰒓"
-                    color: "#3b82f6"
-                    font { family: settingsWin.iconFontFamily; pixelSize: 26 * scaleFactor; bold: true }
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.SizeAllCursor
+                    onPressed: settingsWin.startSystemMove()
                 }
 
-                ColumnLayout {
-                    spacing: 2 * scaleFactor
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: Math.round(8 * scaleFactor)
+                    anchors.rightMargin: Math.round(8 * scaleFactor)
+                    spacing: Math.round(8 * scaleFactor)
+
                     Text {
-                        text: "Quickshell Settings"
-                        color: "#ffffff"
-                        font { family: settingsWin.fontFamily; pixelSize: 18 * scaleFactor; bold: true }
+                        text: "┌─ [PREFS] SYSTEM CONFIG // TE-01"
+                        color: "#0A84FF"
+                        font { family: settingsWin.monoFont; pixelSize: Math.round(10.5 * scaleFactor); bold: true }
                     }
-                    Text {
-                        text: "Customize dynamic island physics, delays, and desktop styles"
-                        color: "#6b7280"
-                        font { family: settingsWin.fontFamily; pixelSize: 10 * scaleFactor }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        height: 1
+                        color: "#212836"
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+
+                    // Status Pill
+                    Rectangle {
+                        width: Math.round(48 * scaleFactor)
+                        height: Math.round(18 * scaleFactor)
+                        color: "#0c1f12"
+                        border.color: "#30D158"
+                        border.width: 1
+                        radius: 0
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "ONLINE"
+                            color: "#30D158"
+                            font { family: settingsWin.monoFont; pixelSize: Math.round(8 * scaleFactor); bold: true }
+                        }
+                    }
+
+                    // Terminal Close [X] Button
+                    Rectangle {
+                        width: Math.round(20 * scaleFactor)
+                        height: Math.round(18 * scaleFactor)
+                        color: closeMa.containsMouse ? "#3d1414" : "#0d1117"
+                        border.color: closeMa.containsMouse ? "#FF453A" : "#30363d"
+                        border.width: 1
+                        radius: 0
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "×"
+                            color: closeMa.containsMouse ? "#FF453A" : "#8b949e"
+                            font { family: settingsWin.monoFont; pixelSize: Math.round(11 * scaleFactor); bold: true }
+                        }
+
+                        MouseArea {
+                            id: closeMa
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: settingsWin.visible = false
+                        }
                     }
                 }
             }
 
-            // Separator
+            // Divider line
             Rectangle {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 1
-                color: Qt.rgba(1, 1, 1, 0.08)
+                height: 1
+                color: "#161b22"
             }
 
-            // GROUP 1: Dynamic Island Physics
+            // ── BODY (TE INSTRUMENT SLOTS) ───────────────────────────────────
             ColumnLayout {
                 Layout.fillWidth: true
-                spacing: 6 * scaleFactor
+                Layout.fillHeight: true
+                Layout.margins: Math.round(12 * scaleFactor)
+                spacing: Math.round(12 * scaleFactor)
 
-                Text {
-                    text: "DYNAMIC ISLAND SPRINGS"
-                    color: "#3b82f6"
-                    font { family: settingsWin.fontFamily; pixelSize: 9 * scaleFactor; bold: true }
-                }
-
+                // ── [01] MINIMO EMBODIED AI APPEARANCE ───────────────────────
                 Rectangle {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: physicsCol.implicitHeight + 24 * scaleFactor
-                    color: Qt.rgba(1, 1, 1, 0.03)
-                    radius: 12 * scaleFactor
-                    border.color: Qt.rgba(1, 1, 1, 0.08)
+                    Layout.preferredHeight: Math.round(84 * scaleFactor)
+                    color: "#050608"
+                    border.color: "#1c212c"
                     border.width: 1
+                    radius: 0
 
                     ColumnLayout {
-                        id: physicsCol
                         anchors.fill: parent
-                        anchors.margins: 12 * scaleFactor
-                        spacing: 12 * scaleFactor
-
-                        // Stiffness (Spring)
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            spacing: 4 * scaleFactor
-                            RowLayout {
-                                Layout.fillWidth: true
-                                Text { text: "Stiffness / Tension"; color: "#ffffff"; font { family: settingsWin.fontFamily; pixelSize: 11 * scaleFactor; bold: true } }
-                                Spacer {}
-                                Text { text: (shellRoot ? shellRoot.notchSpringStiffness.toFixed(1) : "3.5"); color: "#3b82f6"; font { family: settingsWin.fontFamily; pixelSize: 11 * scaleFactor } }
-                            }
-                            ModernSlider {
-                                shellRoot: settingsWin.shellRoot
-                                sliderAccent: "#3b82f6"
-                                from: 1.0; to: 10.0
-                                value: shellRoot ? shellRoot.notchSpringStiffness : 3.5
-                                onMoved: {
-                                    if (shellRoot) shellRoot.notchSpringStiffness = value;
-                                }
-                            }
-                        }
-
-                        // Damping
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            spacing: 4 * scaleFactor
-                            RowLayout {
-                                Layout.fillWidth: true
-                                Text { text: "Damping / Bounce"; color: "#ffffff"; font { family: settingsWin.fontFamily; pixelSize: 11 * scaleFactor; bold: true } }
-                                Spacer {}
-                                Text { text: (shellRoot ? shellRoot.notchSpringDamping.toFixed(2) : "0.62"); color: "#3b82f6"; font { family: settingsWin.fontFamily; pixelSize: 11 * scaleFactor } }
-                            }
-                            ModernSlider {
-                                shellRoot: settingsWin.shellRoot
-                                sliderAccent: "#3b82f6"
-                                from: 0.3; to: 1.0
-                                value: shellRoot ? shellRoot.notchSpringDamping : 0.62
-                                onMoved: {
-                                    if (shellRoot) shellRoot.notchSpringDamping = value;
-                                }
-                            }
-                        }
-
-                        // Mass
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            spacing: 4 * scaleFactor
-                            RowLayout {
-                                Layout.fillWidth: true
-                                Text { text: "Inertia / Mass"; color: "#ffffff"; font { family: settingsWin.fontFamily; pixelSize: 11 * scaleFactor; bold: true } }
-                                Spacer {}
-                                Text { text: (shellRoot ? shellRoot.notchSpringMass.toFixed(2) : "0.75"); color: "#3b82f6"; font { family: settingsWin.fontFamily; pixelSize: 11 * scaleFactor } }
-                            }
-                            ModernSlider {
-                                shellRoot: settingsWin.shellRoot
-                                sliderAccent: "#3b82f6"
-                                from: 0.1; to: 2.0
-                                value: shellRoot ? shellRoot.notchSpringMass : 0.75
-                                onMoved: {
-                                    if (shellRoot) shellRoot.notchSpringMass = value;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // GROUP 2: Timings & Delays
-            ColumnLayout {
-                Layout.fillWidth: true
-                spacing: 6 * scaleFactor
-
-                Text {
-                    text: "TIMINGS & DELAYS"
-                    color: "#10b981"
-                    font { family: settingsWin.fontFamily; pixelSize: 9 * scaleFactor; bold: true }
-                }
-
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: timingsCol.implicitHeight + 24 * scaleFactor
-                    color: Qt.rgba(1, 1, 1, 0.03)
-                    radius: 12 * scaleFactor
-                    border.color: Qt.rgba(1, 1, 1, 0.08)
-                    border.width: 1
-
-                    ColumnLayout {
-                        id: timingsCol
-                        anchors.fill: parent
-                        anchors.margins: 12 * scaleFactor
-                        spacing: 12 * scaleFactor
-
-                        // LocalSend Dismiss
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            spacing: 4 * scaleFactor
-                            RowLayout {
-                                Layout.fillWidth: true
-                                Text { text: "LocalSend Success Duration"; color: "#ffffff"; font { family: settingsWin.fontFamily; pixelSize: 11 * scaleFactor; bold: true } }
-                                Spacer {}
-                                Text { text: (shellRoot ? (shellRoot.localSendDismissDelay / 1000.0).toFixed(1) + "s" : "2.0s"); color: "#10b981"; font { family: settingsWin.fontFamily; pixelSize: 11 * scaleFactor } }
-                            }
-                            ModernSlider {
-                                shellRoot: settingsWin.shellRoot
-                                sliderAccent: "#10b981"
-                                from: 1000; to: 5000
-                                value: shellRoot ? shellRoot.localSendDismissDelay : 2000
-                                onMoved: {
-                                    if (shellRoot) shellRoot.localSendDismissDelay = Math.round(value);
-                                }
-                            }
-                        }
-
-                        // LocalSend Text Reveal Delay
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            spacing: 4 * scaleFactor
-                            RowLayout {
-                                Layout.fillWidth: true
-                                Text { text: "LocalSend Drop text Delay"; color: "#ffffff"; font { family: settingsWin.fontFamily; pixelSize: 11 * scaleFactor; bold: true } }
-                                Spacer {}
-                                Text { text: (shellRoot ? shellRoot.localSendRevealDelay + "ms" : "140ms"); color: "#10b981"; font { family: settingsWin.fontFamily; pixelSize: 11 * scaleFactor } }
-                            }
-                            ModernSlider {
-                                shellRoot: settingsWin.shellRoot
-                                sliderAccent: "#10b981"
-                                from: 50; to: 400
-                                value: shellRoot ? shellRoot.localSendRevealDelay : 140
-                                onMoved: {
-                                    if (shellRoot) shellRoot.localSendRevealDelay = Math.round(value);
-                                }
-                            }
-                        }
-
-                        // Notification dismiss time
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            spacing: 4 * scaleFactor
-                            RowLayout {
-                                Layout.fillWidth: true
-                                Text { text: "Notification Banner Duration"; color: "#ffffff"; font { family: settingsWin.fontFamily; pixelSize: 11 * scaleFactor; bold: true } }
-                                Spacer {}
-                                Text { text: (shellRoot ? (shellRoot.notifDismissDelay / 1000.0).toFixed(1) + "s" : "4.5s"); color: "#10b981"; font { family: settingsWin.fontFamily; pixelSize: 11 * scaleFactor } }
-                            }
-                            ModernSlider {
-                                shellRoot: settingsWin.shellRoot
-                                sliderAccent: "#10b981"
-                                from: 2000; to: 10000
-                                value: shellRoot ? shellRoot.notifDismissDelay : 4500
-                                onMoved: {
-                                    if (shellRoot) shellRoot.notifDismissDelay = Math.round(value);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // GROUP 3: Layout Behaviors
-            ColumnLayout {
-                Layout.fillWidth: true
-                spacing: 6 * scaleFactor
-
-                Text {
-                    text: "LAYOUT STYLE"
-                    color: "#f59e0b"
-                    font { family: settingsWin.fontFamily; pixelSize: 9 * scaleFactor; bold: true }
-                }
-
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: behaviorsCol.implicitHeight + 24 * scaleFactor
-                    color: Qt.rgba(1, 1, 1, 0.03)
-                    radius: 12 * scaleFactor
-                    border.color: Qt.rgba(1, 1, 1, 0.08)
-                    border.width: 1
-
-                    ColumnLayout {
-                        id: behaviorsCol
-                        anchors.fill: parent
-                        anchors.margins: 12 * scaleFactor
+                        anchors.margins: Math.round(8 * scaleFactor)
+                        spacing: Math.round(6 * scaleFactor)
 
                         RowLayout {
                             Layout.fillWidth: true
-                            spacing: 12 * scaleFactor
+                            spacing: Math.round(6 * scaleFactor)
 
-                            ColumnLayout {
-                                spacing: 2 * scaleFactor
-                                Text { text: "Top-Hugging Notch style"; color: "#ffffff"; font { family: settingsWin.fontFamily; pixelSize: 11 * scaleFactor; bold: true } }
-                                Text { text: "Removes margin to dock the Dynamic Island directly at screen edge"; color: "#6b7280"; font { family: settingsWin.fontFamily; pixelSize: 9 * scaleFactor } }
+                            Text {
+                                text: ":: [01] MINIMO AI EMBODIMENT"
+                                color: "#00E5FF"
+                                font { family: settingsWin.monoFont; pixelSize: Math.round(9.5 * scaleFactor); bold: true }
+                            }
+                            Rectangle { Layout.fillWidth: true; height: 1; color: "#161b22" }
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Math.round(10 * scaleFactor)
+
+                            Character {
+                                size: Math.round(32 * scaleFactor)
+                                active: settingsWin.visible
+                                sphereColor: (settingsWin.shellRoot && settingsWin.shellRoot.minimoBotMode === "light") ? "#FFFFFF" : "#14171F"
+                                eyeColor: (settingsWin.shellRoot && settingsWin.shellRoot.minimoBotMode === "light") ? "#07080B" : "#00E5FF"
                             }
 
-                            Spacer {}
-
-                            // Custom toggle switch
-                            Item {
-                                id: hugSwitch
-                                implicitWidth: 44 * scaleFactor
-                                implicitHeight: 24 * scaleFactor
-                                property bool checked: shellRoot ? shellRoot.topHuggingStyle : false
-
-                                Rectangle {
-                                    anchors.fill: parent
-                                    radius: 12 * scaleFactor
-                                    color: hugSwitch.checked ? "#3b82f6" : Qt.rgba(1, 1, 1, 0.15)
-                                    Behavior on color { ColorAnimation { duration: 150 } }
-
-                                    Rectangle {
-                                        x: hugSwitch.checked ? 22 * scaleFactor : 2 * scaleFactor
-                                        y: 2 * scaleFactor
-                                        width: 20 * scaleFactor
-                                        height: 20 * scaleFactor
-                                        radius: 10 * scaleFactor
-                                        color: "#ffffff"
-                                        Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-                                    }
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: 1
+                                Text {
+                                    text: (settingsWin.shellRoot && settingsWin.shellRoot.minimoBotMode === "light")
+                                        ? "PALE PORCELAIN CHITIN"
+                                        : "OBSIDIAN VOID CHITIN"
+                                    color: "#F0F6FC"
+                                    font { family: settingsWin.monoFont; pixelSize: Math.round(10 * scaleFactor); bold: true }
                                 }
+                                Text {
+                                    text: (settingsWin.shellRoot && settingsWin.shellRoot.minimoBotMode === "light")
+                                        ? "OPTICS: DARK CORE // SHELL: LIGHT"
+                                        : "OPTICS: ELECTRIC CYAN // SHELL: DARK"
+                                    color: "#6e7681"
+                                    font { family: settingsWin.monoFont; pixelSize: Math.round(8 * scaleFactor) }
+                                }
+                            }
 
-                                MouseArea {
-                                    anchors.fill: parent
-                                    onClicked: {
-                                        if (shellRoot) {
-                                            shellRoot.topHuggingStyle = !shellRoot.topHuggingStyle;
+                            RowLayout {
+                                spacing: Math.round(4 * scaleFactor)
+
+                                Repeater {
+                                    model: [
+                                        { label: "DARK", mode: "dark" },
+                                        { label: "LIGHT", mode: "light" }
+                                    ]
+                                    Rectangle {
+                                        readonly property bool isSel: (settingsWin.shellRoot ? settingsWin.shellRoot.minimoBotMode : "dark") === modelData.mode
+                                        width: Math.round(58 * scaleFactor)
+                                        height: Math.round(24 * scaleFactor)
+                                        color: isSel ? "#0e1e2e" : (bMa.containsMouse ? "#12151c" : "#07090e")
+                                        border.color: isSel ? "#00E5FF" : "#212836"
+                                        border.width: 1
+                                        radius: 0
+
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: modelData.label
+                                            color: parent.isSel ? "#00E5FF" : "#8b949e"
+                                            font { family: settingsWin.monoFont; pixelSize: Math.round(9 * scaleFactor); bold: parent.isSel }
+                                        }
+
+                                        MouseArea {
+                                            id: bMa
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: if (settingsWin.shellRoot) settingsWin.shellRoot.setMinimoBotMode(modelData.mode)
                                         }
                                     }
                                 }
@@ -325,52 +225,206 @@ Window {
                         }
                     }
                 }
-            }
 
-            // Spacer
-            Item { Layout.preferredHeight: 12 * scaleFactor }
-
-            // Action Buttons Footer
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: 12 * scaleFactor
-
-                // Reset Button
-                ModernButton {
-                    text: "Reset Defaults"
-                    iconText: "󰁯"
-                    accent: "#ef4444"
+                // ── [02] VISUALIZER SHADER SELECTION ─────────────────────────
+                Rectangle {
                     Layout.fillWidth: true
-                    onClicked: {
-                        if (shellRoot) {
-                            shellRoot.topHuggingStyle = false;
-                            shellRoot.notchSpringStiffness = 3.5;
-                            shellRoot.notchSpringDamping = 0.62;
-                            shellRoot.notchSpringMass = 0.75;
-                            shellRoot.localSendDismissDelay = 2000;
-                            shellRoot.localSendRevealDelay = 140;
-                            shellRoot.notifDismissDelay = 4500;
+                    Layout.preferredHeight: Math.round(80 * scaleFactor)
+                    color: "#050608"
+                    border.color: "#1c212c"
+                    border.width: 1
+                    radius: 0
+
+                    ColumnLayout {
+                        anchors.fill: parent
+                        anchors.margins: Math.round(8 * scaleFactor)
+                        spacing: Math.round(6 * scaleFactor)
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Math.round(6 * scaleFactor)
+
+                            Text {
+                                text: ":: [02] SPECTRAL AUDIO VISUALIZER ENGINE"
+                                color: "#30D158"
+                                font { family: settingsWin.monoFont; pixelSize: Math.round(9.5 * scaleFactor); bold: true }
+                            }
+                            Rectangle { Layout.fillWidth: true; height: 1; color: "#161b22" }
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Math.round(6 * scaleFactor)
+
+                            Repeater {
+                                model: [
+                                    { name: "GLOW [0]", val: 0, desc: "AMBIENT DIFFUSION" },
+                                    { name: "FLUID [1]", val: 1, desc: "HARMONIC MESH" },
+                                    { name: "TIDE [2]", val: 2, desc: "PROCEDURAL SWELL" }
+                                ]
+                                Rectangle {
+                                    readonly property bool isSel: (settingsWin.shellRoot ? settingsWin.shellRoot.visualizerShader : 0) === modelData.val
+                                    Layout.fillWidth: true
+                                    height: Math.round(38 * scaleFactor)
+                                    color: isSel ? "#0c1f12" : (vMa.containsMouse ? "#12151c" : "#07090e")
+                                    border.color: isSel ? "#30D158" : "#212836"
+                                    border.width: 1
+                                    radius: 0
+
+                                    ColumnLayout {
+                                        anchors.centerIn: parent
+                                        spacing: 1
+
+                                        Text {
+                                            text: modelData.name
+                                            color: parent.parent.isSel ? "#30D158" : "#8b949e"
+                                            font { family: settingsWin.monoFont; pixelSize: Math.round(9 * scaleFactor); bold: parent.parent.isSel }
+                                            Layout.alignment: Qt.AlignHCenter
+                                        }
+                                        Text {
+                                            text: modelData.desc
+                                            color: parent.parent.isSel ? "#30D158" : "#484f58"
+                                            opacity: 0.8
+                                            font { family: settingsWin.monoFont; pixelSize: Math.round(7 * scaleFactor) }
+                                            Layout.alignment: Qt.AlignHCenter
+                                        }
+                                    }
+
+                                    MouseArea {
+                                        id: vMa
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: if (settingsWin.shellRoot) settingsWin.shellRoot.visualizerShader = modelData.val
+                                    }
+                                }
+                            }
                         }
                     }
                 }
 
-                // Close Button
-                ModernButton {
-                    text: "Close Settings"
-                    iconText: "󰅖"
-                    accent: "#3b82f6"
+                // ── [03] TYPOGRAPHY SCALE / STEP ATTENUATOR ──────────────────
+                Rectangle {
                     Layout.fillWidth: true
-                    onClicked: {
-                        settingsWin.close();
+                    Layout.preferredHeight: Math.round(76 * scaleFactor)
+                    color: "#050608"
+                    border.color: "#1c212c"
+                    border.width: 1
+                    radius: 0
+
+                    ColumnLayout {
+                        anchors.fill: parent
+                        anchors.margins: Math.round(8 * scaleFactor)
+                        spacing: Math.round(8 * scaleFactor)
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Math.round(6 * scaleFactor)
+
+                            Text {
+                                text: ":: [03] UI TYPOGRAPHY SCALING"
+                                color: "#FF9F0A"
+                                font { family: settingsWin.monoFont; pixelSize: Math.round(9.5 * scaleFactor); bold: true }
+                            }
+
+                            Rectangle { Layout.fillWidth: true; height: 1; color: "#161b22" }
+
+                            Text {
+                                text: settingsWin.shellRoot ? (settingsWin.shellRoot.fontSizeMultiplier * 100).toFixed(0) + "%" : "100%"
+                                color: "#FF9F0A"
+                                font { family: settingsWin.monoFont; pixelSize: Math.round(10 * scaleFactor); bold: true }
+                            }
+                        }
+
+                        // Terminal Step Attenuator (Discrete block ticks)
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Math.round(4 * scaleFactor)
+
+                            Repeater {
+                                model: [
+                                    { label: "80%", val: 0.80 },
+                                    { label: "90%", val: 0.90 },
+                                    { label: "100%", val: 1.00 },
+                                    { label: "110%", val: 1.10 },
+                                    { label: "120%", val: 1.20 },
+                                    { label: "130%", val: 1.30 }
+                                ]
+                                Rectangle {
+                                    readonly property bool isCur: settingsWin.shellRoot && Math.abs(settingsWin.shellRoot.fontSizeMultiplier - modelData.val) < 0.05
+                                    Layout.fillWidth: true
+                                    height: Math.round(24 * scaleFactor)
+                                    color: isCur ? "#261608" : (fMa.containsMouse ? "#141720" : "#07090e")
+                                    border.color: isCur ? "#FF9F0A" : "#212836"
+                                    border.width: 1
+                                    radius: 0
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: modelData.label
+                                        color: parent.isCur ? "#FF9F0A" : "#6e7681"
+                                        font { family: settingsWin.monoFont; pixelSize: Math.round(8.5 * scaleFactor); bold: parent.isCur }
+                                    }
+
+                                    MouseArea {
+                                        id: fMa
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: if (settingsWin.shellRoot) settingsWin.shellRoot.fontSizeMultiplier = modelData.val
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Item { Layout.fillHeight: true }
+
+                // ── [04] FOOTER TELEMETRY & HARDWARE RESET ───────────────────
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: Math.round(28 * scaleFactor)
+                    color: rMa.containsMouse ? "#220d0d" : "#080a0e"
+                    border.color: rMa.containsMouse ? "#FF453A" : "#212836"
+                    border.width: 1
+                    radius: 0
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: Math.round(10 * scaleFactor)
+                        anchors.rightMargin: Math.round(10 * scaleFactor)
+
+                        Text {
+                            text: "[RESET] RESTORE FACTORY MATRIX DEFAULTS"
+                            color: rMa.containsMouse ? "#FF453A" : "#8b949e"
+                            font { family: settingsWin.monoFont; pixelSize: Math.round(9 * scaleFactor); bold: true }
+                        }
+
+                        Item { Layout.fillWidth: true }
+
+                        Text {
+                            text: "SYS_RST // CONFIRM"
+                            color: rMa.containsMouse ? "#FF453A" : "#484f58"
+                            font { family: settingsWin.monoFont; pixelSize: Math.round(8 * scaleFactor) }
+                        }
+                    }
+
+                    MouseArea {
+                        id: rMa
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            if (settingsWin.shellRoot) {
+                                settingsWin.shellRoot.setMinimoBotMode("dark");
+                                settingsWin.shellRoot.visualizerShader = 0;
+                                settingsWin.shellRoot.fontSizeMultiplier = 1.00;
+                            }
+                        }
                     }
                 }
             }
         }
-    }
-
-    // Helper item for layout alignment spacing
-    component Spacer : Item {
-        Layout.fillWidth: true
-        Layout.fillHeight: true
     }
 }

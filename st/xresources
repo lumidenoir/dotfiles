@@ -13,5 +13,5 @@ st.borderpx: 10
 !- 0.1 to 0.9 = transparency
 st.alpha: 1.0
 
-#include "themes/active.xresources"
+#include "themes/onedark.xresources"
 

@@ -36,14 +36,14 @@ return {
 		},
 	},
 	warn_about_missing_glyphs = false,
-	font_size = 11,
+	font_size = 10.5,
 	line_height = 1,
 
 	-- Cursor style
 	default_cursor_style = "BlinkingUnderline",
 
 	-- X11
-	enable_wayland = false,
+	enable_wayland = true,
 
 	-- Keybinds
 	disable_default_key_bindings = true,

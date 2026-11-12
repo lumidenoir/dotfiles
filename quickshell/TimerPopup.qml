@@ -15,6 +15,8 @@ PopupWindow {
     property real savedW: 0
     property real savedH: 0
 
+    property string currentTab: "timer" // "timer" | "alarms"
+
     anchor {
         window: groundControlWindow
         rect: Qt.rect(savedX, savedY, savedW, savedH)
@@ -25,7 +27,10 @@ PopupWindow {
     onShowChanged: {
         if (show) {
             timerInput.text = "";
-            timerInput.forceActiveFocus();
+            alarmInput.text = "";
+            if (currentTab === "timer") timerInput.forceActiveFocus();
+            else alarmInput.forceActiveFocus();
+
             if (groundControlWindow && groundControlWindow.btnTimer) {
                 var pos = groundControlWindow.btnTimer.mapToItem(null, 0, 0);
                 savedX = pos.x;
@@ -38,7 +43,7 @@ PopupWindow {
     property real animHeight: animRectTimer.height
     visible: show || animRectTimer.opacity > 0
 
-    implicitWidth: 200
+    implicitWidth: 240
     implicitHeight: layoutTimer.implicitHeight + 32
     color: "transparent"
 
@@ -51,43 +56,21 @@ PopupWindow {
             anchors.rightMargin: 12
 
             color: Qt.rgba(0.08, 0.08, 0.08, 0.95)
-            radius: 16
-            border.color: Qt.rgba(1, 1, 1, 0.1)
+            radius: 4
+            border.color: Qt.rgba(1, 1, 1, 0.08)
             border.width: 1
 
             opacity: timerPopup.show ? 1.0 : 0.0
-            scale: timerPopup.show ? 1.0 : 0.95
-            // A-4 FIX: slide in from left (negative x) since popup anchors to left of button
-            x: timerPopup.show ? 0 : -16
+            scale: timerPopup.show ? 1.0 : 0.98
+            x: timerPopup.show ? 0 : -8
             Behavior on opacity {
-                SequentialAnimation {
-                    // Open: let scale/x springs start first, then reveal
-                    // Close: exit immediately so springs bounce back behind nothing
-                    PauseAnimation {
-                        duration: (shellRoot && shellRoot.batteryMode) ? 0 : (timerPopup.show ? 80 : 0)
-                    }
-                    NumberAnimation {
-                        duration: (shellRoot && shellRoot.batteryMode) ? 150 : (timerPopup.show ? 180 : 150)
-                        easing.type: timerPopup.show ? Easing.OutQuad : Easing.InQuad
-                    }
-                }
+                NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
             }
             Behavior on scale {
-                enabled: true
-                // Match damping to x so both settle at the same time
-                SpringAnimation {
-                    spring: 3.0
-                    damping: 0.75
-                    mass: 0.9
-                }
+                NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
             }
             Behavior on x {
-                enabled: true
-                SpringAnimation {
-                    spring: 2.8
-                    damping: 0.75
-                    mass: 0.9
-                }
+                NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
             }
 
             ColumnLayout {
@@ -95,50 +78,226 @@ PopupWindow {
                 anchors.top: parent.top
                 anchors.left: parent.left
                 anchors.right: parent.right
-                anchors.margins: 16
-                spacing: 8
-                Text {
-                    text: "Timer (MM or MM:SS)"
-                    color: shellRoot ? Qt.rgba(shellRoot.colFg.r, shellRoot.colFg.g, shellRoot.colFg.b, 0.5) : "#88ffffff"
-                    font.family: shellRoot ? shellRoot.fontFamily : "sans-serif"
-                    font.pixelSize: 12
+                anchors.margins: 14
+                spacing: 10
+
+                // ── Tab Switcher: Timer | Alarms ──
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 4
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        height: 24
+                        radius: 4
+                        color: timerPopup.currentTab === "timer" ? Qt.rgba(1, 1, 1, 0.15) : "transparent"
+                        Behavior on color { ColorAnimation { duration: 150 } }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "󰔛 Timer"
+                            color: timerPopup.currentTab === "timer" ? "#FFFFFF" : Qt.rgba(1, 1, 1, 0.45)
+                            font {
+                                family: shellRoot ? shellRoot.textFontFamily : "sans-serif"
+                                pixelSize: 11
+                                weight: timerPopup.currentTab === "timer" ? Font.DemiBold : Font.Normal
+                            }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                timerPopup.currentTab = "timer";
+                                timerInput.forceActiveFocus();
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        height: 24
+                        radius: 4
+                        color: timerPopup.currentTab === "alarms" ? Qt.rgba(1, 1, 1, 0.15) : "transparent"
+                        Behavior on color { ColorAnimation { duration: 150 } }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "󰂞 Alarms"
+                            color: timerPopup.currentTab === "alarms" ? "#FFFFFF" : Qt.rgba(1, 1, 1, 0.45)
+                            font {
+                                family: shellRoot ? shellRoot.textFontFamily : "sans-serif"
+                                pixelSize: 11
+                                weight: timerPopup.currentTab === "alarms" ? Font.DemiBold : Font.Normal
+                            }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                timerPopup.currentTab = "alarms";
+                                alarmInput.forceActiveFocus();
+                            }
+                        }
+                    }
                 }
 
-                TextField {
-                    id: timerInput
+                // ── TAB 1: Countdown Timer ──
+                ColumnLayout {
                     Layout.fillWidth: true
-                    placeholderText: "e.g. 5 or 1:30"
-                    color: shellRoot ? shellRoot.colFg : "#ffffff"
-                    background: Rectangle {
-                        color: Qt.rgba(1, 1, 1, 0.1)
-                        radius: 8
-                        border.color: timerInput.activeFocus ? Qt.rgba(1, 1, 1, 0.3) : "transparent"
+                    spacing: 6
+                    visible: timerPopup.currentTab === "timer"
+
+                    Text {
+                        text: "Minutes or MM:SS"
+                        color: shellRoot ? Qt.rgba(shellRoot.colFg.r, shellRoot.colFg.g, shellRoot.colFg.b, 0.5) : "#88ffffff"
+                        font.family: shellRoot ? shellRoot.fontFamily : "sans-serif"
+                        font.pixelSize: 11
                     }
-                    font.family: shellRoot ? shellRoot.fontFamily : "sans-serif"
-                    font.pixelSize: 14
-                    onAccepted: {
-                        var parts = text.split(":");
-                        var totalSeconds = 0;
-                        if (parts.length === 2) {
-                            var mins = parseInt(parts[0]);
-                            var secs = parseInt(parts[1]);
-                            if (!isNaN(mins) && !isNaN(secs)) {
-                                totalSeconds = (mins * 60) + secs;
+
+                    TextField {
+                        id: timerInput
+                        Layout.fillWidth: true
+                        placeholderText: "e.g. 5 or 1:30"
+                        color: shellRoot ? shellRoot.colFg : "#ffffff"
+                        background: Rectangle {
+                            color: Qt.rgba(1, 1, 1, 0.1)
+                            radius: 4
+                            border.color: timerInput.activeFocus ? Qt.rgba(1, 1, 1, 0.3) : "transparent"
+                        }
+                        font.family: shellRoot ? shellRoot.fontFamily : "sans-serif"
+                        font.pixelSize: 13
+                        onAccepted: {
+                            var parts = text.split(":");
+                            var totalSeconds = 0;
+                            if (parts.length === 2) {
+                                var mins = parseInt(parts[0]);
+                                var secs = parseInt(parts[1]);
+                                if (!isNaN(mins) && !isNaN(secs)) {
+                                    totalSeconds = (mins * 60) + secs;
+                                }
+                            } else if (parts.length === 1) {
+                                var val = parseInt(parts[0]);
+                                if (!isNaN(val)) {
+                                    totalSeconds = val * 60;
+                                }
                             }
-                        } else if (parts.length === 1) {
-                            var val = parseInt(parts[0]);
-                            if (!isNaN(val)) {
-                                totalSeconds = val * 60;
+                            if (totalSeconds > 0 && shellRoot) {
+                                shellRoot.pomodoroState = 0;
+                                shellRoot.timerTotal = totalSeconds;
+                                shellRoot.timerSeconds = totalSeconds;
+                                shellRoot.timerText = shellRoot.formatTime(totalSeconds);
+                                shellRoot.timerRunning = true;
+                            }
+                            timerPopup.show = false;
+                        }
+                    }
+                }
+
+                // ── TAB 2: Standalone Alarms ──
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    visible: timerPopup.currentTab === "alarms"
+
+                    Text {
+                        text: "Set Daily Alarm (HH:MM [Label])"
+                        color: shellRoot ? Qt.rgba(shellRoot.colFg.r, shellRoot.colFg.g, shellRoot.colFg.b, 0.5) : "#88ffffff"
+                        font.family: shellRoot ? shellRoot.fontFamily : "sans-serif"
+                        font.pixelSize: 11
+                    }
+
+                    TextField {
+                        id: alarmInput
+                        Layout.fillWidth: true
+                        placeholderText: "e.g. 08:30 Standup"
+                        color: shellRoot ? shellRoot.colFg : "#ffffff"
+                        background: Rectangle {
+                            color: Qt.rgba(1, 1, 1, 0.1)
+                            radius: 4
+                            border.color: alarmInput.activeFocus ? Qt.rgba(1, 1, 1, 0.3) : "transparent"
+                        }
+                        font.family: shellRoot ? shellRoot.fontFamily : "sans-serif"
+                        font.pixelSize: 13
+                        onAccepted: {
+                            var trimmed = text.trim();
+                            if (!trimmed) return;
+                            var parts = trimmed.split(" ");
+                            var timeVal = parts[0];
+                            var label = parts.slice(1).join(" ") || "Alarm";
+                            if (shellRoot && typeof shellRoot.addAlarm === "function") {
+                                shellRoot.addAlarm(timeVal, label);
+                            }
+                            alarmInput.text = "";
+                        }
+                    }
+
+                    // Alarms List
+                    ListView {
+                        Layout.fillWidth: true
+                        implicitHeight: Math.min(130, count * 30)
+                        clip: true
+                        spacing: 4
+                        model: (shellRoot && shellRoot.alarmsList) ? shellRoot.alarmsList : []
+
+                        delegate: RowLayout {
+                            width: parent.width
+                            height: 26
+                            spacing: 6
+
+                            // Toggle
+                            MouseArea {
+                                width: 26
+                                height: 26
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: if (shellRoot) shellRoot.toggleAlarm(modelData.id)
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: modelData.enabled ? "󰂞" : "󰂛"
+                                    color: modelData.enabled ? "#F59E0B" : Qt.rgba(1, 1, 1, 0.3)
+                                    font.pixelSize: 13
+                                }
+                            }
+
+                            // Time & Label
+                            Text {
+                                text: modelData.time
+                                color: modelData.enabled ? "#FFFFFF" : Qt.rgba(1, 1, 1, 0.4)
+                                font {
+                                    family: shellRoot ? shellRoot.textFontFamily : "sans-serif"
+                                    pixelSize: 12
+                                    weight: Font.DemiBold
+                                }
+                            }
+
+                            Text {
+                                Layout.fillWidth: true
+                                text: modelData.label || "Alarm"
+                                color: Qt.rgba(1, 1, 1, 0.55)
+                                elide: Text.ElideRight
+                                font {
+                                    family: shellRoot ? shellRoot.textFontFamily : "sans-serif"
+                                    pixelSize: 11
+                                }
+                            }
+
+                            // Delete
+                            MouseArea {
+                                width: 22
+                                height: 22
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: if (shellRoot) shellRoot.deleteAlarm(modelData.id)
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "󰅖"
+                                    color: Qt.rgba(1, 1, 1, 0.35)
+                                    font.pixelSize: 11
+                                }
                             }
                         }
-                        if (totalSeconds > 0 && shellRoot) {
-                            shellRoot.pomodoroState = 0;
-                            shellRoot.timerTotal = totalSeconds;
-                            shellRoot.timerSeconds = totalSeconds;
-                            shellRoot.timerText = shellRoot.formatTime(totalSeconds);
-                            shellRoot.timerRunning = true;
-                        }
-                        timerPopup.show = false;
                     }
                 }
             }

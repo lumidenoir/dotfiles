@@ -190,7 +190,7 @@
       (lumi/apply-ui-preset preset-name))))
 
 ;; Set default on startup
-(lumi/apply-ui-preset "JBM")
+(lumi/apply-ui-preset "Metric Perfect")
 
 ;;HACK to replace evil keyword in which-key popup
 (setq which-key-idle-delay 0.5)
@@ -216,9 +216,9 @@
 (after! org
   (setq org-format-latex-options
         (plist-put org-format-latex-options :scale 0.85)))
-(setq org-cite-csl-styles-dir "/home/lumi/Zotero/styles") ;; Path to CSL styles for citations
-(setq reftex-default-bibliography "/home/lumi/org/zotero.bib"
-      org-agenda-files '("/home/lumi/org/todo.org" "/home/lumi/org/todoist.org")
+(setq org-cite-csl-styles-dir "/home/krishna/Zotero/styles") ;; Path to CSL styles for citations
+(setq reftex-default-bibliography "/home/krishna/org/zotero.bib"
+      org-agenda-files '("/home/krishna/org/todo.org" "/home/lumi/org/todoist.org")
       org-fold-catch-invisible-edits 'smart)
 (setq org-export-headline-levels 5) ; I like nesting
 (setq org-ellipsis " ▾ ")
@@ -562,7 +562,7 @@
                       (mu4e-trash-folder            . "/iitk/Trash")
                       (mu4e-refile-folder           . "/iitk/All Mail")
                       (user-mail-address            . "viveksk21@iitk.ac.in")
-                      (user-full-name               . "Lumi Dantu")
+                      (user-full-name               . "Krishna Dantu")
                       (smtpmail-smtp-user           . "viveksk21@iitk.ac.in")
                       (smtpmail-default-smtp-server . "mmtp.iitk.ac.in")
                       (smtpmail-smtp-server         . "smtp.cc.iitk.ac.in")

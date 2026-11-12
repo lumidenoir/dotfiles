@@ -3,25 +3,28 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import Quickshell
 import Quickshell.Io
+import Quickshell.Wayland
 
-PopupWindow {
+PanelWindow {
     id: f1CalendarPopup
+    anchors.top: true
+    anchors.left: true
+    anchors.right: true
+    anchors.bottom: true
+    color: "transparent"
+
     property bool show: false
     property var shellRoot
+    readonly property real fontScale: scaleFactor * (shellRoot ? shellRoot.fontSizeMultiplier : 1.0)
     property var groundControlWindow
-    grabFocus: show
+
+    WlrLayershell.keyboardFocus: show ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+    WlrLayershell.namespace: "quickshell_widgets"
 
     property real savedX: 0
     property real savedY: 0
     property real savedW: 0
     property real savedH: 0
-
-    anchor {
-        window: groundControlWindow
-        rect: Qt.rect(savedX, savedY, savedW, savedH)
-        edges: Edges.Left | Edges.Top
-        gravity: Edges.Left | Edges.Bottom
-    }
 
     onShowChanged: {
         if (show) {
@@ -38,10 +41,6 @@ PopupWindow {
     }
 
     visible: show || animRectF1.opacity > 0
-
-    implicitWidth: 280
-    implicitHeight: 320
-    color: "transparent"
 
     ListModel {
         id: eventsModel
@@ -80,51 +79,41 @@ PopupWindow {
     }
 
     Item {
+        id: popupContent
         anchors.fill: parent
+        focus: show
+
+        Keys.onEscapePressed: show = false
+
+        MouseArea {
+            anchors.fill: parent
+            enabled: show
+            onClicked: show = false
+        }
 
         Rectangle {
             id: animRectF1
-            anchors.fill: parent
-            anchors.rightMargin: 12
-
-            color: Qt.rgba(0.08, 0.08, 0.08, 0.95)
-            radius: 16
-            border.color: Qt.rgba(1, 1, 1, 0.1)
-            border.width: 1
+            color: "transparent"
+            x: (savedX > 0) ? (savedX - width - Math.round(8 * (shellRoot ? shellRoot.scaleFactor : 1.0))) : (groundControlWindow ? ((groundControlWindow.width - groundControlWindow.targetWidth) / 2 - width - Math.round(12 * (shellRoot ? shellRoot.scaleFactor : 1.0))) : Math.round((parent.width - width) / 2))
+            y: (savedY > 0) ? savedY : Math.round((parent.height - height) / 2)
+            width: Math.round(280 * (shellRoot ? shellRoot.scaleFactor : 1.0))
+            height: Math.round(320 * (shellRoot ? shellRoot.scaleFactor : 1.0))
+            radius: Math.round(4 * (shellRoot ? shellRoot.scaleFactor : 1.0))
 
             opacity: f1CalendarPopup.show ? 1.0 : 0.0
-            scale: f1CalendarPopup.show ? 1.0 : 0.95
-            x: f1CalendarPopup.show ? 0 : -16
+            scale: f1CalendarPopup.show ? 1.0 : 0.98
 
-            Behavior on opacity {
-                SequentialAnimation {
-                    PauseAnimation {
-                        duration: (shellRoot && shellRoot.batteryMode) ? 0 : (f1CalendarPopup.show ? 80 : 0)
-                    }
-                    NumberAnimation {
-                        duration: (shellRoot && shellRoot.batteryMode) ? 150 : (f1CalendarPopup.show ? 180 : 150)
-                        easing.type: f1CalendarPopup.show ? Easing.OutQuad : Easing.InQuad
-                    }
-                }
-            }
-            Behavior on scale {
-                enabled: true
-                SpringAnimation {
-                    spring: 3.0
-                    damping: 0.75
-                    mass: 0.9
-                }
-            }
-            Behavior on x {
-                enabled: true
-                SpringAnimation {
-                    spring: 2.8
-                    damping: 0.75
-                    mass: 0.9
-                }
-            }
+            Behavior on opacity { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
+            Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
 
-            ColumnLayout {
+            // SurfaceCard Base (Option B, Zero Shader Overhead)
+            SurfaceCard {
+                id: f1GlassCard
+                anchors.fill: parent
+                radius: animRectF1.radius
+                contentPadding: 0
+            }
+                ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: 14
                 spacing: 10
@@ -134,10 +123,12 @@ PopupWindow {
                     Layout.fillWidth: true
                     spacing: 8
                     Text {
-                        text: "󰛄"
+                        text: "󰞬"
                         color: "#E10600"
-                        font.family: shellRoot ? shellRoot.iconFontFamily : "sans-serif"
+                        font.family: shellRoot ? shellRoot.nerdFontFamily : "Symbols Nerd Font"
                         font.pixelSize: 16
+                        Layout.alignment: Qt.AlignVCenter
+                        verticalAlignment: Text.AlignVCenter
                     }
                     Text {
                         text: "F1 Calendar (4 Weeks)"
@@ -147,6 +138,8 @@ PopupWindow {
                             pixelSize: 12
                             bold: true
                         }
+                        Layout.alignment: Qt.AlignVCenter
+                        verticalAlignment: Text.AlignVCenter
                     }
                     Item {
                         Layout.fillWidth: true

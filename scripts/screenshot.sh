@@ -14,6 +14,7 @@ mkdir -p "$dir_img" "$dir_vid" "/tmp/ocr"
 
 timestamp_file="/tmp/screenshot_timestamp"
 record_pid_file="/tmp/screenshot_record.pid"
+duration_file="/tmp/screenshot_duration"
 notify_replace_id=699
 default_countdown=3
 
@@ -30,48 +31,42 @@ need() {
 }
 
 need notify-send
-need dunstify
 need ffmpeg
-need rofi
 
 # =============================================================================
 # === Helpers ===
 # =============================================================================
 
-make_timestamp() { date +%Y_%m_%d_%H%M%S; }
-make_img_name()  { echo "$dir_img/$(make_timestamp).png"; }
+make_timestamp()  { date +%Y_%m_%d_%H%M%S; }
+make_img_name()   { echo "$dir_img/$(make_timestamp).png"; }
+make_video_name() { echo "$dir_vid/$(make_timestamp).mp4"; }
 
 safe_slurp() {
     echo "safe_slurp started. Args: $@" >> /tmp/safe_slurp.log
     local paused=false
     if command -v dunstctl &>/dev/null; then
-        dunstctl set-paused true || true
+        dunstctl set-paused true 2>/dev/null || true
         paused=true
     fi
 
-    # --- Apply Screen Shader if in Hyprland ---
-    local shader_applied=false
-    local shader_path="$HOME/dotfiles/misc/screenshot_shader.glsl"
-    if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]] && [[ -f "$shader_path" ]]; then
-        hyprctl eval "hl.config({ decoration = { screen_shader = '$shader_path' } })" &>/dev/null || true
-        shader_applied=true
+    # Feed Hyprland client rectangles so clicking snaps to windows and dragging draws a freeform region
+    local boxes=""
+    if command -v hyprctl &>/dev/null && command -v jq &>/dev/null && [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
+        boxes=$(hyprctl clients -j 2>/dev/null | jq -r '.[] | select(.mapped == true and .hidden == false) | "\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])"' 2>/dev/null || true)
     fi
 
     local geom
     set +e
-    echo "running slurp" >> /tmp/safe_slurp.log
-    geom=$(slurp -d -b 00000050 -c ffffffdd -s 00000000 -w 2 -F "Geist" "$@")
+    if [[ -n "$boxes" ]]; then
+        geom=$(echo "$boxes" | slurp -d -b 00000030 -c ffffffe0 -s ffffff14 -w 1 "$@")
+    else
+        geom=$(slurp -d -b 00000030 -c ffffffe0 -s ffffff14 -w 1 "$@")
+    fi
     local status=$?
-    echo "slurp finished with status $status, geom='$geom'" >> /tmp/safe_slurp.log
     set -e
 
-    # --- Restore Screen Shader ---
-    if [[ "$shader_applied" == "true" ]]; then
-        hyprctl eval "hl.config({ decoration = { screen_shader = '' } })" &>/dev/null || true
-    fi
-
     if [[ "$paused" == "true" ]]; then
-        dunstctl set-paused false || true
+        dunstctl set-paused false 2>/dev/null || true
     fi
 
     if [[ $status -ne 0 || -z "$geom" ]]; then
@@ -102,9 +97,6 @@ show_notification() {
     if [[ -n "$file" && -e "$file" ]]; then
         notify-send --replace-id="$notify_replace_id" \
             -i "$file" "Screenshot" "Saved & copied to clipboard"
-    else
-        notify-send --replace-id="$notify_replace_id" \
-            -i "image-missing" "Screenshot" "Cancelled"
     fi
 }
 
@@ -143,30 +135,30 @@ video_to_gif() {
 
 post_convert() {
     local input="$1"
-    local choice
-    choice=$(printf "%s\n%s\n%s" "Keep MKV" "Convert to MP4" "Convert to GIF" \
-        | rofi -dmenu -p "After recording")
+    local filename="$(basename "$input")"
 
-    case "$choice" in
-        "Convert to MP4")
-            notify-send --replace-id="$notify_replace_id" \
-                "Converting" "MP4 in progress..."
-            ffmpeg -y -i "$input" \
-                -c:v libx264 -preset slow -crf 20 \
-                -c:a aac "${input%.mkv}.mp4"
-            notify-send --replace-id="$notify_replace_id" \
-                "Saved MP4" "$(basename "${input%.mkv}.mp4")"
-            ;;
-        "Convert to GIF")
-            notify-send --replace-id="$notify_replace_id" \
-                "Converting" "GIF in progress..."
-            video_to_gif "$input"
-            ;;
-        *)
-            notify-send --replace-id="$notify_replace_id" \
-                "Kept MKV" "$(basename "$input")"
-            ;;
-    esac
+    # Use interactive notification action buttons (native to Quickshell / Dunst)
+    local choice=""
+    if choice=$(notify-send \
+        -a "Screen Recorder" \
+        -i video-x-generic \
+        "Recording Saved" "$filename" \
+        --action=gif="Convert to GIF" \
+        --action=open="Open in Files" 2>/dev/null); then
+
+        case "$choice" in
+            "gif")
+                notify-send -a "Screen Recorder" -i video-x-generic \
+                    "Converting to GIF" "Rendering $filename..."
+                video_to_gif "$input"
+                ;;
+            "open")
+                if command -v xdg-open &>/dev/null; then
+                    xdg-open "$(dirname "$input")" &>/dev/null &
+                fi
+                ;;
+        esac
+    fi
 }
 
 # =============================================================================
@@ -264,37 +256,33 @@ take_screenshot_ocr() {
 # =============================================================================
 
 start_recording() {
-    local mode="${1:-}"
-    local ts video
+    local mode="${1:-full}"
+    local custom_geom="${2:-}"
+    local video
+    video="$(make_video_name)"
 
-    ts=$(make_timestamp)
-    echo "$ts" > "$timestamp_file"
-    video="$dir_vid/${ts}.mkv"
+    make_timestamp > "$timestamp_file"
+    echo "0" > "$duration_file"
 
-    if [[ "$mode" == "sel" ]]; then
-        notify-send --replace-id="$notify_replace_id" \
-            -t 1500 "Recording Starting..." "Select area"
-    else
-        notify-send --replace-id="$notify_replace_id" \
-            -t 1500 "Recording Starting..." "Get ready"
-    fi
-    sleep 1.5
     play_sound "service-login"
 
+    local rec_pid=""
     if [[ -n "${WAYLAND_DISPLAY:-}" || -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" || "$XDG_SESSION_TYPE" == "wayland" ]]; then
         need wf-recorder
-        if [[ "$mode" == "sel" ]]; then
+        if [[ "$mode" == "geom" && -n "$custom_geom" ]]; then
+            wf-recorder -g "$custom_geom" -f "$video" </dev/null >/dev/null 2>&1 &
+            rec_pid=$!
+        elif [[ "$mode" == "sel" ]]; then
             need slurp
             local sel
             if ! sel=$(safe_slurp); then
-                notify-send --replace-id="$notify_replace_id" -i "image-missing" "Recording" "Cancelled"
                 exit 0
             fi
             wf-recorder -g "$sel" -f "$video" </dev/null >/dev/null 2>&1 &
-            disown
+            rec_pid=$!
         else
             wf-recorder -f "$video" </dev/null >/dev/null 2>&1 &
-            disown
+            rec_pid=$!
         fi
     else
         need xdpyinfo
@@ -309,19 +297,21 @@ start_recording() {
                 -vf "crop=${sel},scale=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv420p" \
                 -c:v libx264 -preset ultrafast -crf 18 -movflags +faststart \
                 "$video" </dev/null >/dev/null 2>&1 &
-            disown
+            rec_pid=$!
         else
             ffmpeg -y -video_size "$screen_size" -framerate 25 \
                 -f x11grab -i "$DISPLAY" \
                 -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv420p" \
                 -c:v libx264 -preset veryfast -crf 18 -movflags +faststart \
                 "$video" </dev/null >/dev/null 2>&1 &
-            disown
+            rec_pid=$!
         fi
     fi
 
-    echo "$!" > "$record_pid_file"
-    (quickshell -p "$HOME/dotfiles/quickshell" ipc call qsIpc startRecording || quickshell ipc call qsIpc startRecording) &>/dev/null &
+    if [[ -n "$rec_pid" ]]; then
+        echo "$rec_pid" > "$record_pid_file"
+        (quickshell -p "$HOME/dotfiles/quickshell" ipc call qsIpc startRecording || quickshell ipc call qsIpc startRecording) &>/dev/null &
+    fi
 }
 
 stop_recording() {
@@ -329,45 +319,42 @@ stop_recording() {
 
     pid="$(cat "$record_pid_file" 2>/dev/null || true)"
     if [[ -z "$pid" ]]; then
+        pid="$(pgrep -f wf-recorder 2>/dev/null | head -n1 || true)"
+    fi
+
+    if [[ -z "$pid" ]]; then
         notify-send --replace-id="$notify_replace_id" \
-            "Error" "No recording PID found"
+            "Error" "No recording process found"
+        (quickshell -p "$HOME/dotfiles/quickshell" ipc call qsIpc stopRecording || quickshell ipc call qsIpc stopRecording) &>/dev/null &
         exit 1
     fi
 
     kill -SIGINT "$pid" 2>/dev/null || true
 
-    for _ in {1..4}; do
+    for _ in {1..8}; do
         kill -0 "$pid" 2>/dev/null || break
-        sleep 0.5
+        sleep 0.25
     done
 
     kill -0 "$pid" 2>/dev/null && kill -SIGTERM "$pid" 2>/dev/null || true
 
-    wait "$pid" 2>/dev/null || true
-
     play_sound "service-logout"
 
     ts="$(cat "$timestamp_file" 2>/dev/null || true)"
-    if [[ -n "$ts" && -f "$dir_vid/${ts}.mkv" ]]; then
+    if [[ -n "$ts" && -f "$dir_vid/${ts}.mp4" ]]; then
+        video_path="$dir_vid/${ts}.mp4"
+    elif [[ -n "$ts" && -f "$dir_vid/${ts}.mkv" ]]; then
         video_path="$dir_vid/${ts}.mkv"
     else
-        video_path="$(ls -1t "$dir_vid"/*.mkv 2>/dev/null | head -n1 || true)"
+        video_path="$(ls -1t "$dir_vid"/*.mp4 "$dir_vid"/*.mkv 2>/dev/null | head -n1 || true)"
     fi
 
-    if [[ -z "$video_path" ]]; then
-        notify-send --replace-id="$notify_replace_id" \
-            "Error" "Could not locate recorded file"
-        exit 1
-    fi
-
-    notify-send --replace-id="$notify_replace_id" \
-        "Recording Stopped" "Saved: $(basename "$video_path")"
-
-    rm -f "$record_pid_file" "$timestamp_file" 2>/dev/null || true
+    rm -f "$record_pid_file" "$timestamp_file" "$duration_file" 2>/dev/null || true
     (quickshell -p "$HOME/dotfiles/quickshell" ipc call qsIpc stopRecording || quickshell ipc call qsIpc stopRecording) &>/dev/null &
 
-    # Run post-conversion menu in background so the launcher is not blocked
-    post_convert "$video_path" &
+    if [[ -n "$video_path" && -f "$video_path" ]]; then
+        post_convert "$video_path" &
+    fi
 }
 
 # =============================================================================
@@ -423,6 +410,9 @@ case "${1:-}" in
         ;;
 
     --sel)
+        if (quickshell -p "$HOME/dotfiles/quickshell" ipc call qsIpc openScreenshotSelector || quickshell ipc call qsIpc openScreenshotSelector) &>/dev/null; then
+            exit 0
+        fi
         if [[ -n "${WAYLAND_DISPLAY:-}" || -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" || "$XDG_SESSION_TYPE" == "wayland" ]]; then
             need slurp
             if ! geom=$(safe_slurp); then
@@ -437,6 +427,9 @@ case "${1:-}" in
         ;;
 
     --edit)
+        if (quickshell -p "$HOME/dotfiles/quickshell" ipc call qsIpc openScreenshotEdit || quickshell ipc call qsIpc openScreenshotEdit) &>/dev/null; then
+            exit 0
+        fi
         if [[ -n "${WAYLAND_DISPLAY:-}" || -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" || "$XDG_SESSION_TYPE" == "wayland" ]]; then
             need slurp
             if ! geom=$(safe_slurp); then
@@ -479,10 +472,17 @@ case "${1:-}" in
         start_recording sel
         ;;
 
+    --record-geom)
+        start_recording "geom" "$2"
+        ;;
+
     --stop)
         stop_recording
         ;;
     --ocr)
+        if (quickshell -p "$HOME/dotfiles/quickshell" ipc call qsIpc openScreenshotOcr || quickshell ipc call qsIpc openScreenshotOcr) &>/dev/null; then
+            exit 0
+        fi
         take_screenshot_ocr
         ;;
     --help | -h)

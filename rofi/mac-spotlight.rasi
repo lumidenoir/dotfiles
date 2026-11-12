@@ -3,7 +3,7 @@ configuration {
     show-icons:         false;
     drun-display-format: "{name}";
     window-format:      "{t}";
-    font:               "Geist, GeistMono Nerd Font 12";
+    font:               "Geist, GeistMono Nerd Font 9";
     steal-focus:        true;
 }
 
@@ -54,7 +54,7 @@ inputbar {
 search-icon {
     background-color: transparent;
     text-color:       @accent;     /* Glows with Apple Blue */
-    font:             "GeistMono Nerd Font 14";
+    font:             "GeistMono Nerd Font 12";
     str:              "";          /* magnifier nerd-font glyph */
     padding:          0px 12px 0px 2px;
     vertical-align:   0.5;
@@ -66,7 +66,7 @@ prompt {
     enabled:           false;
     background-color:  rgba(10, 132, 255, 0.12); /* light blue glass capsule */
     text-color:        @accent;
-    font:              "Geist SemiBold, GeistMono Nerd Font SemiBold 10";
+    font:              "Geist SemiBold, GeistMono Nerd Font SemiBold 9";
     padding:           4px 10px;
     border-radius:     8px;
     margin:            0px 12px 0px 0px;
@@ -79,7 +79,7 @@ entry {
     text-color:       @fg;
     placeholder:      "Spotlight Search…";
     placeholder-color: @fg-muted;
-    font:             "Geist, GeistMono Nerd Font 14";
+    font:             "Geist, GeistMono Nerd Font 12";
     vertical-align:   0.5;
     horizontal-align: 0.0;
     cursor:           text;
@@ -152,7 +152,7 @@ element-icon {
 element-text {
     background-color: transparent;
     text-color:       inherit;
-    font:             "Geist, GeistMono Nerd Font 13";
+    font:             "Geist, GeistMono Nerd Font 11";
     vertical-align:   0.5;
     horizontal-align: 0.0;
     cursor:           inherit;
@@ -199,5 +199,5 @@ textbox {
     text-color:       inherit;
     vertical-align:   0.5;
     horizontal-align: 0.5;
-    font:             "Geist, GeistMono Nerd Font 11";
+    font:             "Geist, GeistMono Nerd Font 10";
 }

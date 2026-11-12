@@ -1,0 +1,208 @@
+{"query": "how does zero copy networking work with io_uring in linux", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "show recent clipboard history entries", "expected_intent": "mindspace", "is_action": false, "tag": "mindspace"}
+{"query": "mute playback", "expected_intent": "mpris_control", "is_action": true, "tag": "mpris_control"}
+{"query": "remind me how rsa public key encryption prime factorization works", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_remind"}
+{"query": "put on energetic synthwave music", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "show recent clips from clipboard stash", "expected_intent": "mindspace", "is_action": false, "tag": "mindspace"}
+{"query": "what is on my todo list right now", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "!git pull origin main", "expected_intent": "run_cmd", "is_action": true, "tag": "run_cmd"}
+{"query": "$df -h", "expected_intent": "run_cmd", "is_action": true, "tag": "run_cmd"}
+{"query": "horizon plane in celestial navigation sextant altitude measurement", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_horizon"}
+{"query": "gulf stream thermohaline circulation climate impact", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_stream"}
+{"query": "watch cyberpunk edgerunners ep 4", "expected_intent": "play_media", "is_action": true, "tag": "play_media"}
+{"query": "rules of fair play in international soccer tournaments", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_play"}
+{"query": "stream track afterlife by aimer", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "play something energetic for workout", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "task: review pull request 42 on github", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "nevermind forget it", "expected_intent": "chat", "is_action": false, "tag": "chat_cancellation"}
+{"query": "what are my upcoming tasks this week", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "role play simulation in medical training patient diagnosis", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_play"}
+{"query": "stop adding reminders", "expected_intent": "chat", "is_action": false, "tag": "chat_cancellation"}
+{"query": "cut the sound", "expected_intent": "mpris_control", "is_action": true, "tag": "mpris_control"}
+{"query": "how does a closed loop control pid controller prevent overshoot", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "how does sourdough fermentation create carbon dioxide", "expected_intent": "rag_knowledge", "is_action": false, "tag": "ood_general"}
+{"query": "open anime mkv in mpv player", "expected_intent": "play_media", "is_action": true, "tag": "play_media"}
+{"query": "set a high priority reminder for doctor appointment next tuesday at 10am", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "todo: compile release notes for version 2.4", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "morning briefing overview", "expected_intent": "daily_horizon", "is_action": false, "tag": "daily_horizon"}
+{"query": "urgent task: update ssh keys across all dev servers p1", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "inspect currently active application", "expected_intent": "active_window", "is_action": false, "tag": "active_window"}
+{"query": "urgent task to restart production nginx server", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "what is the church turing thesis in computability theory", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "order of operations in arithmetic pemdas rules", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_run"}
+{"query": "run free -m to check ram", "expected_intent": "run_cmd", "is_action": true, "tag": "run_cmd"}
+{"query": "explain consistent hashing in distributed caching clusters", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "run uptime in terminal", "expected_intent": "run_cmd", "is_action": true, "tag": "run_cmd"}
+{"query": "river stream flow rate measurement v notch weir formula", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_flow"}
+{"query": "play next track", "expected_intent": "mpris_control", "is_action": true, "tag": "mpris_control"}
+{"query": "derive the rankine hugoniot jump conditions", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "how does the wayland display server protocol manage client buffers", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "explain how a scramjet combustor achieves supersonic ignition", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "stop adding reminders please", "expected_intent": "chat", "is_action": false, "tag": "chat_cancellation"}
+{"query": "view my agenda for this evening", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "current focused window title", "expected_intent": "active_window", "is_action": false, "tag": "active_window"}
+{"query": "play kelsey lu blood album", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "show my todo list", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "task: submit thesis chapter draft to advisor by 5pm", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "add task implement websocket heartbeat ping pong", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "list all tasks from todoist", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "what are fanno flows in compressible gas dynamics", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_flow"}
+{"query": "listen to lofi beats in the background", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "what is the event horizon of a rotating kerr black hole", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_horizon"}
+{"query": "play local anime video", "expected_intent": "play_media", "is_action": true, "tag": "play_media"}
+{"query": "stream of photons in quantum photoelectric effect einstein", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_flow"}
+{"query": "!systemctl status bluetooth", "expected_intent": "run_cmd", "is_action": true, "tag": "run_cmd"}
+{"query": "flow cytometry cell sorting technique in immunology diagnostics", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_flow"}
+{"query": "derive the mach cone relation sin mu equals one over m", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "!ip addr show", "expected_intent": "run_cmd", "is_action": true, "tag": "run_cmd"}
+{"query": "what is on my agenda for this afternoon", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "bug in opengl rendering please add a task to fix it tonight", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "remind me to call mom this evening around 8pm", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "add task renew passport before international flight", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "remind me to call insurance agent regarding claim status", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "laminar to turbulent flow transition in boundary layers", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_flow"}
+{"query": "search clipboard buffer for git commit", "expected_intent": "mindspace", "is_action": false, "tag": "mindspace"}
+{"query": "explain how a bloom filter achieves zero false negatives", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "!systemctl status mpd", "expected_intent": "run_cmd", "is_action": true, "tag": "run_cmd"}
+{"query": "play yoko kanno cowboy bebop ost", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "derive bernoulli principle from euler equations", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "stream post rock instrumental tracks", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "refactor database connection pool and fix query latency", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "listen to lofi hip hop radio beats to relax study to", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "how antibodies play a defensive role in immune system response", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_play"}
+{"query": "what window is active", "expected_intent": "active_window", "is_action": false, "tag": "active_window"}
+{"query": "add task clean up downloads directory and archive pdfs p3", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "how does a doubly linked list work in c memory layout", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_list"}
+{"query": "notes on shock wave boundary layer interaction swbli", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "remind me what mach angle formula is in supersonic flight", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_remind"}
+{"query": "need to write abstract for aiaa sci tech conference add task", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "go to previous song", "expected_intent": "mpris_control", "is_action": true, "tag": "mpris_control"}
+{"query": "who sings this song playing currently", "expected_intent": "mpris_control", "is_action": true, "tag": "mpris_control"}
+{"query": "create a todo item to file weekly progress report", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "what is currently playing on mpd", "expected_intent": "mpris_control", "is_action": true, "tag": "mpris_control"}
+{"query": "morning summary of schedule and weather", "expected_intent": "daily_horizon", "is_action": false, "tag": "daily_horizon"}
+{"query": "check clipboard history for link", "expected_intent": "mindspace", "is_action": false, "tag": "mindspace"}
+{"query": "show priority 1 tasks", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "play aimer ref:rain", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "what is prandtl meyer expansion fan in supersonic aerodynamics", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "air flow separation over an airfoil at stall angle", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_flow"}
+{"query": "watch local movie oppenheimer", "expected_intent": "play_media", "is_action": true, "tag": "play_media"}
+{"query": "jet stream velocity and polar vortex meteorology", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_stream"}
+{"query": "skip list probabilistic alternative to balanced trees", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_list"}
+{"query": "remind me what newton third law of motion states action and reaction", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_remind"}
+{"query": "watch frieren episode 5", "expected_intent": "play_media", "is_action": true, "tag": "play_media"}
+{"query": "make sure i dont forget to push git commits before leaving", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "what is on the daily horizon for this morning", "expected_intent": "daily_horizon", "is_action": false, "tag": "daily_horizon"}
+{"query": "morning horizon report", "expected_intent": "daily_horizon", "is_action": false, "tag": "daily_horizon"}
+{"query": "stream piano playlist", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "!pkill -9 mpv", "expected_intent": "run_cmd", "is_action": true, "tag": "run_cmd"}
+{"query": "scheduling tasks with cron in linux systemd timer units", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "stream anime opening songs", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "!ping -c 3 1.1.1.1", "expected_intent": "run_cmd", "is_action": true, "tag": "run_cmd"}
+{"query": "unpause playback", "expected_intent": "mpris_control", "is_action": true, "tag": "mpris_control"}
+{"query": "poiseuille flow between two stationary parallel plates", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_flow"}
+{"query": "what is the difference between specific impulse and thrust", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "add a reminder to call pharmacy at 4pm today", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "creeping flow stokes flow around a sphere low reynolds number", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_flow"}
+{"query": "turn up the music slightly", "expected_intent": "mpris_control", "is_action": true, "tag": "mpris_control"}
+{"query": "what is the difference between lagrangian and eulerian frame of reference", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "put on some chill synthwave beats while i code", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "what is the difference between epoll and select in unix socket programming", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "what did i write in my notes about hypersonic boundary layers", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "stream neon genesis evangelion episode 1", "expected_intent": "play_media", "is_action": true, "tag": "play_media"}
+{"query": "dont let me forget to renew car insurance policy this weekend", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "mute the sound it is too loud", "expected_intent": "mpris_control", "is_action": true, "tag": "mpris_control"}
+{"query": "run top", "expected_intent": "run_cmd", "is_action": true, "tag": "run_cmd"}
+{"query": "how children learn through unstructured play developmental psychology", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_play"}
+{"query": "cancel that reminder request", "expected_intent": "chat", "is_action": false, "tag": "chat_cancellation"}
+{"query": "play the previous track on mpd", "expected_intent": "mpris_control", "is_action": true, "tag": "mpris_control"}
+{"query": "add reminder to submit conference camera ready paper by thursday", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "what is the half life of carbon 14 dating", "expected_intent": "rag_knowledge", "is_action": false, "tag": "ood_general"}
+{"query": "give me my morning briefing", "expected_intent": "daily_horizon", "is_action": false, "tag": "daily_horizon"}
+{"query": "multitasking preemptive vs cooperative scheduling models", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "what is the capital city of australia", "expected_intent": "rag_knowledge", "is_action": false, "tag": "ood_general"}
+{"query": "what is total pressure loss across an oblique shock wave", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "open downloaded film blade runner in video player", "expected_intent": "play_media", "is_action": true, "tag": "play_media"}
+{"query": "todo: audit tailscale acl rules p2", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "blood flow velocity measurement with doppler ultrasound medical physics", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_flow"}
+{"query": "isentropic flow relations table in gas dynamics rathakrishnan", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_flow"}
+{"query": "derive fanno flow equations for constant area duct with friction", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_flow"}
+{"query": "remind me how mergesort works divide and conquer time complexity", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_remind"}
+{"query": "search my notes for gas dynamics shock relations", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "how does liquid rocket regenerative cooling nozzle jacket work", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "network traffic flow analysis and netflow monitoring", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_flow"}
+{"query": "daily briefing summary", "expected_intent": "daily_horizon", "is_action": false, "tag": "daily_horizon"}
+{"query": "what are my todos for today", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "lower playback volume", "expected_intent": "mpris_control", "is_action": true, "tag": "mpris_control"}
+{"query": "!git status -s", "expected_intent": "run_cmd", "is_action": true, "tag": "run_cmd"}
+{"query": "task parallelism vs data parallelism in concurrent computing", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "!curl -I https://google.com", "expected_intent": "run_cmd", "is_action": true, "tag": "run_cmd"}
+{"query": "play previous track", "expected_intent": "mpris_control", "is_action": true, "tag": "mpris_control"}
+{"query": "play soundtrack from blade runner 2049", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "explain cap theorem trade-offs in distributed systems", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "explain how bst binary search tree rebalances into avl tree", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "how do quantum computers achieve entanglement using hadamard gates", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "play video recording from downloads folder", "expected_intent": "play_media", "is_action": true, "tag": "play_media"}
+{"query": "watch downloaded lecture video in vlc", "expected_intent": "play_media", "is_action": true, "tag": "play_media"}
+{"query": "nice chatting with you", "expected_intent": "chat", "is_action": false, "tag": "chat"}
+{"query": "bitstream generation and fpga configuration routing", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_stream"}
+{"query": "put on ambient drone music for sleep", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "how to build a todo list app in react with redux toolkit", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "how do interest rates play into currency valuation", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_play"}
+{"query": "stop audio playback", "expected_intent": "mpris_control", "is_action": true, "tag": "mpris_control"}
+{"query": "play radiohead paranoid android", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "dont forget to water the plants tomorrow morning", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "show all tasks on my agenda", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "how does rust borrow checker enforce memory safety at compile time", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "retrieve last copied text block", "expected_intent": "mindspace", "is_action": false, "tag": "mindspace"}
+{"query": "investment time horizon and risk tolerance asset allocation", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_horizon"}
+{"query": "play local video clip in mpv", "expected_intent": "play_media", "is_action": true, "tag": "play_media"}
+{"query": "create task order spare ethernet cables from amazon", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "what is lsm tree log structured merge tree in rocksdb", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "add a task for database migration p1 due friday", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "how does celery beat schedule recurring background tasks", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "what application am i currently looking at", "expected_intent": "active_window", "is_action": false, "tag": "active_window"}
+{"query": "remind me what is avogadro number 6.022 times 10 to the 23", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_remind"}
+{"query": "couette flow velocity profile with moving upper boundary", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_flow"}
+{"query": "incompressible navier stokes potential flow theory", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_flow"}
+{"query": "focused app name and process id", "expected_intent": "active_window", "is_action": false, "tag": "active_window"}
+{"query": "apache flink vs spark streaming architecture comparison", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_stream"}
+{"query": "what is rate monotonic scheduling for periodic real time tasks", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "dividing tasks in concurrent mapreduce big data jobs", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "todoist api webhook payload schema documentation", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "play classical piano sonata in c major", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": " /etc/os-release", "expected_intent": "run_cmd", "is_action": true, "tag": "run_cmd"}
+{"query": "search clipboard for git commit hash", "expected_intent": "mindspace", "is_action": false, "tag": "mindspace"}
+{"query": "check clipboard for api endpoint", "expected_intent": "mindspace", "is_action": false, "tag": "mindspace"}
+{"query": "current window class and title", "expected_intent": "active_window", "is_action": false, "tag": "active_window"}
+{"query": "play some jazz music", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "explain how a turbojet engine compressor stall occurs", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "what did i copy from browser", "expected_intent": "mindspace", "is_action": false, "tag": "mindspace"}
+{"query": "spectral leakage and windowing in discrete fourier transform fft", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_window"}
+{"query": "watch steins gate episode 12", "expected_intent": "play_media", "is_action": true, "tag": "play_media"}
+{"query": "priority inversion problem in real time operating systems freertos", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_task"}
+{"query": "who created you", "expected_intent": "chat", "is_action": false, "tag": "chat"}
+{"query": "explain optical flow calculation using lucas kanade method", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_flow"}
+{"query": "queue track get lucky by daft punk", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "run sensors to check cpu temperature", "expected_intent": "run_cmd", "is_action": true, "tag": "run_cmd"}
+{"query": "turn down the volume a bit", "expected_intent": "mpris_control", "is_action": true, "tag": "mpris_control"}
+{"query": "what items are pending on my list", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "do i have anything scheduled for today", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "put on some city pop songs from the 80s", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "what is paxos consensus algorithm", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "watch episode 1 of attack on titan", "expected_intent": "play_media", "is_action": true, "tag": "play_media"}
+{"query": "set a task to replace water filter cartridge", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "drop the volume a bit", "expected_intent": "mpris_control", "is_action": true, "tag": "mpris_control"}
+{"query": "what are my pending tasks", "expected_intent": "list_tasks", "is_action": false, "tag": "list_tasks"}
+{"query": "resume playback", "expected_intent": "mpris_control", "is_action": true, "tag": "mpris_control"}
+{"query": "!cargo test --release", "expected_intent": "run_cmd", "is_action": true, "tag": "run_cmd"}
+{"query": "reading list for graduate fluid dynamics and aerodynamics", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_list"}
+{"query": "how does garbage collection work in rust vs go", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "which process has focus right now", "expected_intent": "active_window", "is_action": false, "tag": "active_window"}
+{"query": "explain transformer multi head attention scaling factor square root d", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "play steins gate episode 1", "expected_intent": "play_media", "is_action": true, "tag": "play_media"}
+{"query": "how does cash flow analysis work in financial modeling", "expected_intent": "rag_knowledge", "is_action": false, "tag": "hard_negative_flow"}
+{"query": "dont forget to bring usb flash drive to university", "expected_intent": "add_task", "is_action": true, "tag": "add_task"}
+{"query": "stream soundtrack from interstellar", "expected_intent": "play_music", "is_action": true, "tag": "play_music"}
+{"query": "notes on aerothermodynamics hypersonic reentry", "expected_intent": "rag_knowledge", "is_action": false, "tag": "rag_knowledge"}
+{"query": "good morning minimo", "expected_intent": "chat", "is_action": false, "tag": "chat"}

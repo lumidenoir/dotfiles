@@ -8,7 +8,7 @@ configuration {
     display-window:              " ";
     drun-display-format:         "{name}";
     window-format:               "{w}{t}";
-    font:                        "JetBrainsMono Nerd Font 10";
+    font:                        "JetBrainsMono Nerd Font 9";
     icon-theme:                  "Tela-circle-dracula";
 }
 
@@ -23,8 +23,8 @@ configuration {
 
 // Main //
 window {
-    height:                      40em;
-    width:                       25em;
+    height:                      38em;
+    width:                       24em;
     transparency:                "real";
     fullscreen:                  false;
     enabled:                     true;
@@ -77,7 +77,7 @@ listview {
     enabled:                     true;
     spacing:                     0.4em;
     padding:                     1em;
-    lines: 11;
+    lines: 12;
     columns:                     1;
     cycle:                       true;
     dynamic:                     true;
